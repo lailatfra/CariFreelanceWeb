@@ -119,19 +119,26 @@ class RegisterController extends Controller
     public function saveClientProfile(Request $request)
     {
         $request->validate([
-            'company_name' => 'required',
-            'address' => 'required',
+            'name' => 'required',
+            'email' => 'required|email',
+            'company_name' => 'nullable',
+            'phone' => 'nullable',
         ]);
+
+        $user = Auth::user(); // ✅ Ambil user login
 
         ClientProfile::create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'email' => $request->email,
             'company_name' => $request->company_name,
-            'address' => $request->address,
+            'phone' => $request->phone,
         ]);
 
-        Auth::logout(); // keluarin user setelah simpan profil
+        Auth::logout();
         return redirect()->route('login')->with('success', 'Pendaftaran berhasil. Silakan login.');
     }
+
 
 
     // STEP 4: Form profil freelancer
@@ -143,19 +150,26 @@ class RegisterController extends Controller
    public function saveFreelancerProfile(Request $request)
     {
         $request->validate([
+            'name' => 'required',
+            'email' => 'required|email',
             'skills' => 'required',
-            'portfolio_url' => 'nullable|url',
+            'phone' => 'nullable',
         ]);
+
+        $user = Auth::user(); // ✅ Ambil user login
 
         FreelancerProfile::create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'email' => $request->email,
             'skills' => $request->skills,
-            'portfolio_url' => $request->portfolio_url,
+            'phone' => $request->phone,
         ]);
 
-        Auth::logout(); // keluarin user setelah simpan profil
+        Auth::logout();
         return redirect()->route('login')->with('success', 'Pendaftaran berhasil. Silakan login.');
     }
+
 
 
     public function showRoleForm()

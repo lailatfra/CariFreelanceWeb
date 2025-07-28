@@ -18,15 +18,22 @@ class FreelancerProfileController extends Controller
 
     public function store(Request $request)
     {
+        
         $request->validate([
-            'skills' => 'required',
-            'portfolio_url' => 'nullable|url'
+            'skills' => 'required|string',
+            'experience_years' => 'nullable|integer',
+            'portofolio_link' => 'nullable|url',
+            'phone' => 'nullable|string',
+            'bio' => 'nullable|string',
         ]);
 
         FreelancerProfile::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'skills' => $request->skills,
-            'portfolio_url' => $request->portfolio_url,
+            'experience_years' => $request->experience_years,
+            'portofolio_link' => $request->portofolio_link,
+            'phone' => $request->phone,
+            'bio' => $request->bio,
         ]);
 
         Auth::logout();

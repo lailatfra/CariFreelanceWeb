@@ -20,14 +20,18 @@ class ClientProfileController extends Controller
     {
 
         $request->validate([
-            'company_name' => 'required',
-            'address' => 'required'
+            'company_name' => 'nullable|string',
+            'website' => 'nullable|url',
+            'phone' => 'nullable|string',
+            'bio' => 'nullable|string',
         ]);
 
         ClientProfile::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'company_name' => $request->company_name,
-            'address' => $request->address,
+            'website' => $request->website,
+            'phone' => $request->phone,
+            'bio' => $request->bio,
         ]);
 
         Auth::logout();

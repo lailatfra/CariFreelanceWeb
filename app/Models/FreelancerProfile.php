@@ -12,7 +12,10 @@ class FreelancerProfile extends Model
     protected $fillable = [
         'user_id',
         'skills',
-        'portfolio_url',
+        'ecperience_years',
+        'portofolio_link',
+        'phone',
+        'bio',
     ];
 
     // Relasi ke user

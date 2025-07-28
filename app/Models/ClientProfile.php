@@ -12,7 +12,9 @@ class ClientProfile extends Model
     protected $fillable = [
         'user_id',
         'company_name',
-        'address',
+        'website',
+        'phone',
+        'bio',
     ];
 
     // Relasi ke user

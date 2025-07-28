@@ -9,16 +9,21 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('freelancer_profiles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->text('skills');
-            $table->string('portfolio_url')->nullable();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('skills')->nullable();
+            $table->integer('experience_years')->nullable();
+            $table->string('portofolio_link')->nullable();
+            $table->string('phone')->nullable();
+            $table->text('bio')->nullable();
+            $table->rememberToken();
             $table->timestamps();
         });
     }
+
 
 
     /**
