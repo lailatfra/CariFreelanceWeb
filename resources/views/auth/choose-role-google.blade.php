@@ -6,7 +6,7 @@
         <div class="card-body">
             <h3 class="mb-4 text-center">Daftar Sebagai</h3>
 
-            <form method="POST" action="{{ route('register.step2.google.submit') }}">
+            <form method="POST" action="{{ route('register.saveRole') }}">
                 @csrf
 
                 <div class="form-check mb-3 p-3 border rounded-3 d-flex align-items-center gap-3" style="cursor:pointer;">

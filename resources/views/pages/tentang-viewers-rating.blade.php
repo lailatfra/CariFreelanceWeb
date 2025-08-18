@@ -18,7 +18,7 @@
 
     /* Header Section */
     .rating-header {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 50%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 50%, #1DA1F2 100%);
         padding: 120px 0 80px;
         color: white;
         text-align: center;
@@ -75,7 +75,7 @@
         text-align: center;
         padding: 20px;
         border-radius: 15px;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #219ae6ff 100%);
         color: white;
         transform: translateY(20px);
         opacity: 0;
@@ -115,7 +115,7 @@
     .overall-rating {
         text-align: center;
         padding: 40px;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #259ae2ff 100%);
         border-radius: 20px;
         color: white;
         transform: scale(0.9);
@@ -189,7 +189,7 @@
 
     .rating-fill {
         height: 100%;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1f9ae6ff 100%);
         border-radius: 5px;
         transition: width 1s ease;
     }
@@ -231,7 +231,7 @@
 
     .review-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,184,148,0.2);
+        box-shadow: 0 15px 30px #1a4b69ff;
     }
 
     .review-header {
@@ -244,7 +244,7 @@
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #219ce9ff 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -280,12 +280,12 @@
         background: #f8f9fa;
         padding: 15px;
         border-radius: 10px;
-        border-left: 4px solid #00B894;
+        border-left: 4px solid #1DA1F2;
     }
 
     .review-project h5 {
         font-size: 0.9rem;
-        color: #00B894;
+        color: #1DA1F2;
         margin-bottom: 5px;
     }
 
@@ -339,7 +339,7 @@
     }
 
     .form-control:focus {
-        border-color: #00B894;
+        border-color: #1DA1F2;
         outline: none;
         box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.1);
     }
@@ -364,7 +364,7 @@
     }
 
     .btn-submit {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2499e2ff 100%);
         color: white;
         padding: 15px 40px;
         border: none;
@@ -377,9 +377,9 @@
     }
 
     .btn-submit:hover {
-        background: linear-gradient(135deg, #00A085 0%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2a99dfff 100%);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,184,148,0.4);
+        box-shadow: 0 8px 25px #1c5274ff;
     }
 
     .btn-submit:disabled {
@@ -445,18 +445,18 @@
     }
 
     .filter-btn.active {
-        background: #00B894;
+        background: #1DA1F2;
         color: white;
-        border-color: #00B894;
+        border-color: #1DA1F2;
     }
 
     .filter-btn:hover {
-        border-color: #00B894;
-        color: #00B894;
+        border-color: #1DA1F2;
+        color: #1DA1F2;
     }
 
     .filter-btn.active:hover {
-        background: #00A085;
+        background: #1DA1F2;
         color: white;
     }
 
@@ -502,7 +502,7 @@
 
     /* Success Message */
     .success-message {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 100%);
         color: white;
         padding: 20px;
         border-radius: 15px;

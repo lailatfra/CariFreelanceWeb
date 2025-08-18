@@ -27,7 +27,7 @@ class LoginController extends Controller
 
             // Arahkan ke dashboard sesuai role
             if ($user->role === 'client') {
-                return redirect()->route('client.dashboard');
+                return redirect()->route('client.home');
             } elseif ($user->role === 'freelancer') {
                 return redirect()->route('freelancer.dashboard');
             } else {

@@ -17,13 +17,18 @@ use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Freelancer\FreelancerDashboardController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 
-
+// guest
 Route::get('/', fn() => view('pages.landing'))->name('home');
 Route::get('/tentang/penjelasan', fn() => view('pages.tentang-penjelasan'))->name('tentang.penjelasan');
 Route::get('/tentang/foto', fn() => view('pages.tentang-foto'))->name('tentang.foto');
 Route::get('/tentang/viewers-rating', fn() => view('pages.tentang-viewers-rating'))->name('tentang.rating');
 Route::get('/faq', fn() => view('pages.faq'))->name('faq');
+
+Route::get('/profil/akun', fn() => view('client.profil-akun'))->name('profil.akun');
+
 
 // Multi-step Register
 Route::get('/register/step1', [RegisterController::class, 'showStep1'])->name('register.step1');
@@ -34,59 +39,18 @@ Route::post('/register/step2', [RegisterController::class, 'processStep2'])->nam
 
 Route::get('/email/verify', [RegisterController::class, 'verifyNotice'])->middleware('auth')->name('verification.notice');
 
-//Step2-Google
-Route::get('/register/step2/google', function () {
-    if (!Session::has('register.google')) {
-        return redirect('/login');
-    }
-
-    return view('auth.choose-role-google');
-})->name('register.step2.google');
-
-Route::post('/register/step2/google', function (Request $request) {
-    $request->validate([
-        'role' => 'required|in:client,freelancer',
-    ]);
-
-    $email = Session::get('register.email');
-
-    $user = \App\Models\User::where('email', $email)->first();
-
-    if (!$user) {
-        $user = \App\Models\User::create([
-            'name' => Session::get('register.name'),
-            'email' => $email,
-            'google_id' => Session::get('register.google_id'),
-            'email_verified_at' => now(),
-            'role' => $request->role,
-            'password' => Hash::make(Str::random(6)), 
-        ]);
-    } else {
-        $user->role = $request->role;
-        $user->save();
-    }
-
-    Session::forget('register.google');
-    Session::forget('register.email');
-    Session::forget('register.name');
-    Session::forget('register.google_id');
-
-    Auth::login($user);
-
-    return redirect()->route(getRedirectRouteByRole($user));
-})->name('register.step2.google.submit');
-
-
-
 
 // Register via Google
 Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
-Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
 
-// Login via Google
-Route::get('/auth/google/login', [GoogleController::class, 'redirectToGoogleForLogin'])->name('google.login');
-Route::get('/auth/google/login/callback', [GoogleController::class, 'handleGoogleLoginCallback']);
+// Step set password
+Route::get('/register/set-password', [GoogleController::class, 'showSetPassword'])->name('register.setPassword');
+Route::post('/register/set-password', [GoogleController::class, 'savePassword'])->name('register.savePassword');
 
+// Step pilih role
+Route::get('/register/choose-role', [GoogleController::class, 'showChooseRole'])->name('register.chooseRole');
+Route::post('/register/choose-role', [GoogleController::class, 'saveRole'])->name('register.saveRole');
 
 
 // Route untuk mengirim ulang email verifikasi
@@ -115,11 +79,37 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 
+// Halaman untuk request reset password
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+
+// Halaman untuk form reset password
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+
+
 // Client profile
 Route::middleware('auth')->group(function () {
     Route::get('/client/profile/create', [ClientProfileController::class, 'create'])->name('client.profile.create')->middleware('auth');
     Route::post('/client/profile', [ClientProfileController::class, 'store'])->name('client.profile.store')->middleware('auth');
 });
+Route::get('/popular', fn() => view('client.popular'))->name('popular');
+Route::get('/grafis', fn() => view('client.grafis-desain'))->name('grafis');
+Route::get('/penulisan', fn() => view('client.penulisan-penerjemahan'))->name('penulisan');
+Route::get('/web', fn() => view('client.popular.web-development'))->name('web');
+Route::get('/web/job', fn() => view('client.popular.job.job1'))->name('job');
+Route::get('/logo', fn() => view('client.grafis.logo-desain'))->name('logo');
+Route::get('/copy', fn() => view('client.penulisan.copy-writing'))->name('copy');
+Route::get('/notification', fn() => view('client.notification'))->name('notification');
+Route::get('/profile', fn() => view('client.profile.profil'))->name('profile');
+Route::get('/profile/akun', fn() => view('client.settings.profil-akun'))->name('profile-akun');
+Route::get('/profile/kontak', fn() => view('client.settings.profil-kontak'))->name('profile-kontak');
+Route::get('/profile/manage', fn() => view('client.settings.manage-akun'))->name('manage-akun');
+Route::get('/profile/rating', fn() => view('client.settings.rating'))->name('rating');
+Route::get('/profile/job', fn() => view('client.projek'))->name('projek');
+Route::get('/freelancer/1', fn() => view('client.freelancer.1'))->name('freelancer1');
+Route::get('/freelancer1', fn() => view('client.freelancer.1-1'))->name('freelancer1-1');
+
 
 // Freelancer profile
 Route::middleware('auth')->group(function () {
@@ -129,11 +119,13 @@ Route::post('/freelancer/profile', [FreelancerProfileController::class, 'store']
 
 // Dashboard
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
+    Route::get('/client/home', [ClientDashboardController::class, 'index'])->name('client.home');
     Route::get('/freelancer/dashboard', [FreelancerDashboardController::class, 'index'])->name('freelancer.dashboard');
 });
 
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/test', function () {
+    return view('test');
 });
+
+
+Route::get('/posting', fn() => view('client.posting'))->name('posting');

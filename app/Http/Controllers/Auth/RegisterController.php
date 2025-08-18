@@ -95,7 +95,7 @@ class RegisterController extends Controller
         if ($user->role === 'client') {
             $hasProfile = \App\Models\ClientProfile::where('user_id', $user->id)->exists();
             return $hasProfile
-                ? redirect()->route('client.dashboard')
+                ? redirect()->route('client.home')
                 : redirect()->route('client.profile.create');
         }
 

@@ -43,10 +43,10 @@
         }
 
         .dropdown-item-enhanced:hover {
-            background: linear-gradient(135deg, #00B894 0%, #00a783 100%);
+            background: linear-gradient(135deg, #1DA1F2 0%, #2288c7ff 100%);
             color: white;
             transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+            box-shadow: 0 4px 15px #194764ff;
         }
 
         .dropdown-item-enhanced::before {
@@ -79,7 +79,7 @@
         .dropdown-item-enhanced i {
             margin-right: 10px;
             font-size: 16px;
-            color: #00B894;
+            color: #1DA1F2;
             transition: color 0.3s ease;
             width: 20px;
             text-align: center;
@@ -213,7 +213,7 @@
                     <!-- Auth Buttons -->
                     <li class="nav-item">
                         <a class="btn" href="/login"
-                           style="border: 2px solid #00B894; color: #00B894; border-radius: 30px; padding: 6px 20px;
+                           style="border: 2px solid #1DA1F2; color: #1DA1F2; border-radius: 30px; padding: 6px 20px;
                            font-weight: 500; transition: all 0.3s ease;"
                            onmouseover="this.style.backgroundColor='#e8fdf7'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';"
                            onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none';">
@@ -222,10 +222,10 @@
                     </li>
                     <li class="nav-item">
                         <a class="btn" href="/register/step1"
-                           style="background-color: #00B894; color: white; border-radius: 30px; padding: 6px 20px;
+                           style="background-color: #1DA1F2; color: white; border-radius: 30px; padding: 6px 20px;
                            font-weight: 500; transition: all 0.3s ease;"
-                           onmouseover="this.style.backgroundColor='#00a783'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';"
-                           onmouseout="this.style.backgroundColor='#00B894'; this.style.boxShadow='none';">
+                           onmouseover="this.style.backgroundColor='#308dc7ff'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)';"
+                           onmouseout="this.style.backgroundColor='#1DA1F2'; this.style.boxShadow='none';">
                             Daftar
                         </a>
                     </li>

@@ -18,7 +18,7 @@
 
     /* Header Section */
     .page-header {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 50%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1d95dfff 50%, #2398e0ff 100%);
         color: white;
         padding: 120px 0 80px;
         text-align: center;
@@ -94,7 +94,7 @@
         transform: translateX(-50%);
         width: 80px;
         height: 4px;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2192d8ff 100%);
         border-radius: 2px;
     }
 
@@ -113,13 +113,13 @@
     }
 
     .faq-item:hover {
-        border-color: #00B894;
+        border-color: #1DA1F2;
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0,184,148,0.15);
     }
 
     .faq-question {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2099e4ff 100%);
         color: white;
         padding: 20px 25px;
         cursor: pointer;
@@ -199,7 +199,7 @@
 
     /* Contact Section */
     .contact-section {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 50%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2695daff 50%, #2e9ee4ff 100%);
         color: white;
         padding: 60px 40px;
         border-radius: 20px;
@@ -245,7 +245,7 @@
     .contact-button {
         display: inline-block;
         background: white;
-        color: #00B894;
+        color: #1DA1F2;
         padding: 15px 40px;
         border-radius: 50px;
         text-decoration: none;

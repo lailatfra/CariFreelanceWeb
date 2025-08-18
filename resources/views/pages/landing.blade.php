@@ -19,7 +19,7 @@
 
     /* Hero Section */
     .hero {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 50%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 50%, #1DA1F2 100%);
         min-height: 70vh;
         display: flex;
         align-items: center;
@@ -77,7 +77,7 @@
     }
 
     .search-btn {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 100%);
         color: white;
         border: none;
         padding: 15px 30px;
@@ -88,7 +88,7 @@
     }
 
     .search-btn:hover {
-        background: linear-gradient(135deg, #00A085 0%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 100%);
         transform: translateY(-2px);
     }
 
@@ -142,12 +142,12 @@
     }
 
     .category-tab.active {
-        color: #00B894;
-        border-bottom-color: #00B894;
+        color: #1DA1F2;
+        border-bottom-color: #1DA1F2;
     }
 
     .category-tab:hover {
-        color: #00B894;
+        color: #1DA1F2;
     }
 
     .category-grid {
@@ -197,7 +197,7 @@
     .category-card .price {
         font-size: 1.1rem;
         font-weight: 600;
-        color: #00B894;
+        color: #1DA1F2;
     }
 
     /* Features Section */
@@ -228,7 +228,7 @@
     .feature-icon {
         width: 80px;
         height: 80px;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 50%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 50%, #1DA1F2 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -253,7 +253,7 @@
     /* Stats Section */
     .stats-section {
         padding: 60px 0;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 50%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 50%, #1DA1F2 100%);
         color: white;
     }
 
@@ -309,40 +309,40 @@
     }
 
     .btn-primary-custom {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 100%);
         color: white;
         padding: 15px 40px;
         border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s ease;
-        border: 2px solid #00B894;
-        box-shadow: 0 5px 15px rgba(0,184,148,0.3);
+        border: 2px solid #1DA1F2;
+        box-shadow: 0 5px 15px #27709eff;
     }
 
     .btn-primary-custom:hover {
-        background: linear-gradient(135deg, #00A085 0%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 100%);
         transform: translateY(-2px);
         color: white;
-        box-shadow: 0 8px 25px rgba(0,184,148,0.4);
+        box-shadow: 0 8px 25px #27709eff;
     }
 
     .btn-secondary-custom {
         background: transparent;
-        color: #00B894;
+        color: #1DA1F2;
         padding: 15px 40px;
         border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s ease;
-        border: 2px solid #00B894;
+        border: 2px solid #1DA1F2;
     }
 
     .btn-secondary-custom:hover {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1DA1F2 100%);
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,184,148,0.4);
+        box-shadow: 0 8px 25px #206fa0ff;
     }
 
     /* Responsive Design */

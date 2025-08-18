@@ -17,7 +17,7 @@
 
     /* Hero Section */
     .hero-about {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 50%, #008F75 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #238bccff 50%, #1DA1F2 100%);
         min-height: 60vh;
         display: flex;
         align-items: center;
@@ -140,7 +140,7 @@
         left: 0;
         width: 100%;
         height: 5px;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2194dbff 100%);
     }
 
     .mission-card:hover, .vision-card:hover {
@@ -160,7 +160,7 @@
     .mission-card .icon, .vision-card .icon {
         width: 50px;
         height: 50px;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2295ddff 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -215,7 +215,7 @@
 
     .different-card:hover {
         background: white;
-        border-color: #00B894;
+        border-color: #1d95dfff;
         transform: translateY(-5px);
         box-shadow: 0 15px 30px rgba(0,184,148,0.15);
     }
@@ -223,7 +223,7 @@
     .different-card .feature-icon {
         width: 70px;
         height: 70px;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2391d6ff 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -290,7 +290,7 @@
     .team-avatar {
         width: 80px;
         height: 80px;
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2193daff 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -309,7 +309,7 @@
     }
 
     .team-card .position {
-        color: #00B894;
+        color: #1DA1F2;
         font-size: 0.9rem;
         margin-bottom: 15px;
     }
@@ -353,40 +353,40 @@
     }
 
     .btn-primary-custom {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #1d90d8ff 100%);
         color: white;
         padding: 15px 40px;
         border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s ease;
-        border: 2px solid #00B894;
+        border: 2px solid #1DA1F2;
         box-shadow: 0 5px 15px rgba(0,184,148,0.3);
     }
 
     .btn-primary-custom:hover {
-        background: linear-gradient(135deg, #00A085 0%, #008F75 100%);
+        background: linear-gradient(135deg, #2096dfff 0%, #1f92daff 100%);
         transform: translateY(-2px);
         color: white;
-        box-shadow: 0 8px 25px rgba(0,184,148,0.4);
+        box-shadow: 0 8px 25px #1e76adff;
     }
 
     .btn-secondary-custom {
         background: transparent;
-        color: #00B894;
+        color: #1DA1F2;
         padding: 15px 40px;
         border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s ease;
-        border: 2px solid #00B894;
+        border: 2px solid #1DA1F2;
     }
 
     .btn-secondary-custom:hover {
-        background: linear-gradient(135deg, #00B894 0%, #00A085 100%);
+        background: linear-gradient(135deg, #1DA1F2 0%, #2089caff 100%);
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,184,148,0.4);
+        box-shadow: 0 8px 25px #2677aaff;
     }
 
     /* Responsive Design */
