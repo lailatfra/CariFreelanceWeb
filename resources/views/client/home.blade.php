@@ -8,6 +8,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Temukan Freelancer Terbaik untuk Proyek Anda</title>
+    <!-- Bootstrap Icons CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -37,7 +39,7 @@
             background: 
                 linear-gradient(135deg, rgba(29, 161, 242, 0.8) 0%, rgba(13, 122, 201, 0.8) 50%, rgba(29, 161, 242, 0.8) 100%),
                 url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1920&h=1080&fit=crop&crop=center') center/cover;
-            min-height: 400px;
+            min-height: 500px;
             display: flex;
             align-items: center;
             position: relative;
@@ -88,6 +90,44 @@
             animation: slideInUp 1s ease-out 0.3s both;
         }
 
+        /* Hero Button */
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: slideInUp 1s ease-out 0.6s both;
+        }
+
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 35px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            min-width: 250px;
+            text-align: center;
+            justify-content: center;
+            background: white;
+            color: #1DA1F2;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            background: #f8f9fa;
+        }
+
+        .hero-btn i {
+            font-size: 1.2rem;
+        }
+
         @keyframes slideInDown {
             from {
                 opacity: 0;
@@ -113,7 +153,7 @@
     background: white;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     position: sticky;
-    top: 80px;
+    top: 70px;
     z-index: 100;
     width: 100vw;
     margin: 0;
@@ -128,19 +168,21 @@
 
 .nav {
     max-width: 100%;
-    margin: 0;
-    padding: 0 15px; /* Reduced from 20px to 15px */
+    margin: 0 auto; /* Center the nav */
+    padding: 0 20px;
 }
 
 .nav-list {
     display: flex;
     list-style: none;
     overflow-x: auto;
-    padding: 4px 0; /* Reduced from 8px to 4px */
-    gap: 8px; /* Reduced from 15px to 8px */
+    padding: 4px 0;
+    gap: 90px; /* Tambah gap lebih besar */
     scrollbar-width: none;
     -ms-overflow-style: none;
     align-items: center;
+    justify-content: center; /* Tambahkan ini untuk center alignment */
+    flex-wrap: nowrap; /* Pastikan tidak wrap */
 }
 
 .nav-list::-webkit-scrollbar {
@@ -150,18 +192,18 @@
 .nav-item {
     white-space: nowrap;
     cursor: pointer;
-    padding: 8px 15px; /* Reduced vertical padding from 10px to 8px */
+    padding: 8px 20px; /* Tambah horizontal padding */
     border-radius: 20px;
     transition: all 0.3s ease;
     font-weight: 500;
     color: #666;
     background: transparent;
     border: none;
-    min-height: 36px; /* Reduced from 40px to 36px */
+    min-height: 36px;
     display: flex;
     align-items: center;
+    flex-shrink: 0; /* Prevent shrinking */
 }
-
 .nav-item:hover, .nav-item.active {
     background: transparent;
     color: #1DA1F2;
@@ -546,6 +588,11 @@
             .hero p {
                 font-size: 1.1rem;
             }
+
+            .hero-btn {
+                min-width: 280px;
+                padding: 16px 30px;
+            }
             
             .categories-grid {
                 grid-template-columns: 1fr;
@@ -553,6 +600,7 @@
             
             .nav-list {
                 padding: 10px 0;
+                gap: 30px;
             }
             
             .section-title {
@@ -592,6 +640,13 @@
             margin-right: 0 !important;
         }
 
+        .category-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
 
     </style>
 </head>
@@ -601,33 +656,34 @@
         <div class="hero-content">
             <h1>Temukan Freelancer Terbaik untuk Proyek Anda</h1>
             <p>Jutaan freelance profesional siap membantu mewujudkan ide bisnis anda</p>
+            <div class="hero-buttons">
+                <a href="/posting" class="hero-btn">
+                    <i class="bi bi-plus-circle"></i>
+                    Posting Proyek Sekarang
+                </a>
+            </div>
         </div>
     </section>
 
     <!-- Navigation -->
     <div class="nav-container">
         <nav class="nav">
-<ul class="nav-list">
-    <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Popular</a></li>
-    <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-    <li class="nav-item"><a href="/penulisan" class="nav-link">Penulisan & Penerjemahan</a></li>
-    <li class="nav-item"><a href="#" class="nav-link">Web dan Pemrograman</a></li>
-    <li class="nav-item"><a href="#" class="nav-link">Visual dan Audio</a></li>
-    <li class="nav-item"><a href="#" class="nav-link">Pemasaran dan Periklanan</a></li>
-    <li class="nav-item"><a href="#" class="nav-link">Bisnis</a></li>
-</ul>
-
+            <ul class="nav-list">
+                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
+                <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
+                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
+                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Video Editing</a></li>
+            </ul>
         </nav>
     </div>
-
     <!-- Main Content -->
     <main class="main-content1">
-        <h2 class="section-title animate-on-scroll">Semua Kategori</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem;" class="animate-on-scroll">Pilih kategori pekerjaan yang dibutuhkan dan mulai mempekerjakan freelancer.</p>
+        <h2 class="section-title animate-on-scroll">Kategori Terbaru</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem;" class="animate-on-scroll">Jelajahi kategori pekerjaan terpopuler dan mulai mempekerjakan freelancer terbaik.</p>
 
         <!-- Categories Grid -->
         <div class="categories-grid">
-
 
             <!-- Grafis & Desain -->
             <div class="category-card animate-on-scroll" onclick="navigateToCategory('grafis-desain')">
@@ -637,126 +693,29 @@
                 </a>
             </div>
 
-            <!-- Penulisan & Penerjemahan -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('penulisan-penerjemahan')">
-                <a href="/penulisan" class="category-link">
-                <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500&h=300&fit=crop" alt="Penulisan & Penerjemahan" class="category-image">
-                <h3 class="category-title">Penulisan & Penerjemahan</h3>
+            <!-- Dokumen & PPT -->
+            <div class="category-card animate-on-scroll" onclick="navigateToCategory('dokumen-ppt')">
+                <a href="/dokumen" class="category-link">
+                <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500&h=300&fit=crop" alt="Dokumen & PPT" class="category-image">
+                <h3 class="category-title">Dokumen & PPT</h3>
                 </a>
             </div>
 
-            <!-- Web dan Pemrograman -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('web-pemrograman')">
+            <!-- Web & App -->
+            <div class="category-card animate-on-scroll" onclick="navigateToCategory('web-app')">
+                <a href="/web-app" class="category-link">
+                <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&h=300&fit=crop" alt="Web & App" class="category-image">
+                <h3 class="category-title">Web & App</h3>
+                </a>
+            </div>
+
+            <!-- Video Editing -->
+            <div class="category-card animate-on-scroll" onclick="navigateToCategory('video-editing')">
                 <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&h=300&fit=crop" alt="Web dan Pemrograman" class="category-image">
-                <h3 class="category-title">Web dan Pemrograman</h3>
+                <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=500&h=300&fit=crop" alt="Video Editing" class="category-image">
+                <h3 class="category-title">Video Editing</h3>
                 </a>
             </div>
-
-            <!-- Visual dan Audio -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('visual-audio')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&h=300&fit=crop" alt="Visual dan Audio" class="category-image">
-                <h3 class="category-title">Visual dan Audio</h3>
-                </a>
-            </div>
-
-            <!-- Pemasaran dan Periklanan -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('pemasaran-periklanan')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1533750516457-a7f992034fec?w=500&h=300&fit=crop" alt="Pemasaran dan Periklanan" class="category-image">
-                <h3 class="category-title">Pemasaran dan Periklanan</h3>
-                </a>
-            </div>
-
-            <!-- Bisnis -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('bisnis')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&h=300&fit=crop" alt="Bisnis" class="category-image">
-                <h3 class="category-title">Bisnis</h3>
-                </a>
-            </div>
-
-            <!-- Digital Marketing -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('digital-marketing')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=300&fit=crop" alt="Digital Marketing" class="category-image">
-                <h3 class="category-title">Digital Marketing</h3>
-                </a>
-            </div>
-
-            <!-- SEO -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('seo')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=500&h=300&fit=crop" alt="SEO" class="category-image">
-                <h3 class="category-title">Search Engine Optimization (SEO)</h3>
-                </a>
-            </div>
-
-            <!-- Aplikasi Mobile -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('aplikasi-mobile')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=500&h=300&fit=crop" alt="Aplikasi Mobile" class="category-image">
-                <h3 class="category-title">Aplikasi Mobile</h3>
-                </a>
-            </div>
-
-            <!-- Data Science & Analytics -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('data-science')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&h=300&fit=crop" alt="Data Science" class="category-image">
-                <h3 class="category-title">Data Science & Analytics</h3>
-                </a>
-            </div>
-
-            <!-- Akuntansi & Keuangan -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('akuntansi-keuangan')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=500&h=300&fit=crop" alt="Akuntansi & Keuangan" class="category-image">
-                <h3 class="category-title">Akuntansi & Keuangan</h3>
-                </a>
-            </div>
-
-            <!-- Fotografi -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('fotografi')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=500&h=300&fit=crop" alt="Fotografi" class="category-image">
-                <h3 class="category-title">Fotografi</h3>
-                </a>
-            </div>
-
-            <!-- Konsultasi Hukum -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('konsultasi-hukum')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=500&h=300&fit=crop" alt="Konsultasi Hukum" class="category-image">
-                <h3 class="category-title">Konsultasi Hukum</h3>
-                </a>
-            </div>
-
-            <!-- Arsitektur & Engineering -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('arsitektur-engineering')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=500&h=300&fit=crop" alt="Arsitektur & Engineering" class="category-image">
-                <h3 class="category-title">Arsitektur & Engineering</h3>
-                </a>
-            </div>
-
-            <!-- Pendidikan & Pelatihan -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('pendidikan-pelatihan')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=500&h=300&fit=crop" alt="Pendidikan & Pelatihan" class="category-image">
-                <h3 class="category-title">Pendidikan & Pelatihan</h3>
-                </a>
-            </div>
-
-            <!-- E-commerce -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('e-commerce')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500&h=300&fit=crop" alt="E-commerce" class="category-image">
-                <h3 class="category-title">E-commerce</h3>
-                </a>
-            </div>
-
 
         </div>
     </main>
@@ -882,6 +841,9 @@
             console.log(`Navigating to ${category} category`);
             // window.location.href = `/${category}`;
         }
+
+        // Hero button functionality - Let it navigate naturally
+        // No need to prevent default, let the link work normally
 
         // Scroll animations
         const observerOptions = {

@@ -52,13 +52,16 @@ class RegisterController extends Controller
             'role' => 'required|in:client,freelancer',
         ]);
 
+        // Buat user pertama kali
         $user = User::create([
             'name' => Session::get('register.name'),
             'email' => Session::get('register.email'),
             'password' => Session::get('register.password'),
             'role' => $request->role,
+            'status' => $request->role === 'client' ? 'approved' : 'pending',
         ]);
 
+        // Login user
         Auth::login($user);
 
         // Kirim email verifikasi
@@ -66,6 +69,9 @@ class RegisterController extends Controller
 
         return redirect()->route('verification.notice');
     }
+
+
+
 
     // STEP 3: Notifikasi verifikasi
     public function verifyNotice()
@@ -89,8 +95,6 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
-
-        
         // Cek apakah profil sudah ada
         if ($user->role === 'client') {
             $hasProfile = \App\Models\ClientProfile::where('user_id', $user->id)->exists();
@@ -102,12 +106,15 @@ class RegisterController extends Controller
         if ($user->role === 'freelancer') {
             $hasProfile = \App\Models\FreelancerProfile::where('user_id', $user->id)->exists();
             return $hasProfile
-                ? redirect()->route('freelancer.dashboard')
+                ? ($user->status === 'approved'
+                    ? redirect()->route('freelancer.home')
+                    : view('auth.pending')) // pending setelah profil dibuat
                 : redirect()->route('freelancer.profile.create');
         }
 
         return redirect('/login');
     }
+
 
 
     // STEP 4: Form profil client
@@ -147,7 +154,7 @@ class RegisterController extends Controller
         return view('freelancer.profile-create');
     }
 
-   public function saveFreelancerProfile(Request $request)
+    public function saveFreelancerProfile(Request $request)
     {
         $request->validate([
             'name' => 'required',
@@ -156,7 +163,7 @@ class RegisterController extends Controller
             'phone' => 'nullable',
         ]);
 
-        $user = Auth::user(); // ✅ Ambil user login
+        $user = Auth::user();
 
         FreelancerProfile::create([
             'user_id' => $user->id,
@@ -166,9 +173,17 @@ class RegisterController extends Controller
             'phone' => $request->phone,
         ]);
 
+        // Jika freelancer baru daftar → langsung arahkan ke pending
+        if ($user->role === 'freelancer' && $user->status === 'pending') {
+            Auth::logout();
+            return view('pending');
+        }
+
+        // Default redirect
         Auth::logout();
         return redirect()->route('login')->with('success', 'Pendaftaran berhasil. Silakan login.');
     }
+
 
 
 
@@ -205,5 +220,4 @@ class RegisterController extends Controller
 
         return redirect()->route('verification.notice');
     }
-
 }

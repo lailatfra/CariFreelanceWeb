@@ -1,9 +1,7 @@
-
-
 @extends('layouts.app')
 @section('title', 'Home - CariFreelance')
 @section('content')
-
+<!-- landing guest -->
 <style>
     * {
         margin: 0;
@@ -114,90 +112,114 @@
         transform: translateY(-2px);
     }
 
-    /* Categories Section */
+    /* Latest Categories Section */
     .categories-section {
-        padding: 80px 0;
+        padding: 80px 20px;
         background: #f8f9fa;
+        width: 100vw;
+        margin: 0;
     }
 
-    .category-tabs {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 3rem;
-        border-bottom: 2px solid #e0e0e0;
-        flex-wrap: wrap;
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+        position: relative;
     }
 
-    .category-tab {
-        padding: 15px 25px;
-        background: none;
-        border: none;
-        font-size: 1rem;
-        font-weight: 500;
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(135deg, #1DA1F2, #0d7ac9);
+        border-radius: 2px;
+    }
+
+    .section-subtitle {
+        text-align: center;
         color: #666;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-bottom: 3px solid transparent;
-        margin: 0 10px;
+        margin-bottom: 50px;
+        font-size: 1.1rem;
     }
 
-    .category-tab.active {
-        color: #1DA1F2;
-        border-bottom-color: #1DA1F2;
-    }
-
-    .category-tab:hover {
-        color: #1DA1F2;
-    }
-
-    .category-grid {
+    /* Categories Grid */
+    .categories-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 30px;
-        margin-top: 2rem;
+        margin-bottom: 60px;
+        max-width: 1200px;
+        margin: 0 auto;
     }
 
     .category-card {
         background: white;
         border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
         cursor: pointer;
+        position: relative;
+        height: 200px;
+    }
+
+    .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(29, 161, 242, 0.8), rgba(13, 122, 201, 0.8));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+    }
+
+    .category-card:hover::before {
+        opacity: 1;
     }
 
     .category-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,184,148,0.2);
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(29, 161, 242, 0.2);
     }
 
-    .category-card img {
+    .category-image {
         width: 100%;
-        height: 200px;
+        height: 100%;
         object-fit: cover;
+        transition: transform 0.3s ease;
     }
 
-    .category-card-content {
-        padding: 20px;
+    .category-card:hover .category-image {
+        transform: scale(1.1);
     }
 
-    .category-card h3 {
-        font-size: 1.2rem;
+    .category-title {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        color: white;
+        font-size: 1.4rem;
         font-weight: 600;
-        margin-bottom: 10px;
-        color: #333;
+        z-index: 2;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
 
-    .category-card p {
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 15px;
-    }
-
-    .category-card .price {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #1DA1F2;
+    .category-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        width: 100%;
+        height: 100%;
     }
 
     /* Features Section */
@@ -345,23 +367,34 @@
         box-shadow: 0 8px 25px #206fa0ff;
     }
 
+    /* Scroll animations */
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 0.6s ease;
+    }
+
+    .animate-on-scroll.animated {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
         .hero h1 {
             font-size: 2.5rem;
         }
         
-        .category-tabs {
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .category-tab {
-            margin: 5px 0;
-        }
-        
         .search-container {
             max-width: 90%;
+        }
+        
+        .categories-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .section-title {
+            font-size: 2rem;
         }
         
         .cta-buttons {
@@ -385,249 +418,55 @@
                 </div>
             </div>
             
-            <div class="popular-searches">
+            <!-- <div class="popular-searches">
                 <span>Website Development</span>
                 <span>Logo Design</span>
                 <span>Video Editing</span>
                 <span>Content Writing</span>
                 <span>Mobile App</span>
-            </div>
+            </div> -->
         </div>
     </div>
 </section>
 
-<!-- Categories Section -->
+<!-- Latest Categories Section -->
 <section class="categories-section">
     <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold mb-3">Jelajahi Kategori Populer</h2>
-            <p class="lead text-muted">Temukan layanan yang tepat untuk kebutuhan Anda</p>
-        </div>
-        
-        <div class="category-tabs">
-            <button class="category-tab active" data-category="popular">Pekerjaan Populer</button>
-            <button class="category-tab" data-category="design">Grafis & Desain</button>
-            <button class="category-tab" data-category="writing">Penulisan & Penerjemahan</button>
-            <button class="category-tab" data-category="web">Web dan Pemrograman</button>
-            <button class="category-tab" data-category="video">Video & Audio</button>
-            <button class="category-tab" data-category="marketing">Pemasaran & Periklanan</button>
-        </div>
-        
-        <div class="category-content">
-            <!-- Popular Category -->
-            <div class="category-grid" id="popular-grid">
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Web Development">
-                    <div class="category-card-content">
-                        <h3>Website Development</h3>
-                        <p>Buat website profesional untuk bisnis Anda</p>
-                        <div class="price">Mulai dari Rp 500.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Mobile App">
-                    <div class="category-card-content">
-                        <h3>Mobile App Development</h3>
-                        <p>Aplikasi mobile iOS dan Android</p>
-                        <div class="price">Mulai dari Rp 2.000.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Digital Marketing">
-                    <div class="category-card-content">
-                        <h3>Digital Marketing</h3>
-                        <p>Strategi pemasaran digital yang efektif</p>
-                        <div class="price">Mulai dari Rp 300.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Content Writing">
-                    <div class="category-card-content">
-                        <h3>Content Writing</h3>
-                        <p>Artikel berkualitas untuk website dan blog</p>
-                        <div class="price">Mulai dari Rp 50.000</div>
-                    </div>
-                </div>
+        <h2 class="section-title animate-on-scroll">Kategori Terbaru</h2>
+        <p class="section-subtitle animate-on-scroll">Jelajahi kategori pekerjaan terpopuler dan mulai mempekerjakan freelancer terbaik.</p>
+
+        <!-- Categories Grid -->
+        <div class="categories-grid">
+            <!-- Grafis & Desain -->
+            <div class="category-card animate-on-scroll">
+                <a href="/grafis" class="category-link">
+                    <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Grafis & Desain" class="category-image">
+                    <h3 class="category-title">Grafis & Desain</h3>
+                </a>
             </div>
-            
-            <!-- Design Category -->
-            <div class="category-grid" id="design-grid" style="display: none;">
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1626785774573-4b799315345d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Logo Design">
-                    <div class="category-card-content">
-                        <h3>Logo Design</h3>
-                        <p>Desain logo profesional untuk brand Anda</p>
-                        <div class="price">Mulai dari Rp 150.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="UI/UX Design">
-                    <div class="category-card-content">
-                        <h3>UI/UX Design</h3>
-                        <p>Desain interface yang user-friendly</p>
-                        <div class="price">Mulai dari Rp 800.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1493421419110-74f4e85ba126?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Branding">
-                    <div class="category-card-content">
-                        <h3>Branding Package</h3>
-                        <p>Paket branding lengkap untuk bisnis</p>
-                        <div class="price">Mulai dari Rp 1.500.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1572044162444-ad60f128bdea?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Print Design">
-                    <div class="category-card-content">
-                        <h3>Print Design</h3>
-                        <p>Desain untuk keperluan cetak</p>
-                        <div class="price">Mulai dari Rp 100.000</div>
-                    </div>
-                </div>
+
+            <!-- Dokumen & PPT -->
+            <div class="category-card animate-on-scroll">
+                <a href="/dokumen" class="category-link">
+                    <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500&h=300&fit=crop" alt="Dokumen & PPT" class="category-image">
+                    <h3 class="category-title">Dokumen & PPT</h3>
+                </a>
             </div>
-            
-            <!-- Writing Category -->
-            <div class="category-grid" id="writing-grid" style="display: none;">
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Article Writing">
-                    <div class="category-card-content">
-                        <h3>Article Writing</h3>
-                        <p>Artikel SEO-friendly untuk website</p>
-                        <div class="price">Mulai dari Rp 75.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Translation">
-                    <div class="category-card-content">
-                        <h3>Translation Services</h3>
-                        <p>Layanan penerjemahan profesional</p>
-                        <div class="price">Mulai dari Rp 25.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Copywriting">
-                    <div class="category-card-content">
-                        <h3>Copywriting</h3>
-                        <p>Copy yang menjual untuk marketing</p>
-                        <div class="price">Mulai dari Rp 200.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Resume Writing">
-                    <div class="category-card-content">
-                        <h3>Resume Writing</h3>
-                        <p>CV profesional yang menarik perhatian</p>
-                        <div class="price">Mulai dari Rp 150.000</div>
-                    </div>
-                </div>
+
+            <!-- Web & App -->
+            <div class="category-card animate-on-scroll">
+                <a href="/web-app" class="category-link">
+                    <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&h=300&fit=crop" alt="Web & App" class="category-image">
+                    <h3 class="category-title">Web & App</h3>
+                </a>
             </div>
-            
-            <!-- Web Category -->
-            <div class="category-grid" id="web-grid" style="display: none;">
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="WordPress">
-                    <div class="category-card-content">
-                        <h3>WordPress Development</h3>
-                        <p>Website WordPress custom dan profesional</p>
-                        <div class="price">Mulai dari Rp 750.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="E-commerce">
-                    <div class="category-card-content">
-                        <h3>E-commerce Development</h3>
-                        <p>Toko online siap jual dengan fitur lengkap</p>
-                        <div class="price">Mulai dari Rp 2.500.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1580894732444-8ecded7900cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="API Development">
-                    <div class="category-card-content">
-                        <h3>API Development</h3>
-                        <p>Pengembangan API untuk aplikasi</p>
-                        <div class="price">Mulai dari Rp 1.000.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Database">
-                    <div class="category-card-content">
-                        <h3>Database Management</h3>
-                        <p>Optimasi dan pengelolaan database</p>
-                        <div class="price">Mulai dari Rp 500.000</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Video Category -->
-            <div class="category-grid" id="video-grid" style="display: none;">
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Video Editing">
-                    <div class="category-card-content">
-                        <h3>Video Editing</h3>
-                        <p>Edit video profesional untuk kebutuhan bisnis</p>
-                        <div class="price">Mulai dari Rp 200.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Animation">
-                    <div class="category-card-content">
-                        <h3>Animation</h3>
-                        <p>Animasi 2D dan 3D untuk berbagai keperluan</p>
-                        <div class="price">Mulai dari Rp 800.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Voice Over">
-                    <div class="category-card-content">
-                        <h3>Voice Over</h3>
-                        <p>Pengisi suara profesional untuk video</p>
-                        <div class="price">Mulai dari Rp 100.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Music Production">
-                    <div class="category-card-content">
-                        <h3>Music Production</h3>
-                        <p>Produksi musik dan audio berkualitas</p>
-                        <div class="price">Mulai dari Rp 300.000</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Marketing Category -->
-            <div class="category-grid" id="marketing-grid" style="display: none;">
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="SEO">
-                    <div class="category-card-content">
-                        <h3>SEO Optimization</h3>
-                        <p>Optimasi website untuk mesin pencari</p>
-                        <div class="price">Mulai dari Rp 500.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Social Media">
-                    <div class="category-card-content">
-                        <h3>Social Media Marketing</h3>
-                        <p>Kelola media sosial untuk bisnis Anda</p>
-                        <div class="price">Mulai dari Rp 400.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Google Ads">
-                    <div class="category-card-content">
-                        <h3>Google Ads Management</h3>
-                        <p>Kelola iklan Google untuk ROI maksimal</p>
-                        <div class="price">Mulai dari Rp 600.000</div>
-                    </div>
-                </div>
-                <div class="category-card">
-                    <img src="https://images.unsplash.com/photo-1590479773265-7464e5d48118?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Email Marketing">
-                    <div class="category-card-content">
-                        <h3>Email Marketing</h3>
-                        <p>Kampanye email yang efektif dan terukur</p>
-                        <div class="price">Mulai dari Rp 250.000</div>
-                    </div>
-                </div>
+
+            <!-- Video Editing -->
+            <div class="category-card animate-on-scroll">
+                <a href="#" class="category-link">
+                    <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=500&h=300&fit=crop" alt="Video Editing" class="category-image">
+                    <h3 class="category-title">Video Editing</h3>
+                </a>
             </div>
         </div>
     </div>
@@ -687,7 +526,6 @@
        </div>
    </section>
 
-
    <!-- CTA Section -->
    <section class="cta-section">
        <div class="container">
@@ -702,36 +540,8 @@
        </div>
    </section>
 
-
-
 <script>
-    // Category tabs functionality
     document.addEventListener('DOMContentLoaded', function() {
-        const categoryTabs = document.querySelectorAll('.category-tab');
-        const categoryGrids = document.querySelectorAll('.category-grid');
-        
-        categoryTabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                // Remove active class from all tabs
-                categoryTabs.forEach(t => t.classList.remove('active'));
-                
-                // Add active class to clicked tab
-                this.classList.add('active');
-                
-                // Hide all category grids
-                categoryGrids.forEach(grid => {
-                    grid.style.display = 'none';
-                });
-                
-                // Show corresponding grid
-                const category = this.getAttribute('data-category');
-                const targetGrid = document.getElementById(category + '-grid');
-                if (targetGrid) {
-                    targetGrid.style.display = 'grid';
-                }
-            });
-        });
-        
         // Search functionality
         const searchInput = document.querySelector('.search-input');
         const searchBtn = document.querySelector('.search-btn');
@@ -772,7 +582,7 @@
             });
         });
         
-        // Add scroll animations
+        // Scroll animations
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -781,18 +591,32 @@
         const observer = new IntersectionObserver(function(entries) {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+                    entry.target.classList.add('animated');
                 }
             });
         }, observerOptions);
         
         // Observe elements for animation
-        document.querySelectorAll('.category-card, .feature-card, .testimonial-card').forEach(el => {
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+        
+        // Add scroll animations for other elements
+        document.querySelectorAll('.category-card, .feature-card').forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(20px)';
             el.style.transition = 'all 0.6s ease';
-            observer.observe(el);
+            
+            const animationObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+            
+            animationObserver.observe(el);
         });
     });
 </script>

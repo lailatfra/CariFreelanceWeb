@@ -1,4 +1,5 @@
 <?php
+// App/Models/User.php
 
 namespace App\Models;
 
@@ -24,6 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'role', // tambahkan ini
         'email_verified_at', // tambahkan ini juga kalau kamu set manual
+        'status',
     ];
 
 
@@ -48,5 +50,37 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function clientProfile()
+    {
+        return $this->hasOne(ClientProfile::class, 'user_id', 'id');
+    }
+
+    public function freelancerProfile()
+    {
+        return $this->hasOne(FreelancerProfile::class, 'user_id', 'id');
+    }
+
+
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function timeline()
+    {
+        return $this->belongsTo(Timeline::class);
+    }
+
+    public function clientAdditionalInfo()
+    {
+        return $this->hasOne(ClientAdditionalInfo::class);
+    }
+
+    public function freelancerAdditionalInfo()
+    {
+        return $this->hasOne(FreelancerProfile::class);
     }
 }

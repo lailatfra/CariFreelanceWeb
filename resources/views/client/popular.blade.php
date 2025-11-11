@@ -115,7 +115,7 @@
     background: white;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     position: sticky;
-    top: 80px;
+    top: 70px;
     z-index: 100;
     width: 100vw;
     margin: 0;
@@ -130,19 +130,21 @@
 
 .nav {
     max-width: 100%;
-    margin: 0;
-    padding: 0 15px; /* Reduced from 20px to 15px */
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
 .nav-list {
     display: flex;
     list-style: none;
     overflow-x: auto;
-    padding: 4px 0; /* Reduced from 8px to 4px */
-    gap: 8px; /* Reduced from 15px to 8px */
+    padding: 4px 0;
+    gap: 90px;
     scrollbar-width: none;
     -ms-overflow-style: none;
     align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
 }
 
 .nav-list::-webkit-scrollbar {
@@ -152,18 +154,18 @@
 .nav-item {
     white-space: nowrap;
     cursor: pointer;
-    padding: 8px 15px; /* Reduced vertical padding from 10px to 8px */
+    padding: 8px 20px;
     border-radius: 20px;
     transition: all 0.3s ease;
     font-weight: 500;
     color: #666;
     background: transparent;
     border: none;
-    min-height: 36px; /* Reduced from 40px to 36px */
+    min-height: 36px;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
-
 .nav-item:hover, .nav-item.active {
     background: transparent;
     color: #1DA1F2;
@@ -176,7 +178,7 @@
     text-decoration: none;
     color: inherit;
     display: block;
-    font-size: 14px; /* Reduced from 15px to 14px */
+    font-size: 14px;
     font-weight: 600;
     transition: all 0.3s ease;
 }
@@ -529,16 +531,14 @@
     </section>
 
     <!-- Navigation -->
-    <div class="nav-container" id="navigation">
+    <div class="nav-container">
         <nav class="nav">
             <ul class="nav-list">
-                <li class="nav-item active"><a href="/popular" class="nav-link">Pekerjaan Popular</a></li>
+                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
                 <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-                <li class="nav-item"><a href="/penulisan" class="nav-link">Penulisan & Penerjemahan</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Web dan Pemrograman</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Visual dan Audio</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Pemasaran dan Periklanan</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Bisnis</a></li>
+                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
+                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
+                <li class="nav-item"><a href="/video" class="nav-link">Video Editing</a></li>
             </ul>
         </nav>
     </div>
@@ -546,35 +546,23 @@
     <!-- Main Layout -->
     <div class="main-layout">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-title">Pekerjaan Popular</div>
-            <ul class="sidebar-menu">
-                <li class="sidebar-item">
-                    <a href="/web" class="sidebar-link" onclick="filterCategory('web-development')">Web Development</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('aplikasi-ponsel')">Aplikasi Ponsel</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('seo')">Search Engine Optimization (SEO)</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('digital-marketing')">Digital Marketing</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('penulisan-konten')">Penulisan Konten</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('akuntansi')">Akuntansi dan Keuangan</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('logo')">Logo</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('cad-drawing')">CAD Drawing</a>
-                </li>
-            </ul>
-        </aside>
+<aside class="sidebar">
+    <div class="sidebar-title">Pekerjaan Popular</div>
+    <ul class="sidebar-menu">
+        <li class="sidebar-item">
+            <a href="{{ route('popular.category', ['subcategory' => 'website-development']) }}" class="sidebar-link">Website Development</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('popular.category', ['subcategory' => 'mobile-app-development']) }}" class="sidebar-link">Mobile App Development</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('popular.category', ['subcategory' => 'logo-design']) }}" class="sidebar-link">Logo Design</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('popular.category', ['subcategory' => 'video-editing']) }}" class="sidebar-link">Video Editing</a>
+        </li>
+    </ul>
+</aside>
 
         <!-- Main Content Area -->
         <main class="content-area">
@@ -583,90 +571,50 @@
                 <p class="content-subtitle">Kategori pekerjaan yang paling banyak dicari dan diminati oleh klien kami</p>
             </div>
 
-            <!-- First Row of Categories -->
-            <div class="categories-grid animate-on-scroll">
-                <div class="category-card" onclick="navigateToCategory('web-development')">
-                    <a href="/web" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&h=300&fit=crop" alt="Web Development" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Web Development</h3>
-                            <p class="category-description">Jasa pembuatan website</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('aplikasi-ponsel')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=500&h=300&fit=crop" alt="Aplikasi Ponsel" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Aplikasi Ponsel</h3>
-                            <p class="category-description">Aplikasi Android maupun iOS</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('seo')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=300&fit=crop" alt="SEO" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Search Engine Optimization (SEO)</h3>
-                            <p class="category-description">Optimasi mesin pencari</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('digital-marketing')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1533750516457-a7f992034fec?w=500&h=300&fit=crop" alt="Digital Marketing" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Digital Marketing</h3>
-                            <p class="category-description">Pemasaran digital terpadu</p>
-                        </div>
-                    </a>
-                </div>
+            <!-- Categories Grid -->
+<div class="categories-grid animate-on-scroll">
+    <div class="category-card">
+        <a href="{{ route('popular.category', ['subcategory' => 'website-development']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&h=300&fit=crop" alt="Website Development" class="category-image">
+            <div class="category-overlay">
+                <h3 class="category-title">Website Development</h3>
+                <p class="category-description">Jasa pembuatan website profesional</p>
             </div>
+        </a>
+    </div>
 
-            <!-- Second Row of Categories -->
-            <div class="categories-grid animate-on-scroll">
-                <div class="category-card" onclick="navigateToCategory('penulisan-konten')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500&h=300&fit=crop" alt="Penulisan Konten" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Penulisan Konten</h3>
-                            <p class="category-description">Artikel, blog, dan copywriting</p>
-                        </div>
-                    </a>
-                </div>
+    <div class="category-card">
+        <a href="{{ route('popular.category', ['subcategory' => 'mobile-app-development']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=500&h=300&fit=crop" alt="Mobile App Development" class="category-image">
+            <div class="category-overlay">
+                <h3 class="category-title">Mobile App Development</h3>
+                <p class="category-description">Aplikasi Android dan iOS</p>
+            </div>  
+        </a>
+    </div>
 
-                <div class="category-card" onclick="navigateToCategory('akuntansi')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=500&h=300&fit=crop" alt="Akuntansi" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Akuntansi dan Keuangan</h3>
-                            <p class="category-description">Pembukuan dan laporan keuangan</p>
-                        </div>
-                    </a>
-                </div>
+    <div class="category-card">
+        <a href="{{ route('popular.category', ['subcategory' => 'logo-design']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Logo Design" class="category-image">
+            <div class="category-overlay">
+                <h3 class="category-title">Logo Design</h3>
+                <p class="category-description">Desain logo kreatif dan profesional</p>
+            </div>
+        </a>
+    </div>
 
-                <div class="category-card" onclick="navigateToCategory('logo-design')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Logo Design" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Logo Design</h3>
-                            <p class="category-description">Desain logo profesional</p>
-                        </div>
-                    </a>
-                </div>
+    <div class="category-card">
+        <a href="{{ route('popular.category', ['subcategory' => 'video-editing']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=500&h=300&fit=crop" alt="Video Editing" class="category-image">
+            <div class="category-overlay">
+                <h3 class="category-title">Video Editing</h3>
+                <p class="category-description">Edit video berkualitas tinggi</p>
+            </div>
+        </a>
+    </div>
+</div>
 
-                <div class="category-card" onclick="navigateToCategory('cad-drawing')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=500&h=300&fit=crop" alt="CAD Drawing" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">CAD Drawing</h3>
-                            <p class="category-description">Gambar teknik dan arsitektur</p>
-                        </div>
-                    </a>
-                </div>
+
             </div>
         </main>
     </div>

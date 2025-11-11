@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {
+* {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -30,9 +30,9 @@
             width: 100%;
             height: 100%;
             background: 
-                radial-gradient(circle at 20% 50%, rgba(0, 184, 148, 0.02) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(102, 126, 234, 0.02) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(118, 75, 162, 0.02) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(29, 161, 242, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(13, 122, 201, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(29, 161, 242, 0.02) 0%, transparent 50%);
             z-index: -1;
         }
 
@@ -48,7 +48,7 @@
 
         .particle {
             position: absolute;
-            background: rgba(0, 184, 148, 0.08);
+            background: rgba(29, 161, 242, 0.08);
             border-radius: 50%;
             animation: floatParticle 20s infinite linear;
         }
@@ -100,7 +100,7 @@
             box-shadow: 
                 0 6px 25px rgba(0, 0, 0, 0.12),
                 0 3px 6px rgba(0, 0, 0, 0.15);
-            color: #00B894;
+            color: #1DA1F2;
         }
 
         @keyframes slideInFromLeft {
@@ -163,9 +163,9 @@
         .welcome-section {
             background: 
                 linear-gradient(135deg, 
-                    rgba(0, 184, 148, 0.9) 0%, 
-                    rgba(0, 167, 131, 0.95) 50%,
-                    rgba(0, 153, 112, 0.9) 100%),
+                    rgba(29, 161, 242, 0.9) 0%, 
+                    rgba(13, 122, 201, 0.95) 50%,
+                    rgba(29, 161, 242, 0.9) 100%),
                 url('https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80');
             background-size: cover;
             background-position: center;
@@ -359,17 +359,17 @@
 
         .form-control-custom:focus {
             outline: none;
-            border-color: #00B894;
+            border-color: #1DA1F2;
             background: #ffffff;
             transform: translateY(-1px);
             box-shadow: 
-                0 6px 20px rgba(0, 184, 148, 0.15),
-                0 0 0 3px rgba(0, 184, 148, 0.1),
+                0 6px 20px rgba(29, 161, 242, 0.15),
+                0 0 0 3px rgba(29, 161, 242, 0.1),
                 inset 0 1px 0 rgba(255, 255, 255, 1);
         }
 
         .form-control-custom:hover {
-            border-color: rgba(0, 184, 148, 0.3);
+            border-color: rgba(29, 161, 242, 0.3);
             box-shadow: 
                 0 3px 12px rgba(0, 0, 0, 0.08),
                 inset 0 1px 0 rgba(255, 255, 255, 1);
@@ -387,7 +387,7 @@
             width: 18px;
             height: 18px;
             margin-right: 10px;
-            accent-color: #00B894;
+            accent-color: #1DA1F2;
             cursor: pointer;
         }
 
@@ -410,7 +410,7 @@
         .btn-login {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #00B894 0%, #00a783 50%, #009970 100%);
+            background: linear-gradient(135deg, #1DA1F2 0%, #0d7ac9 50%, #1976d2 100%);
             color: white;
             border: none;
             border-radius: 12px;
@@ -421,8 +421,8 @@
             overflow: hidden;
             animation: buttonFloat 0.8s ease-out 0.8s both;
             box-shadow: 
-                0 4px 15px rgba(0, 184, 148, 0.25),
-                0 2px 6px rgba(0, 184, 148, 0.15);
+                0 4px 15px rgba(29, 161, 242, 0.25),
+                0 2px 6px rgba(29, 161, 242, 0.15);
             margin-bottom: 20px;
         }
 
@@ -455,8 +455,8 @@
         .btn-login:hover {
             transform: translateY(-2px);
             box-shadow: 
-                0 8px 25px rgba(0, 184, 148, 0.3),
-                0 4px 12px rgba(0, 184, 148, 0.2);
+                0 8px 25px rgba(29, 161, 242, 0.3),
+                0 4px 12px rgba(29, 161, 242, 0.2);
         }
 
         .btn-login:active {
@@ -564,7 +564,7 @@
         }
 
         .register-link-text {
-            color: #00B894;
+            color: #1DA1F2;
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -578,12 +578,12 @@
             height: 2px;
             bottom: -2px;
             left: 0;
-            background: linear-gradient(90deg, #00B894, #00a783);
+            background: linear-gradient(90deg, #1DA1F2, #0d7ac9);
             transition: width 0.3s ease;
         }
 
         .register-link-text:hover {
-            color: #00a783;
+            color: #0d7ac9;
             text-decoration: none;
             transform: translateY(-1px);
         }
@@ -600,7 +600,7 @@
         }
 
         .forgot-password a {
-            color: #00B894;
+            color: #1DA1F2;
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 600;
@@ -608,7 +608,7 @@
         }
 
         .forgot-password a:hover {
-            color: #00a783;
+            color: #0d7ac9;
             text-decoration: underline;
         }
 
@@ -820,19 +820,19 @@
                         </form>
 
                         <!-- Divider -->
-                        <div class="divider">
+                        <!-- <div class="divider">
                             <span>atau masuk dengan</span>
-                        </div>
+                        </div> -->
 
                         <!-- Google Login -->
-                        <a href="{{ route('google.redirect') }}" class="btn-google">
+                        <!-- <a href="{{ route('google.redirect') }}" class="btn-google">
                             <i class="fab fa-google" style="color: #dc3545;"></i>
                             Masuk dengan Google
-                        </a>
+                        </a> -->
 
                         <!-- Register Link -->
                         <div class="register-link">
-                            <p>Belum punya akun? <a href="/register" class="register-link-text">Daftar disini</a></p>
+                            <p>Belum punya akun? <a href="/register/step1" class="register-link-text">Daftar disini</a></p>
                         </div>
                     </div>
                 </div>

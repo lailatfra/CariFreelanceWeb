@@ -11,8 +11,29 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
-    })
+    $middleware->alias([
+        'checkStatus' => App\Http\Middleware\CheckUserStatus::class,
+        'role' => App\Http\Middleware\RoleMiddleware::class,
+    ]);
+})
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+
+    // $app->routeMiddleware([
+    //     'auth' => App\Http\Middleware\Authenticate::class,
+    //     'role' => App\Http\Middleware\RoleMiddleware::class, 
+    // ]);
+
+//     $app->middleware([
+//     App\Http\Middleware\TraceMiddleware::class,
+
+    
+// ]);
+
+    $app->router->group([
+        'namespace' => 'App\Http\Controllers',
+    ], function ($router) {
+        require __DIR__.'/../routes/web.php';
+    });

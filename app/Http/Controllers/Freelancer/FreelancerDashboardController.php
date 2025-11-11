@@ -8,7 +8,8 @@ class FreelancerDashboardController extends Controller
 {
     public function index()
     {
-        return view('freelancer.dashboard');
+
+        return view('freelancer.home');
     }
 }
 

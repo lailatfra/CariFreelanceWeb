@@ -5,7 +5,7 @@ if (!function_exists('getRedirectRouteByRole')) {
     {
         return match ($user->role) {
             'client' => 'client.home',
-            'freelancer' => 'freelancer.dashboard',
+            'freelancer' => 'freelancer.home',
             default => 'login',
         };
     }

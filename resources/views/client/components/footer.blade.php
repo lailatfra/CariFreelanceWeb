@@ -160,7 +160,7 @@
 
         .footer-bottom {
             border-top: 1px solid rgba(255, 255, 255, 0.2);
-            padding-top: 30px;
+            padding-top: 0px;
             display: flex;
             justify-content: space-between;
             align-items: center;

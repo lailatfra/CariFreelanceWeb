@@ -12,14 +12,21 @@ class ClientProfile extends Model
     protected $fillable = [
         'user_id',
         'company_name',
-        'website',
+        'tujuan',
         'phone',
         'bio',
+        'location',
+        'profile_photo', 
     ];
 
     // Relasi ke user
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
+        public function projects()
+    {
+        return $this->hasMany(Project::class, 'client_id'); // atau user_id tergantung foreign key
+    }
+
 }

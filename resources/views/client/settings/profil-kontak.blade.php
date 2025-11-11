@@ -18,13 +18,13 @@
         }
         main {
             display: flex;
-            max-width: 80rem;
+            max-width: 100%;
             margin: 1rem auto 0;
             padding: 0 1rem;
             gap: 2rem;
         }
         aside {
-            width: 16rem; /* 256px */
+            width: 16rem; 
             flex-shrink: 0;
             font-size: 0.875rem;
             color: #475569;
@@ -208,28 +208,136 @@
             display: flex;
             justify-content: flex-end;
         }
+        
+.nav-container {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: sticky;
+    top: -1px;
+    z-index: 100;
+    width: 100vw;
+    
+    margin: 0 !important;
+    margin-left: -1.5rem !important;
+    margin-right: -1.5rem !important;
+    margin-top: -1.5rem !important; /* Tambahkan ini untuk menghilangkan gap atas */
+    
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+        .nav-container.scrolled {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            top: 60px;
+        }
+
+        .nav {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .nav-list {
+            display: flex;
+            list-style: none;
+            overflow-x: auto;
+            padding: 4px 0;
+            gap: 90px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: nowrap;
+        }
+
+        .nav-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-item {
+            white-space: nowrap;
+            cursor: pointer;
+            padding: 8px 20px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #666;
+            background: transparent;
+            border: none;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: transparent;
+            color: #1DA1F2;
+            text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
+            box-shadow: none;
+            transform: translateY(-1px);
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover .nav-link,
+        .nav-item.active .nav-link {
+            color: #1DA1F2;
+            text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
+        }
+
     </style>
 </head>
 <body>
+           <!-- Category Navigation -->
+    <div class="nav-container">
+        <nav class="nav">
+            <ul class="nav-list">
+                <li class="nav-item {{ request()->is('popular*') ? 'active' : '' }}">
+                    <a href="/popular" class="nav-link">Pekerjaan Populer</a>
+                </li>
+                <li class="nav-item {{ request()->is('grafis*') ? 'active' : '' }}">
+                    <a href="/grafis" class="nav-link">Grafis & Desain</a>
+                </li>
+                <li class="nav-item {{ request()->is('dokumen*') ? 'active' : '' }}">
+                    <a href="/dokumen" class="nav-link">Dokumen & PPT</a>
+                </li>
+                <li class="nav-item {{ request()->is('web*') ? 'active' : '' }}">
+                    <a href="/web" class="nav-link">Web & App</a>
+                </li>
+                <li class="nav-item {{ request()->is('video*') ? 'active' : '' }}">
+                    <a href="/video" class="nav-link">Video Editing</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
 
-<main>
+    <main style="margin-top: 40px;">
+
     <!-- Sidebar -->
     <aside>
-        <section class="mb-8">
-            <h2>Akun Anda</h2>
-            <ul>
-                <li><a href="{{ route('profile-akun') }}" ><i class="fas fa-user text-xs"></i><span>Informasi Akun</span></a></li>
-                <li><a href="{{ route('profile-kontak') }}" class="active-link"><i class="fas fa-id-card-alt text-xs"></i><span>Informasi Kontak</span></a></li>
-                <li><a href="{{ route('manage-akun') }}"><i class="fas fa-lock text-xs"></i><span>Manajemen Akun</span></a></li>
-            </ul>
-        </section>
-        <section>
-            <br><h2>Rating</h2>
-            <ul>
-                    <li><a href="{{ route('rating') }}"><i class="fas fa-id-card-alt text-xs"></i><span>Rating Freelancer</span></a></li>
-            </ul>
-        </section>
-    </aside>
+    <section class="mb-8">
+        <h2>Akun Anda</h2>
+        <ul>
+            <li><a href="{{ route('profile-akun') }}" ><i class="fas fa-user text-xs"></i><span>Informasi Akun</span></a></li>
+            <li><a href="{{ route('profile-kontak') }}" class="active-link"><i class="fas fa-id-card-alt text-xs"></i><span>Informasi Kontak</span></a></li>
+            <li><a href="{{ route('manage-akun') }}"><i class="fas fa-lock text-xs"></i><span>Manajemen Akun</span></a></li>
+        </ul>
+    </section>
+    <section>
+        <br><h2>Rating</h2>
+        <ul>
+            <li><a href="{{ route('rating') }}"><i class="fas fa-star text-xs"></i><span>Rating Freelancer</span></a></li>
+        </ul>
+    </section>
+</aside>
 
     <section class="flex-1">
         <article>

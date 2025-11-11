@@ -1,4 +1,5 @@
 <?php
+// login controller
 
 namespace App\Http\Controllers\Auth;
 
@@ -29,7 +30,7 @@ class LoginController extends Controller
             if ($user->role === 'client') {
                 return redirect()->route('client.home');
             } elseif ($user->role === 'freelancer') {
-                return redirect()->route('freelancer.dashboard');
+                return redirect('/home/freelancer');
             } else {
                 return redirect('/'); // fallback
             }

@@ -111,11 +111,11 @@
             }
         }
 
- .nav-container {
+  .nav-container {
     background: white;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     position: sticky;
-    top: 80px;
+    top: 70px;
     z-index: 100;
     width: 100vw;
     margin: 0;
@@ -130,19 +130,21 @@
 
 .nav {
     max-width: 100%;
-    margin: 0;
-    padding: 0 15px; /* Reduced from 20px to 15px */
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
 .nav-list {
     display: flex;
     list-style: none;
     overflow-x: auto;
-    padding: 4px 0; /* Reduced from 8px to 4px */
-    gap: 8px; /* Reduced from 15px to 8px */
+    padding: 4px 0;
+    gap: 90px;
     scrollbar-width: none;
     -ms-overflow-style: none;
     align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
 }
 
 .nav-list::-webkit-scrollbar {
@@ -152,18 +154,18 @@
 .nav-item {
     white-space: nowrap;
     cursor: pointer;
-    padding: 8px 15px; /* Reduced vertical padding from 10px to 8px */
+    padding: 8px 20px;
     border-radius: 20px;
     transition: all 0.3s ease;
     font-weight: 500;
     color: #666;
     background: transparent;
     border: none;
-    min-height: 36px; /* Reduced from 40px to 36px */
+    min-height: 36px;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
-
 .nav-item:hover, .nav-item.active {
     background: transparent;
     color: #1DA1F2;
@@ -176,7 +178,7 @@
     text-decoration: none;
     color: inherit;
     display: block;
-    font-size: 14px; /* Reduced from 15px to 14px */
+    font-size: 14px;
     font-weight: 600;
     transition: all 0.3s ease;
 }
@@ -529,16 +531,15 @@
     </section>
 
     <!-- Navigation -->
+  <!-- Navigation -->
     <div class="nav-container">
         <nav class="nav">
             <ul class="nav-list">
-                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Popular</a></li>
-                <li class="nav-item active"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-                <li class="nav-item"><a href="/penulisan" class="nav-link">Penulisan & Penerjemahan</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Web dan Pemrograman</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Visual dan Audio</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Pemasaran dan Periklanan</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Bisnis</a></li>
+                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
+                <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
+                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
+                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
+                <li class="nav-item"><a href="/video" class="nav-link">Video Editing</a></li>
             </ul>
         </nav>
     </div>
@@ -546,35 +547,26 @@
     <!-- Main Layout -->
     <div class="main-layout">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-title">Grafis & Desain</div>
-            <ul class="sidebar-menu">
-                <li class="sidebar-item">
-                    <a href="/logo" class="sidebar-link" onclick="filterCategory('logo-design')">Logo Design</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('brand-identity')">Brand Identity</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('website-design')">Website Design</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('print-design')">Print Design</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('packaging-design')">Packaging Design</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('illustration')">Illustration</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('social-media-design')">Social Media Design</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('ui-ux-design')">UI/UX Design</a>
-                </li>
-            </ul>
-        </aside>
+<aside class="sidebar">
+    <div class="sidebar-title">Grafis & Desain</div>
+    <ul class="sidebar-menu">
+        <li class="sidebar-item">
+            <a href="{{ route('grafis.category', ['subcategory' => 'logo-design']) }}" class="sidebar-link">Logo Design</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('grafis.category', ['subcategory' => 'brand-identity']) }}" class="sidebar-link">Brand Identity</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('grafis.category', ['subcategory' => 'packaging-design']) }}" class="sidebar-link">Packaging Design</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('grafis.category', ['subcategory' => 'ilustrasi-gambar']) }}" class="sidebar-link">Ilustrasi Gambar</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('grafis.category', ['subcategory' => 'stiker-design']) }}" class="sidebar-link">Stiker Design</a>
+        </li>
+    </ul>
+</aside>
 
         <!-- Main Content Area -->
         <main class="content-area">
@@ -582,92 +574,48 @@
                 <h2 class="content-title">Grafis & Desain</h2>
                 <p class="content-subtitle">Solusi desain grafis profesional untuk kebutuhan bisnis dan personal Anda</p>
             </div>
-
-            <!-- First Row of Categories -->
-            <div class="categories-grid animate-on-scroll">
-                <div class="category-card" onclick="navigateToCategory('logo-design')">
-                    <a href="/logo" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Logo Design" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Logo Design</h3>
-                            <p class="category-description">Desain logo profesional dan berkesan</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('brand-identity')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=500&h=300&fit=crop" alt="Brand Identity" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Brand Identity</h3>
-                            <p class="category-description">Identitas visual yang konsisten</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('website-design')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=500&h=300&fit=crop" alt="Website Design" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Website Design</h3>
-                            <p class="category-description">Desain website modern dan responsif</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('print-design')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1542744094-3a31f272c490?w=500&h=300&fit=crop" alt="Print Design" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Print Design</h3>
-                            <p class="category-description">Brosur, poster, dan materi cetak</p>
-                        </div>
-                    </a>
-                </div>
+<!-- Untuk halaman grafis-desain.blade.php -->
+<div class="categories-grid animate-on-scroll">
+    <div class="category-card">
+        <a href="{{ route('grafis.category', ['subcategory' => 'logo-design']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Logo Design" class="category-image">
+            <div class="category-overlay">
+                <h3 class="category-title">Logo Design</h3>
+                <p class="category-description">Desain logo profesional dan berkesan</p>
             </div>
+        </a>
+    </div>
 
-            <!-- Second Row of Categories -->
-            <div class="categories-grid animate-on-scroll">
-                <div class="category-card" onclick="navigateToCategory('packaging-design')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=500&h=300&fit=crop" alt="Packaging Design" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Packaging Design</h3>
-                            <p class="category-description">Desain kemasan yang menarik</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('illustration')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=500&h=300&fit=crop" alt="Illustration" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Illustration</h3>
-                            <p class="category-description">Ilustrasi custom dan artwork</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('social-media-design')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=500&h=300&fit=crop" alt="Social Media Design" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">Social Media Design</h3>
-                            <p class="category-description">Konten visual untuk media sosial</p>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="category-card" onclick="navigateToCategory('ui-ux-design')">
-                    <a href="#" class="category-link">
-                        <img src="https://images.unsplash.com/photo-1559028006-448665bd7c7f?w=500&h=300&fit=crop" alt="UI/UX Design" class="category-image">
-                        <div class="category-overlay">
-                            <h3 class="category-title">UI/UX Design</h3>
-                            <p class="category-description">Antarmuka yang user-friendly</p>
-                        </div>
-                    </a>
-                </div>
+    <div class="category-card">
+        <a href="{{ route('grafis.category', ['subcategory' => 'brand-identity']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=500&h=300&fit=crop" alt="Brand Identity" class="category-image">
+            <div class="category-overlay">
+                <h3 class="category-title">Brand Identity</h3>
+                <p class="category-description">Identitas visual yang konsisten</p>
             </div>
+        </a>
+    </div>
+
+    <div class="category-card">
+        <a href="{{ route('grafis.category', ['subcategory' => 'packaging-design']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=500&h=300&fit=crop" alt="Packaging Design" class="category-image">
+            <div class="category-overlay">
+                <h3 class="category-title">Packaging Design</h3>
+                <p class="category-description">Desain kemasan yang menarik</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="category-card">
+        <a href="{{ route('grafis.category', ['subcategory' => 'ilustrasi-gambar']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=500&h=300&fit=crop" alt="Illustration" class="category-image">
+            <div class="category-overlay">
+                <h3 class="category-title">Ilustrasi Gambar</h3>
+                <p class="category-description">Ilustrasi custom dan artwork</p>
+            </div>
+        </a>
+    </div>
+</div>
 
             <!-- Load More Section -->
             <div class="load-more-section">
