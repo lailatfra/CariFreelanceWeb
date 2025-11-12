@@ -10,6 +10,9 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Halaman Profil - Freelancer</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
   <style>
     :root {
       --blue-700: #1d4ed8;
@@ -1142,12 +1145,10 @@
 </div>
 
 <script>
-  // CSRF Token setup for AJAX
-  $.ajaxSetup({
-    headers: {
-      'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-    }
-  });
+  // Get CSRF Token
+  function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  }
 
   // Modal functionality
   function openModal(modalId) {
@@ -1177,8 +1178,7 @@
   // Close modal when clicking outside
   document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal')) {
-      const modalId = e.target.id;
-      closeModal(modalId);
+      closeModal(e.target.id);
     }
   });
 
@@ -1186,9 +1186,7 @@
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       const activeModal = document.querySelector('.modal.active');
-      if (activeModal) {
-        closeModal(activeModal.id);
-      }
+      if (activeModal) closeModal(activeModal.id);
     }
   });
 
@@ -1225,27 +1223,30 @@
       return;
     }
 
-    // Send AJAX request
+    console.log('Sending bio data:', { bio, experience, headline }); // Debug
+
     fetch('{{ route("freelancer.updateBio") }}', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json'
       },
-      body: JSON.stringify({
-        bio: bio,
-        experience: experience,
-        headline: headline
-      })
+      body: JSON.stringify({ bio, experience, headline })
     })
-    .then(response => response.json())
+    .then(response => {
+      console.log('Response status:', response.status); // Debug
+      if (!response.ok) {
+        return response.json().then(err => Promise.reject(err));
+      }
+      return response.json();
+    })
     .then(data => {
+      console.log('Response data:', data); // Debug
       if (data.success) {
         showNotification(data.message, 'success');
         closeModal('bioModal');
         this.reset();
-        updateProgress();
-        // Reload page to show updated data
         setTimeout(() => location.reload(), 1000);
       } else {
         showNotification(data.message, 'error');
@@ -1253,7 +1254,7 @@
     })
     .catch(error => {
       console.error('Error:', error);
-      showNotification('Terjadi kesalahan saat menyimpan data', 'error');
+      showNotification(error.message || 'Terjadi kesalahan saat menyimpan data', 'error');
     });
   });
 
@@ -1273,12 +1274,14 @@
       return;
     }
 
-    // Send AJAX request
+    console.log('Sending skills data:', { skills, custom_skills: customSkills, experience_level: experienceLevel });
+
     fetch('{{ route("freelancer.updateSkills") }}', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         skills: skills,
@@ -1286,13 +1289,17 @@
         experience_level: experienceLevel
       })
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => Promise.reject(err));
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.success) {
         showNotification(data.message, 'success');
         closeModal('skillsModal');
         this.reset();
-        updateProgress();
         setTimeout(() => location.reload(), 1000);
       } else {
         showNotification(data.message, 'error');
@@ -1300,7 +1307,7 @@
     })
     .catch(error => {
       console.error('Error:', error);
-      showNotification('Terjadi kesalahan saat menyimpan data', 'error');
+      showNotification(error.message || 'Terjadi kesalahan saat menyimpan data', 'error');
     });
   });
 
@@ -1324,12 +1331,12 @@
       return;
     }
 
-    // Send AJAX request
     fetch('{{ route("freelancer.updatePortfolio") }}', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         portfolio_title: title,
@@ -1339,13 +1346,17 @@
         portfolio_tech: tech
       })
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => Promise.reject(err));
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.success) {
         showNotification(data.message, 'success');
         closeModal('portfolioModal');
         this.reset();
-        updateProgress();
         setTimeout(() => location.reload(), 1000);
       } else {
         showNotification(data.message, 'error');
@@ -1353,7 +1364,7 @@
     })
     .catch(error => {
       console.error('Error:', error);
-      showNotification('Terjadi kesalahan saat menyimpan data', 'error');
+      showNotification(error.message || 'Terjadi kesalahan saat menyimpan data', 'error');
     });
   });
 
@@ -1375,12 +1386,12 @@
       return;
     }
 
-    // Send AJAX request
     fetch('{{ route("freelancer.updateEducation") }}', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         education: education,
@@ -1390,13 +1401,17 @@
         languages: languages
       })
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => Promise.reject(err));
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.success) {
         showNotification(data.message, 'success');
         closeModal('educationModal');
         this.reset();
-        updateProgress();
         setTimeout(() => location.reload(), 1000);
       } else {
         showNotification(data.message, 'error');
@@ -1404,7 +1419,7 @@
     })
     .catch(error => {
       console.error('Error:', error);
-      showNotification('Terjadi kesalahan saat menyimpan data', 'error');
+      showNotification(error.message || 'Terjadi kesalahan saat menyimpan data', 'error');
     });
   });
 
@@ -1431,12 +1446,12 @@
       return;
     }
 
-    // Send AJAX request
     fetch('{{ route("freelancer.updateRate") }}', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        'X-CSRF-TOKEN': getCsrfToken(),
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         hourly_rate: hourlyRate,
@@ -1446,13 +1461,17 @@
         response_time: responseTime
       })
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => Promise.reject(err));
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.success) {
         showNotification(data.message, 'success');
         closeModal('rateModal');
         this.reset();
-        updateProgress();
         setTimeout(() => location.reload(), 1000);
       } else {
         showNotification(data.message, 'error');
@@ -1460,29 +1479,9 @@
     })
     .catch(error => {
       console.error('Error:', error);
-      showNotification('Terjadi kesalahan saat menyimpan data', 'error');
+      showNotification(error.message || 'Terjadi kesalahan saat menyimpan data', 'error');
     });
   });
-
-  // Progress tracking
-  function updateProgress() {
-    const completedItems = document.querySelectorAll('.status-green').length;
-    const totalItems = 5;
-    
-    if (completedItems >= totalItems) {
-      const alert = document.querySelector('.alert');
-      alert.innerHTML = `
-        <div>
-          <strong>🎉 Profil Anda sudah lengkap!</strong><br>
-          Sekarang Anda siap untuk menerima proyek dari klien terbaik.
-        </div>
-        <button onclick="location.href='/dashboard'">Lihat Dashboard</button>
-      `;
-      alert.style.borderColor = '#3b82f6';
-      alert.style.backgroundColor = '#eff6ff';
-      alert.style.color = '#1e40af';
-    }
-  }
 
   // URL validation helper
   function isValidUrl(string) {
@@ -1528,12 +1527,12 @@
       item.addEventListener('click', function(e) {
         if (e.target.type !== 'checkbox') {
           const checkbox = this.querySelector('input[type="checkbox"]');
-          checkbox.checked = !checkbox.checked;
+          if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+          }
         }
       });
     });
-
-    updateProgress();
   });
 </script>
 

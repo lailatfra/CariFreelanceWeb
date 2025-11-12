@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Freelancer;
 
 use App\Http\Controllers\Controller;
-use App\Models\FreelancerProfile;
+use App\Models\FreelancerAdditionalInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class FreelancerProfileController extends Controller
+class FreelancerAdditionalInfoController extends Controller
 {
     /**
      * Update bio and experience
@@ -28,7 +28,7 @@ class FreelancerProfileController extends Controller
             ], 422);
         }
 
-        $profile = FreelancerProfile::updateOrCreate(
+        $profile = FreelancerAdditionalInfo::updateOrCreate(
             ['user_id' => Auth::id()],
             [
                 'bio' => $request->bio,
@@ -68,7 +68,7 @@ class FreelancerProfileController extends Controller
             $allSkills = array_merge($allSkills, $customSkillsArray);
         }
 
-        $profile = FreelancerProfile::updateOrCreate(
+        $profile = FreelancerAdditionalInfo::updateOrCreate(
             ['user_id' => Auth::id()],
             [
                 'skills' => implode(',', $allSkills),
@@ -102,7 +102,7 @@ class FreelancerProfileController extends Controller
             ], 422);
         }
 
-        $profile = FreelancerProfile::updateOrCreate(
+        $profile = FreelancerAdditionalInfo::updateOrCreate(
             ['user_id' => Auth::id()],
             [
                 'portfolio_title' => $request->portfolio_title,
@@ -139,7 +139,7 @@ class FreelancerProfileController extends Controller
             ], 422);
         }
 
-        $profile = FreelancerProfile::updateOrCreate(
+        $profile = FreelancerAdditionalInfo::updateOrCreate(
             ['user_id' => Auth::id()],
             [
                 'education' => $request->education,
@@ -183,7 +183,7 @@ class FreelancerProfileController extends Controller
             ], 422);
         }
 
-        $profile = FreelancerProfile::updateOrCreate(
+        $profile = FreelancerAdditionalInfo::updateOrCreate(
             ['user_id' => Auth::id()],
             [
                 'hourly_rate' => $request->hourly_rate,
@@ -205,7 +205,7 @@ class FreelancerProfileController extends Controller
      */
     public function getInfo()
     {
-        $profile = FreelancerProfile::where('user_id', Auth::id())->first();
+        $profile = FreelancerAdditionalInfo::where('user_id', Auth::id())->first();
         
         return response()->json([
             'success' => true,

@@ -196,14 +196,15 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    // Freelancer Profile Routes
-    Route::post('/freelancer/update-bio', [FreelancerProfileController::class, 'updateBio'])->name('freelancer.updateBio');
-    Route::post('/freelancer/update-skills', [FreelancerProfileController::class, 'updateSkills'])->name('freelancer.updateSkills');
-    Route::post('/freelancer/update-portfolio', [FreelancerProfileController::class, 'updatePortfolio'])->name('freelancer.updatePortfolio');
-    Route::post('/freelancer/update-education', [FreelancerProfileController::class, 'updateEducation'])->name('freelancer.updateEducation');
-    Route::post('/freelancer/update-rate', [FreelancerProfileController::class, 'updateRate'])->name('freelancer.updateRate');
-    Route::get('/freelancer/get-info', [FreelancerProfileController::class, 'getInfo'])->name('freelancer.getInfo');
+    Route::post('/freelancer/update-bio', [FreelancerAdditionalInfoController::class, 'updateBio'])->name('freelancer.updateBio');
+    Route::post('/freelancer/update-skills', [FreelancerAdditionalInfoController::class, 'updateSkills'])->name('freelancer.updateSkills');
+    Route::post('/freelancer/update-portfolio', [FreelancerAdditionalInfoController::class, 'updatePortfolio'])->name('freelancer.updatePortfolio');
+    Route::post('/freelancer/update-education', [FreelancerAdditionalInfoController::class, 'updateEducation'])->name('freelancer.updateEducation');
+    Route::post('/freelancer/update-rate', [FreelancerAdditionalInfoController::class, 'updateRate'])->name('freelancer.updateRate');
+    Route::get('/freelancer/get-info', [FreelancerAdditionalInfoController::class, 'getInfo'])->name('freelancer.getInfo');
 });
+
+
     
 // Route::middleware(['auth'])->group(function () {
 //     // Progress routes
