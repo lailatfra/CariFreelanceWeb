@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WithdrawalController;
 use App\Http\Controllers\Client\ClientAdditionalInfoController;
 use App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController;
+use App\http\Controllers\ChatController;
 
 
 // guest
@@ -391,3 +392,19 @@ Route::get('/projects', [\App\Http\Controllers\Admin\ProjectController::class, '
 
 // Route logout admin
 Route::get('/admin/logout', [AdminController::class, 'logout'])->name('logout.admin');
+
+// Route di web.php - PERBAIKAN
+Route::middleware(['auth'])->group(function () {
+    // Route utama chat dengan name 'chat'
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat');
+    
+    // Route chat lainnya
+    Route::prefix('chat')->name('chat.')->group(function () {
+        Route::get('/conversations/{conversation}', [ChatController::class, 'show'])->name('show');
+        Route::post('/conversations/{conversation}/send', [ChatController::class, 'sendMessage'])->name('send');
+        Route::get('/conversations/{conversation}/load-more', [ChatController::class, 'loadMore'])->name('load-more');
+        Route::post('/conversations/{conversation}/typing', [ChatController::class, 'typing'])->name('typing');
+        Route::post('/conversations/{conversation}/mark-read', [ChatController::class, 'markAsRead'])->name('mark-read');
+        Route::get('/search', [ChatController::class, 'search'])->name('search');
+    });
+});
