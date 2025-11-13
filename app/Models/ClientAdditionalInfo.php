@@ -49,3 +49,7 @@ class ClientAdditionalInfo extends Model
         return $this->belongsTo(User::class);
     }
 }
+
+
+// <!-- ini models/clientadditionalinfos -->
+ 

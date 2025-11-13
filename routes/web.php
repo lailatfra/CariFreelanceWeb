@@ -205,31 +205,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-    
-// Route::middleware(['auth'])->group(function () {
-//     // Progress routes
-//     Route::post('/progress/store', [ProgressController::class, 'store'])->name('progress.store');
-//     Route::get('/progress/{projectId}', [ProgressController::class, 'index'])->name('progress.index');
-//     Route::delete('/progress/{id}', [ProgressController::class, 'destroy'])->name('progress.destroy');
-    
-//     // Proposal routes
-//     Route::get('/freelancer/proposall/{project}', [ProposalController::class, 'create'])->name('proposal.create');
-//     Route::post('/freelancer/proposall/{project}', [ProposalController::class, 'store'])->name('proposal.store');
-    
-//     // Route untuk halaman job board umum
-//     Route::get('/freelancer/profile/job', [ProposalController::class, 'index'])->name('freelancer.profile.job');
-    
-//     // Route untuk halaman job detail spesifik (dengan project dan proposal ID)  
-//     Route::get('/freelancer/profile/job/{projectId}/{proposalId}', [ProposalController::class, 'jobDetail'])
-//         ->name('freelancer.profile.job.detail');
-        
-//     // Route untuk halaman job board utama
-//     Route::get('/freelancer/job', [ProposalController::class, 'index'])
-//         ->name('freelancer.job');
-// });
-
-// Route::get('/job/freelancer', [ProjectController::class, 'job'])->name('freelancerjob'); 
-
 // Form buat isi profil freelancer
 Route::get('/freelancer/profile/create', [FreelancerProfileController::class, 'create'])->name('freelancer.profile.create')->middleware(['auth', 'verified']); 
 Route::post('/freelancer/profile', [FreelancerProfileController::class, 'store'])->name('freelancer.profile.store')->middleware(['auth', 'verified']);
@@ -264,6 +239,15 @@ Route::get('/freelancer/profile/kontak', fn() => view('freelancer.settings.profi
 Route::get('/freelancer/profile/manage', fn() => view('freelancer.settings.manage-akun'))->name('freelancer-manage-akun');
 Route::get('/notification/freelancer', fn() => view('freelancer.notification'))->name('notification');
 Route::get('/saldo/freelancer', fn() => view('freelancer.tarik-saldo'))->name('saldo');
+
+// Tambahkan di bagian route client yang sudah ada middleware auth
+Route::middleware(['auth'])->group(function () {
+    // ... routes lain ...
+    
+    Route::get('/profile/akun', [ClientProfileController::class, 'showAccount'])->name('profile-akun');
+    Route::post('/profile/akun/update', [ClientProfileController::class, 'updateAccount'])->name('profile-akun.update');
+    Route::post('/profile/akun/avatar', [ClientProfileController::class, 'updateAvatar'])->name('profile-akun.avatar');
+});
 
 // Dashboard
 Route::middleware(['auth', 'verified'])->group(function () {

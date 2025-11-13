@@ -6,6 +6,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>CariFreelance Account Info - CariFreelance</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
@@ -24,7 +25,7 @@
             padding: 0 1.5rem;
         }
         aside {
-            width: 16rem; /* 256px */
+            width: 16rem;
             flex-shrink: 0;
             font-size: 0.875rem;
             color: #475569;
@@ -100,6 +101,9 @@
         }
         .avatar-container img {
             border-radius: 50%;
+            width: 96px;
+            height: 96px;
+            object-fit: cover;
         }
         .avatar-container button {
             position: absolute;
@@ -174,7 +178,6 @@
         .dob-select select:nth-child(2) {
             width: 10rem;
         }
-        /* Button */
         .btn-primary {
             background-color: #2563EB;
             color: white;
@@ -189,23 +192,37 @@
             background-color: #1D4ED8;
         }
         
-                /* Navigation Categories - Same styling from original */
-.nav-container {
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    position: sticky;
-    top: -1px;
-    z-index: 100;
-    width: 100vw;
-    
-    margin: 0 !important;
-    margin-left: -1.5rem !important;
-    margin-right: -1.5rem !important;
-    margin-top: -1.5rem !important; /* Tambahkan ini untuk menghilangkan gap atas */
-    
-    padding: 0;
-    transition: all 0.3s ease;
-}
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        .alert-success {
+            background-color: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+        .alert-error {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+        }
+        
+        .nav-container {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: -1px;
+            z-index: 100;
+            width: 100vw;
+            margin: 0 !important;
+            margin-left: -1.5rem !important;
+            margin-right: -1.5rem !important;
+            margin-top: -1.5rem !important;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
 
         .nav-container.scrolled {
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -273,11 +290,10 @@
             color: #1DA1F2;
             text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
         }
-
     </style>
 </head>
 <body>
-           <!-- Category Navigation -->
+    <!-- Category Navigation -->
     <div class="nav-container">
         <nav class="nav">
             <ul class="nav-list">
@@ -299,6 +315,7 @@
             </ul>
         </nav>
     </div>
+
     <main style="margin-top: 40px;">
         <!-- Sidebar -->
         <aside>
@@ -320,51 +337,138 @@
 
         <!-- Content -->
         <section class="flex-1">
+            @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+            @endif
+
+            @if(session('error'))
+            <div class="alert alert-error">
+                {{ session('error') }}
+            </div>
+            @endif
+
+            @if($errors->any())
+            <div class="alert alert-error">
+                <ul style="margin: 0; padding-left: 1.25rem;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
             <div class="card" aria-label="Account information form">
                 <header>
                     <h3>Informasi akun</h3>
                     <p>Atur informasi dasar akun Anda</p>
                 </header>
-                <div class="avatar-container">
-                    <img src="https://placehold.co/96x96/8DA4F1/FFFFFF/png?text=User+Avatar" alt="User avatar">
-                    <button aria-label="Edit avatar"><i class="fas fa-pen text-xs"></i></button>
-                </div>
-                <form novalidate>
+
+                <!-- Avatar Upload Form -->
+                <form action="{{ route('profile-akun.avatar') }}" method="POST" enctype="multipart/form-data" id="avatarForm">
+                    @csrf
+                    <div class="avatar-container">
+                        <img src="{{ $clientProfile && $clientProfile->profile_photo 
+                            ? asset('storage/' . $clientProfile->profile_photo) 
+                            : 'https://placehold.co/96x96/8DA4F1/FFFFFF/png?text=' . strtoupper(substr($user->name ?? 'U', 0, 1)) }}" 
+                            alt="User avatar" id="avatarPreview">
+                        <button type="button" aria-label="Edit avatar" onclick="document.getElementById('avatarInput').click()">
+                            <i class="fas fa-pen text-xs"></i>
+                        </button>
+                        <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;">
+                    </div>
+                </form>
+
+                <!-- Account Info Form -->
+                <form action="{{ route('profile-akun.update') }}" method="POST">
+                    @csrf
+                    
                     <div class="form-group">
-                        <label for="username">Username</label>
+                        <label for="username" class="label">Username</label>
                         <div class="username-box">
-                            <input type="text" id="username" value="lk6obm9l">
+                            <input type="text" id="username" name="username" value="{{ old('username', $user->username ?? '') }}" required>
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label class=".label" for="displayname">Nama yang digunakan untuk ditampilkan di sistem</label>
-                        <p>Nama tersebut harus terdengar formal untuk membangun kredibilitas Anda</p>
-                        <input class="input" type="text" id="displayname" value="lk6obm9l">
+                        <label class="label" for="displayname">Nama yang digunakan untuk ditampilkan di sistem</label>
+                        <p style="margin-bottom: 0.5rem;">Nama tersebut harus terdengar formal untuk membangun kredibilitas Anda</p>
+                        <input class="input" type="text" id="displayname" name="display_name" value="{{ old('display_name', $user->name ?? '') }}" required>
                     </div>
+
                     <div class="form-group">
-                        <label class=".label">Tanggal lahir</label>
+                        <label class="label">Tanggal lahir</label>
+                        @php
+                            $birthDate = $user->birth_date ? \Carbon\Carbon::parse($user->birth_date) : null;
+                        @endphp
                         <div class="dob-select">
-                            <select aria-label="Tanggal">
-                                <option disabled selected>Tanggal</option>
+                            <select aria-label="Tanggal" name="birth_date">
+                                <option value="" disabled {{ !$birthDate ? 'selected' : '' }}>Tanggal</option>
                                 @for($i=1; $i<=31; $i++)
-                                    <option>{{ $i }}</option>
+                                    <option value="{{ $i }}" {{ $birthDate && $birthDate->day == $i ? 'selected' : '' }}>{{ $i }}</option>
                                 @endfor
                             </select>
-                            <select aria-label="Bulan">
-                                <option disabled selected>Bulan</option>
-                                <option>Januari</option><option>Februari</option><option>Maret</option>
-                                <option>April</option><option>Mei</option><option>Juni</option>
-                                <option>Juli</option><option>Agustus</option><option>September</option>
-                                <option>Oktober</option><option>November</option><option>Desember</option>
+                            <select aria-label="Bulan" name="birth_month">
+                                <option value="" disabled {{ !$birthDate ? 'selected' : '' }}>Bulan</option>
+                                @php
+                                    $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                                @endphp
+                                @foreach($months as $index => $month)
+                                    <option value="{{ $index + 1 }}" {{ $birthDate && $birthDate->month == ($index + 1) ? 'selected' : '' }}>{{ $month }}</option>
+                                @endforeach
                             </select>
-                            <select aria-label="Tahun">
-                                <option disabled selected>Tahun</option>
-                                @for($y=2024; $y>=2000; $y--)
-                                    <option>{{ $y }}</option>
+                            <select aria-label="Tahun" name="birth_year">
+                                <option value="" disabled {{ !$birthDate ? 'selected' : '' }}>Tahun</option>
+                                @for($y=date('Y'); $y>=1900; $y--)
+                                    <option value="{{ $y }}" {{ $birthDate && $birthDate->year == $y ? 'selected' : '' }}>{{ $y }}</option>
                                 @endfor
                             </select>
                         </div>
                     </div>
+
+                    <div class="form-group">
+                        <label class="label" for="company_name">Nama Perusahaan</label>
+                        <input class="input" type="text" id="company_name" name="company_name" value="{{ old('company_name', $clientProfile->company_name ?? $additionalInfo->company_name ?? '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="industry">Industri</label>
+                        <input class="input" type="text" id="industry" name="industry" value="{{ old('industry', $additionalInfo->industry ?? '') }}" placeholder="e.g., Technology, Fashion, Finance">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="company_size">Ukuran Perusahaan</label>
+                        <select id="company_size" name="company_size">
+                            <option value="" disabled {{ !($additionalInfo->company_size ?? null) ? 'selected' : '' }}>Pilih ukuran perusahaan</option>
+                            <option value="1-10" {{ ($additionalInfo->company_size ?? '') == '1-10' ? 'selected' : '' }}>1-10 karyawan</option>
+                            <option value="11-50" {{ ($additionalInfo->company_size ?? '') == '11-50' ? 'selected' : '' }}>11-50 karyawan</option>
+                            <option value="51-200" {{ ($additionalInfo->company_size ?? '') == '51-200' ? 'selected' : '' }}>51-200 karyawan</option>
+                            <option value="201-500" {{ ($additionalInfo->company_size ?? '') == '201-500' ? 'selected' : '' }}>201-500 karyawan</option>
+                            <option value="500+" {{ ($additionalInfo->company_size ?? '') == '500+' ? 'selected' : '' }}>500+ karyawan</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="phone">Nomor Telepon</label>
+                        <input class="input" type="text" id="phone" name="phone" value="{{ old('phone', $clientProfile->phone ?? '') }}" placeholder="+62 812 3456 7890">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="location">Lokasi</label>
+                        <input class="input" type="text" id="location" name="location" value="{{ old('location', $clientProfile->location ?? '') }}" placeholder="Jakarta, Indonesia">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="website">Website Perusahaan</label>
+                        <input class="input" type="text" id="website" name="website" value="{{ old('website', $additionalInfo->website ?? '') }}" placeholder="https://example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="bio">Bio / Deskripsi Singkat</label>
+                        <textarea class="input" id="bio" name="bio" rows="4" style="resize: vertical;" placeholder="Ceritakan sedikit tentang perusahaan Anda...">{{ old('bio', $clientProfile->bio ?? '') }}</textarea>
+                    </div>
+
                     <div style="text-align: right;">
                         <button type="submit" class="btn-primary">Simpan</button>
                     </div>
@@ -372,6 +476,33 @@
             </div>
         </section>
     </main>
+
+    <script>
+        // Auto-submit avatar form when file is selected
+        document.getElementById('avatarInput').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                // Preview image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(this.files[0]);
+                
+                // Submit form
+                document.getElementById('avatarForm').submit();
+            }
+        });
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
 </body>
 </html>
 @endsection

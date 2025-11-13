@@ -324,8 +324,8 @@
         <section class="mb-8">
             <h2>Akun Anda</h2>
                 <ul>
-                    <li><a href="{{ route('freelancer-profile-akun') }}" class="active-link"><i class="fas fa-user text-xs"></i><span>Informasi Akun</span></a></li>
-                    <li><a href="{{ route('freelancer-profile-kontak') }}"><i class="fas fa-id-card-alt text-xs"></i><span>Informasi Kontak</span></a></li>
+                    <li><a href="{{ route('freelancer-profile-akun') }}"><i class="fas fa-user text-xs"></i><span>Informasi Akun</span></a></li>
+                    <li><a href="{{ route('freelancer-profile-kontak') }}" class="active-link"><i class="fas fa-id-card-alt text-xs"></i><span>Informasi Kontak</span></a></li>
                     <li><a href="{{ route('freelancer-manage-akun') }}"><i class="fas fa-lock text-xs"></i><span>Manajemen Akun</span></a></li>
                 </ul>
         </section>
