@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Conversation;
 
 class PaymentController extends Controller
 {
@@ -214,41 +215,65 @@ class PaymentController extends Controller
             ], 500);
         }
     }
-
-    private function updatePaymentStatusFromMidtrans($payment, $midtransStatus)
-    {
-        $transactionStatus = $midtransStatus->transaction_status;
-
-        if (in_array($transactionStatus, ['settlement', 'capture'])) {
-            $payment->update([
-                'status' => 'success',
-                'midtrans_transaction_status' => $transactionStatus,
-                'midtrans_response' => $midtransStatus,
-                'paid_at' => now()
-            ]);
-
-            // Accept proposal
-            $payment->proposal->update(['status' => 'accepted']);
-            
-            // Reject other proposals
-            Proposal::where('project_id', $payment->project_id)
-                ->where('id', '!=', $payment->proposal_id)
-                ->update(['status' => 'rejected']);
-
-        } elseif ($transactionStatus === 'pending') {
-            $payment->update([
-                'status' => 'pending',
-                'midtrans_transaction_status' => $transactionStatus,
-                'midtrans_response' => $midtransStatus
-            ]);
-        } else {
-            $payment->update([
-                'status' => 'failed',
-                'midtrans_transaction_status' => $transactionStatus,
-                'midtrans_response' => $midtransStatus
-            ]);
-        }
+    private function createConversation($payment)
+{
+    // Cek apakah conversation sudah ada
+    $existingConversation = Conversation::where('project_id', $payment->project_id)
+        ->where('client_id', $payment->client_id)
+        ->where('freelancer_id', $payment->freelancer_id)
+        ->first();
+    
+    if ($existingConversation) {
+        return $existingConversation;
     }
+    
+    // Buat conversation baru
+    return Conversation::create([
+        'project_id' => $payment->project_id,
+        'client_id' => $payment->client_id,
+        'freelancer_id' => $payment->freelancer_id,
+        'proposal_id' => $payment->proposal_id,
+        'last_message_at' => now(),
+    ]);
+}
+
+private function updatePaymentStatusFromMidtrans($payment, $midtransStatus)
+{
+    $transactionStatus = $midtransStatus->transaction_status;
+
+    if (in_array($transactionStatus, ['settlement', 'capture'])) {
+        $payment->update([
+            'status' => 'success',
+            'midtrans_transaction_status' => $transactionStatus,
+            'midtrans_response' => $midtransStatus,
+            'paid_at' => now()
+        ]);
+
+        // Accept proposal
+        $payment->proposal->update(['status' => 'accepted']);
+        
+        // Reject other proposals
+        Proposal::where('project_id', $payment->project_id)
+            ->where('id', '!=', $payment->proposal_id)
+            ->update(['status' => 'rejected']);
+        
+        // ✅ CREATE CONVERSATION (TAMBAHAN BARU)
+        $this->createConversation($payment);
+
+    } elseif ($transactionStatus === 'pending') {
+        $payment->update([
+            'status' => 'pending',
+            'midtrans_transaction_status' => $transactionStatus,
+            'midtrans_response' => $midtransStatus
+        ]);
+    } else {
+        $payment->update([
+            'status' => 'failed',
+            'midtrans_transaction_status' => $transactionStatus,
+            'midtrans_response' => $midtransStatus
+        ]);
+    }
+}
 
     private function getRedirectUrl($payment)
     {

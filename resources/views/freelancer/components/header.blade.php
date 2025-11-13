@@ -550,12 +550,15 @@
                         </a>
 
                         {{-- Messages --}}
-                        <a href="{{ route('chat') }}">
-                        <button class="action-btn position-relative" title="Pesan">
-                            <i class="fas fa-envelope"></i>
-                            <span class="notification-badge">5</span>
-                        </button>
-                        </a>
+<a href="{{ route('chat') }}">
+    <button class="action-btn position-relative" title="Pesan">
+        <i class="fas fa-envelope"></i>
+        @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
+            <span class="notification-badge">{{ $unreadMessagesCount }}</span>
+        @endif
+    </button>
+</a>
+
 
                         {{-- Projects --}}
                         <a href="/freelancer/profile/job">
