@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     $middleware->alias([
         'checkStatus' => App\Http\Middleware\CheckUserStatus::class,
         'role' => App\Http\Middleware\RoleMiddleware::class,
+        'active' => \App\Http\Middleware\CheckUserActive::class,
     ]);
 })
 
@@ -38,3 +39,5 @@ return Application::configure(basePath: dirname(__DIR__))
     ], function ($router) {
         require __DIR__.'/../routes/web.php';
     });
+
+    

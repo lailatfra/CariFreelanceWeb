@@ -124,7 +124,6 @@
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
         }
 
-
         button {
             border: none;
             border-radius: 0.375rem;
@@ -209,22 +208,20 @@
             justify-content: flex-end;
         }
         
-.nav-container {
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    position: sticky;
-    top: -1px;
-    z-index: 100;
-    width: 100vw;
-    
-    margin: 0 !important;
-    margin-left: -1.5rem !important;
-    margin-right: -1.5rem !important;
-    margin-top: -1.5rem !important; /* Tambahkan ini untuk menghilangkan gap atas */
-    
-    padding: 0;
-    transition: all 0.3s ease;
-}
+        .nav-container {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: -1px;
+            z-index: 100;
+            width: 100vw;
+            margin: 0 !important;
+            margin-left: -1.5rem !important;
+            margin-right: -1.5rem !important;
+            margin-top: -1.5rem !important;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
 
         .nav-container.scrolled {
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -293,10 +290,116 @@
             text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
         }
 
+        /* New styles for additional information sections */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid #cbd5e1;
+            padding: 0.6rem 0.9rem;
+            font-size: 0.875rem;
+            outline: none;
+            background-color: white;
+            color: #1e293b;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .social-media-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .social-media-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .char-counter {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .char-counter.limit {
+            color: #ef4444;
+        }
+
+        .success-message {
+            background-color: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .error-message {
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .section-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .section-content {
+            margin-top: 1rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body>
-           <!-- Category Navigation -->
+    <!-- Category Navigation -->
     <div class="nav-container">
         <nav class="nav">
             <ul class="nav-list">
@@ -340,74 +443,400 @@
 </aside>
 
     <section class="flex-1">
-        <article>
-            <header>
-                <h3>Informasi kontak</h3>
-                <p>Agar kami dapat menghubungi Anda</p>
-            </header>
-            <form>
-                <label for="email" class="label">Kontak email</label>
-                <div style="display:flex;gap:1rem;align-items:center;">
-                    <input type="email" id="email" value="lailatulfitria6619@gmail.com" readonly class="form-input">
-                    <button type="button" class="btn-link">Ubah</button>
-                </div>
+        <!-- Success/Error Messages -->
+        <div id="messageContainer"></div>
 
-                <label for="phone" class="label">Kontak telepon</label>
-                <p class="text-muted">Jika menggunakan nomor luar negri, silahkan hubungi customer service kami untuk memverifikasi.</p>
-                <div style="display:flex;gap:0.75rem;">
-                    <input type="tel" id="phone" placeholder="Masukan nomor telepon" class="form-input">
-                    <button type="submit" class="btn-primary">Konfirmasi</button>
-                </div>
-            </form>
+        <!-- Company Information -->
+        <article>
+            <div class="section-toggle" onclick="toggleSection('companyInfo')">
+                <header>
+                    <h3>Informasi Perusahaan</h3>
+                    <p>Bagikan detail tentang bisnis dan industri Anda untuk membantu freelancer memahami kebutuhan Anda.</p>
+                </header>
+                <i class="fas fa-chevron-down toggle-icon" id="companyInfoIcon"></i>
+            </div>
+            <div class="section-content hidden" id="companyInfo">
+                <form id="companyInfoForm">
+                    @csrf
+                    <div class="form-group">
+                        <label for="company_name" class="label">Nama Perusahaan</label>
+                        <input type="text" id="company_name" name="company_name" class="form-control" placeholder="Masukkan nama perusahaan">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="industry" class="label">Industri</label>
+                        <input type="text" id="industry" name="industry" class="form-control" placeholder="Contoh: Teknologi, Retail, Pendidikan">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company_size" class="label">Ukuran Perusahaan</label>
+                        <select id="company_size" name="company_size" class="form-control">
+                            <option value="">Pilih ukuran perusahaan</option>
+                            <option value="1-10">1-10 karyawan</option>
+                            <option value="11-50">11-50 karyawan</option>
+                            <option value="51-200">51-200 karyawan</option>
+                            <option value="201-500">201-500 karyawan</option>
+                            <option value="500+">500+ karyawan</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company_description" class="label">Deskripsi Perusahaan</label>
+                        <textarea id="company_description" name="company_description" class="form-control" placeholder="Ceritakan tentang perusahaan Anda, produk/layanan yang ditawarkan, dan nilai unik yang dimiliki"></textarea>
+                        <div class="char-counter">
+                            <span id="companyDescCount">0</span>/1000 karakter
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="website" class="label">Website Perusahaan</label>
+                        <input type="url" id="website" name="website" class="form-control" placeholder="https://example.com">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Simpan Informasi Perusahaan</button>
+                    </div>
+                </form>
+            </div>
         </article>
 
+        <!-- Vision & Mission -->
         <article>
-            <header>
-                <h3>Informasi alamat</h3>
-                <p>Sebagai data jika suatu saat kami perlu mengirimkan sesuatu dan dokumen kepada Anda</p>
-            </header>
-            <form>
-                <fieldset>
-                    <legend>Alamat sekarang</legend>
-                    <div class="radio-group">
-                        <label class="radio-label active" for="indonesia">
-                            <input type="radio" id="indonesia" name="alamat" checked> Indonesia
-                        </label>
-                        <label class="radio-label" for="luar-negeri">
-                            <input type="radio" id="luar-negeri" name="alamat"> Di luar negeri
-                        </label>
+            <div class="section-toggle" onclick="toggleSection('visionMission')">
+                <header>
+                    <h3>Visi & Misi Perusahaan</h3>
+                    <p>Bagikan visi dan misi perusahaan untuk menunjukkan nilai dan tujuan bisnis Anda.</p>
+                </header>
+                <i class="fas fa-chevron-down toggle-icon" id="visionMissionIcon"></i>
+            </div>
+            <div class="section-content hidden" id="visionMission">
+                <form id="visionMissionForm">
+                    @csrf
+                    <div class="form-group">
+                        <label for="company_vision" class="label">Visi Perusahaan</label>
+                        <textarea id="company_vision" name="company_vision" class="form-control" placeholder="Apa visi jangka panjang perusahaan Anda?"></textarea>
+                        <div class="char-counter">
+                            <span id="visionCount">0</span>/500 karakter
+                        </div>
                     </div>
-                </fieldset>
-                <div>
-                    <label for="alamat-lengkap">Alamat lengkap</label>
-                    <input type="text" id="alamat-lengkap" placeholder="Masukan alamat detail Anda" class="form-input">
-                </div>
-                <div class="grid-2">
-                    <div>
-                        <label for="kode-pos">Kode Pos</label>
-                        <input type="text" id="kode-pos" placeholder="Kode Pos" class="form-input">
+
+                    <div class="form-group">
+                        <label for="company_mission" class="label">Misi Perusahaan</label>
+                        <textarea id="company_mission" name="company_mission" class="form-control" placeholder="Apa misi dan tujuan utama perusahaan Anda?"></textarea>
+                        <div class="char-counter">
+                            <span id="missionCount">0</span>/500 karakter
+                        </div>
                     </div>
-                    <div>
-                        <label for="kelurahan">Kelurahan</label>
-                        <input type="text" id="kelurahan" placeholder="masukan kecamatan" class="form-input">
+
+                    <div class="form-group">
+                        <label for="company_values" class="label">Nilai-nilai Perusahaan</label>
+                        <textarea id="company_values" name="company_values" class="form-control" placeholder="Nilai-nilai apa yang dianut perusahaan Anda?"></textarea>
+                        <div class="char-counter">
+                            <span id="valuesCount">0</span>/500 karakter
+                        </div>
                     </div>
-                    <div>
-                        <label for="kecamatan">Kecamatan</label>
-                        <input type="text" id="kecamatan" placeholder="masukan kabupaten" class="form-input">
+
+                    <div class="form-group">
+                        <label for="company_goals" class="label">Tujuan Perusahaan</label>
+                        <textarea id="company_goals" name="company_goals" class="form-control" placeholder="Apa tujuan spesifik yang ingin dicapai perusahaan?"></textarea>
+                        <div class="char-counter">
+                            <span id="goalsCount">0</span>/500 karakter
+                        </div>
                     </div>
-                    <div>
-                        <label for="city">City</label>
-                        <input type="text" id="city" value="Jawa Timur" class="form-input">
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Simpan Visi & Misi</button>
                     </div>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Simpan</button>
-                </div>
-            </form>
+                </form>
+            </div>
+        </article>
+
+        <!-- Communication Preferences -->
+        <article>
+            <div class="section-toggle" onclick="toggleSection('communication')">
+                <header>
+                    <h3>Preferensi Komunikasi</h3>
+                    <p>Beri tahu freelancer tentang gaya komunikasi dan ketersediaan waktu yang Anda sukai.</p>
+                </header>
+                <i class="fas fa-chevron-down toggle-icon" id="communicationIcon"></i>
+            </div>
+            <div class="section-content hidden" id="communication">
+                <form id="communicationForm">
+                    @csrf
+                    <div class="form-group">
+                        <label class="label">Platform Komunikasi yang Disukai</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="communication_platforms[]" value="whatsapp"> WhatsApp
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="communication_platforms[]" value="email"> Email
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="communication_platforms[]" value="telegram"> Telegram
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="communication_platforms[]" value="zoom"> Zoom
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="communication_platforms[]" value="google_meet"> Google Meet
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="communication_platforms[]" value="slack"> Slack
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update_frequency" class="label">Frekuensi Update yang Diinginkan</label>
+                        <select id="update_frequency" name="update_frequency" class="form-control">
+                            <option value="">Pilih frekuensi update</option>
+                            <option value="daily">Harian</option>
+                            <option value="weekly">Mingguan</option>
+                            <option value="biweekly">Dua kali seminggu</option>
+                            <option value="monthly">Bulanan</option>
+                            <option value="as_needed">Sesuai kebutuhan</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timezone" class="label">Zona Waktu</label>
+                        <select id="timezone" name="timezone" class="form-control">
+                            <option value="">Pilih zona waktu</option>
+                            <option value="WIB">WIB (UTC+7)</option>
+                            <option value="WITA">WITA (UTC+8)</option>
+                            <option value="WIT">WIT (UTC+9)</option>
+                            <option value="other">Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Simpan Preferensi</button>
+                    </div>
+                </form>
+            </div>
+        </article>
+
+        <!-- Social Media -->
+        <article>
+            <div class="section-toggle" onclick="toggleSection('socialMedia')">
+                <header>
+                    <h3>Media Sosial</h3>
+                    <p>Tautkan akun media sosial perusahaan untuk meningkatkan kredibilitas dan transparansi.</p>
+                </header>
+                <i class="fas fa-chevron-down toggle-icon" id="socialMediaIcon"></i>
+            </div>
+            <div class="section-content hidden" id="socialMedia">
+                <form id="socialMediaForm">
+                    @csrf
+                    <div class="social-media-grid">
+                        <div class="form-group">
+                            <label for="social_website" class="label">Website</label>
+                            <input type="url" id="social_website" name="social_website" class="form-control" placeholder="https://website-perusahaan.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="social_linkedin" class="label">LinkedIn</label>
+                            <input type="url" id="social_linkedin" name="social_linkedin" class="form-control" placeholder="https://linkedin.com/company/...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="social_instagram" class="label">Instagram</label>
+                            <input type="url" id="social_instagram" name="social_instagram" class="form-control" placeholder="https://instagram.com/...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="social_facebook" class="label">Facebook</label>
+                            <input type="url" id="social_facebook" name="social_facebook" class="form-control" placeholder="https://facebook.com/...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="social_twitter" class="label">Twitter</label>
+                            <input type="url" id="social_twitter" name="social_twitter" class="form-control" placeholder="https://twitter.com/...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="social_youtube" class="label">YouTube</label>
+                            <input type="url" id="social_youtube" name="social_youtube" class="form-control" placeholder="https://youtube.com/...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="social_tiktok" class="label">TikTok</label>
+                            <input type="url" id="social_tiktok" name="social_tiktok" class="form-control" placeholder="https://tiktok.com/...">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="social_other" class="label">Media Sosial Lainnya</label>
+                            <input type="text" id="social_other" name="social_other" class="form-control" placeholder="Platform lain yang digunakan">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Simpan Media Sosial</button>
+                    </div>
+                </form>
+            </div>
         </article>
     </section>
 </main>
 
+<script>
+    // Toggle section visibility
+    function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        const icon = document.getElementById(sectionId + 'Icon');
+        
+        section.classList.toggle('hidden');
+        icon.classList.toggle('rotated');
+    }
+
+    // Character counters
+    function setupCharacterCounter(textareaId, counterId, maxLength) {
+        const textarea = document.getElementById(textareaId);
+        const counter = document.getElementById(counterId);
+        
+        textarea.addEventListener('input', function() {
+            const count = this.value.length;
+            counter.textContent = count;
+            
+            if (count > maxLength) {
+                counter.classList.add('limit');
+            } else {
+                counter.classList.remove('limit');
+            }
+        });
+    }
+
+    // Initialize character counters
+    document.addEventListener('DOMContentLoaded', function() {
+        setupCharacterCounter('company_description', 'companyDescCount', 1000);
+        setupCharacterCounter('company_vision', 'visionCount', 500);
+        setupCharacterCounter('company_mission', 'missionCount', 500);
+        setupCharacterCounter('company_values', 'valuesCount', 500);
+        setupCharacterCounter('company_goals', 'goalsCount', 500);
+
+        // Load existing data
+        loadClientInfo();
+    });
+
+    // Show message
+    function showMessage(message, type = 'success') {
+        const messageContainer = document.getElementById('messageContainer');
+        messageContainer.innerHTML = `
+            <div class="${type === 'success' ? 'success-message' : 'error-message'}">
+                ${message}
+            </div>
+        `;
+        
+        setTimeout(() => {
+            messageContainer.innerHTML = '';
+        }, 5000);
+    }
+
+    // Load client additional info
+    async function loadClientInfo() {
+        try {
+            const response = await fetch('{{ route("client.additional-info.get") }}');
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                const data = result.data;
+                
+                // Company Information
+                if (data.company_name) document.getElementById('company_name').value = data.company_name;
+                if (data.industry) document.getElementById('industry').value = data.industry;
+                if (data.company_size) document.getElementById('company_size').value = data.company_size;
+                if (data.company_description) document.getElementById('company_description').value = data.company_description;
+                if (data.website) document.getElementById('website').value = data.website;
+                
+                // Vision & Mission
+                if (data.company_vision) document.getElementById('company_vision').value = data.company_vision;
+                if (data.company_mission) document.getElementById('company_mission').value = data.company_mission;
+                if (data.company_values) document.getElementById('company_values').value = data.company_values;
+                if (data.company_goals) document.getElementById('company_goals').value = data.company_goals;
+                
+                // Communication Preferences
+                if (data.communication_platforms) {
+                    const platforms = JSON.parse(data.communication_platforms);
+                    platforms.forEach(platform => {
+                        const checkbox = document.querySelector(`input[name="communication_platforms[]"][value="${platform}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
+                if (data.update_frequency) document.getElementById('update_frequency').value = data.update_frequency;
+                if (data.timezone) document.getElementById('timezone').value = data.timezone;
+                
+                // Social Media
+                if (data.social_website) document.getElementById('social_website').value = data.social_website;
+                if (data.social_linkedin) document.getElementById('social_linkedin').value = data.social_linkedin;
+                if (data.social_instagram) document.getElementById('social_instagram').value = data.social_instagram;
+                if (data.social_facebook) document.getElementById('social_facebook').value = data.social_facebook;
+                if (data.social_twitter) document.getElementById('social_twitter').value = data.social_twitter;
+                if (data.social_youtube) document.getElementById('social_youtube').value = data.social_youtube;
+                if (data.social_tiktok) document.getElementById('social_tiktok').value = data.social_tiktok;
+                if (data.social_other) document.getElementById('social_other').value = data.social_other;
+            }
+        } catch (error) {
+            console.error('Error loading client info:', error);
+        }
+    }
+
+    // Form submissions
+    document.getElementById('companyInfoForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await submitForm(this, '{{ route("client.additional-info.company") }}', 'Informasi perusahaan berhasil disimpan!');
+    });
+
+    document.getElementById('visionMissionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await submitForm(this, '{{ route("client.additional-info.vision-mission") }}', 'Visi & Misi berhasil disimpan!');
+    });
+
+    document.getElementById('communicationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await submitForm(this, '{{ route("client.additional-info.communication") }}', 'Preferensi komunikasi berhasil disimpan!');
+    });
+
+    document.getElementById('socialMediaForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await submitForm(this, '{{ route("client.additional-info.social-media") }}', 'Media sosial berhasil disimpan!');
+    });
+
+    // Generic form submission function
+    async function submitForm(form, url, successMessage) {
+        const formData = new FormData(form);
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        
+        try {
+            submitButton.textContent = 'Menyimpan...';
+            submitButton.disabled = true;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showMessage(successMessage, 'success');
+            } else {
+                showMessage(result.message, 'error');
+            }
+        } catch (error) {
+            showMessage('Terjadi kesalahan. Silakan coba lagi.', 'error');
+            console.error('Error:', error);
+        } finally {
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>
 @endsection

@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\WithdrawalController;
 use App\Http\Controllers\Client\ClientAdditionalInfoController;
 use App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController;
 use App\http\Controllers\ChatController;
+use App\Http\Controllers\AccountController;
 
 
 // guest
@@ -102,6 +103,12 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
+Route::middleware(['auth', 'active'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::post('/akun/nonaktifkan', [AccountController::class, 'deactivate'])
+        ->name('account.deactivate');
+});
 
 // Client profile
 Route::middleware('auth')->group(function () {
@@ -133,10 +140,33 @@ Route::get('/chat', fn() => view('client.chat'))->name('chat');
 Route::get('/notification', fn() => view('client.notification'))->name('notification');
 Route::get('/client/profile/{id}', [ClientProfileController::class, 'show'])
     ->name('client.profile.show');
-Route::get('/profile/akun', fn() => view('client.settings.profil-akun'))->name('profile-akun');
-Route::get('/profile/kontak', fn() => view('client.settings.profil-kontak'))->name('profile-kontak');
-Route::get('/profile/manage', fn() => view('client.settings.manage-akun'))->name('manage-akun');
-Route::get('/profile/rating', fn() => view('client.settings.rating'))->name('rating');
+
+
+// Route::get('/profile/akun', fn() => view('client.settings.profil-akun'))->name('profile-akun');
+// Route::get('/profile/kontak', fn() => view('client.settings.profil-kontak'))->name('profile-kontak');
+// Route::get('/profile/manage', fn() => view('client.settings.manage-akun'))->name('manage-akun');
+// Route::get('/profile/rating', fn() => view('client.settings.rating'))->name('rating');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Menampilkan halaman edit profil client (profil-akun)
+    Route::get('/profile/akun', [ClientProfileController::class, 'showAccount'])
+        ->name('profile-akun');
+    
+    // Update profil client (POST karena ada file upload)
+    Route::post('/profile/akun/update', [ClientProfileController::class, 'updateAccount'])
+        ->name('profile-akun.update');
+    
+    // Halaman kontak dan manage akun
+    Route::get('/profile/kontak', fn() => view('client.settings.profil-kontak'))
+        ->name('profile-kontak');
+    Route::get('/profile/manage', fn() => view('client.settings.manage-akun'))
+        ->name('manage-akun');
+    
+    // Rating (jika ada)
+    Route::get('/profile/rating', fn() => view('client.settings.rating'))
+        ->name('rating');
+});
+
 // Route::get('/profile/job', fn() => view('client.projek'))->name('projek');
 Route::get('/freelancer/1', fn() => view('client.freelancer.1'))->name('freelancer1');
 Route::get('/freelancer/{project}', [PostingController::class, 'freelancer'])->name('freelancer.show');
@@ -195,16 +225,43 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/client/update-social-media', [ClientAdditionalInfoController::class, 'updateSocialMedia'])->name('client.updateSocialMedia');
     Route::get('/client/get-info', [ClientAdditionalInfoController::class, 'getInfo'])->name('client.getInfo');
 });
-
-Route::middleware(['auth'])->group(function () {
-    Route::post('/freelancer/update-bio', [FreelancerAdditionalInfoController::class, 'updateBio'])->name('freelancer.updateBio');
-    Route::post('/freelancer/update-skills', [FreelancerAdditionalInfoController::class, 'updateSkills'])->name('freelancer.updateSkills');
-    Route::post('/freelancer/update-portfolio', [FreelancerAdditionalInfoController::class, 'updatePortfolio'])->name('freelancer.updatePortfolio');
-    Route::post('/freelancer/update-education', [FreelancerAdditionalInfoController::class, 'updateEducation'])->name('freelancer.updateEducation');
-    Route::post('/freelancer/update-rate', [FreelancerAdditionalInfoController::class, 'updateRate'])->name('freelancer.updateRate');
-    Route::get('/freelancer/get-info', [FreelancerAdditionalInfoController::class, 'getInfo'])->name('freelancer.getInfo');
+Route::prefix('client')->group(function () {
+    Route::get('/additional-info', [ClientAdditionalInfoController::class, 'getInfo'])->name('client.additional-info.get');
+    Route::post('/additional-info/company', [ClientAdditionalInfoController::class, 'updateCompanyInfo'])->name('client.additional-info.company');
+    Route::post('/additional-info/vision-mission', [ClientAdditionalInfoController::class, 'updateVisionMission'])->name('client.additional-info.vision-mission');
+    Route::post('/additional-info/communication', [ClientAdditionalInfoController::class, 'updateCommunication'])->name('client.additional-info.communication');
+    Route::post('/additional-info/social-media', [ClientAdditionalInfoController::class, 'updateSocialMedia'])->name('client.additional-info.social-media');
 });
 
+
+Route::middleware(['auth'])->group(function() {
+    Route::get('/freelancer/profile/contact', [FreelancerProfileController::class, 'showContactInfo'])
+        ->name('freelancer-profile-kontak');
+    
+    Route::post('/freelancer/update-bio', [FreelancerProfileController::class, 'updateBio'])
+        ->name('freelancer.updateBio');
+    Route::post('/freelancer/update-skills', [FreelancerProfileController::class, 'updateSkills'])
+        ->name('freelancer.updateSkills');
+    Route::post('/freelancer/update-portfolio', [FreelancerProfileController::class, 'updatePortfolio'])
+        ->name('freelancer.updatePortfolio');
+    Route::post('/freelancer/update-education', [FreelancerProfileController::class, 'updateEducation'])
+        ->name('freelancer.updateEducation');
+    Route::post('/freelancer/update-rate', [FreelancerProfileController::class, 'updateRate'])
+        ->name('freelancer.updateRate');
+    Route::get('/freelancer/additional-info', [FreelancerAdditionalInfoController::class, 'getInfo']);
+});
+
+Route::prefix('freelancer')->middleware(['auth'])->group(function () {
+    // GET route untuk mengambil data
+    Route::get('/additional-info', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'getInfo'])->name('freelancer.additional-info.get');
+    
+    // POST routes untuk update data
+    Route::post('/additional-info/bio', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'updateBio'])->name('freelancer.additional-info.bio');
+    Route::post('/additional-info/skills', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'updateSkills'])->name('freelancer.additional-info.skills');
+    Route::post('/additional-info/portfolio', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'updatePortfolio'])->name('freelancer.additional-info.portfolio');
+    Route::post('/additional-info/education', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'updateEducation'])->name('freelancer.additional-info.education');
+    Route::post('/additional-info/rate', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'updateRate'])->name('freelancer.additional-info.rate');
+});
 
 // Form buat isi profil freelancer
 Route::get('/freelancer/profile/create', [FreelancerProfileController::class, 'create'])->name('freelancer.profile.create')->middleware(['auth', 'verified']); 
@@ -235,9 +292,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/freelancer/profile/edit', [FreelancerProfileController::class, 'edit'])->name('freelancer.profile.edit');
     Route::put('/freelancer/profile', [FreelancerProfileController::class, 'update'])->name('freelancer.profile.update');
 });
-Route::get('/freelancer/profile/akun', fn() => view('freelancer.settings.profil-akun'))->name('freelancer-profile-akun');
-Route::get('/freelancer/profile/kontak', fn() => view('freelancer.settings.profil-kontak'))->name('freelancer-profile-kontak');
-Route::get('/freelancer/profile/manage', fn() => view('freelancer.settings.manage-akun'))->name('freelancer-manage-akun');
+
+
+// Route::get('/freelancer/profile/akun', fn() => view('freelancer.settings.profil-akun'))->name('freelancer-profile-akun');
+// Route::get('/freelancer/profile/kontak', fn() => view('freelancer.settings.profil-kontak'))->name('freelancer-profile-kontak');
+// Route::get('/freelancer/profile/manage', fn() => view('freelancer.settings.manage-akun'))->name('freelancer-manage-akun');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Menampilkan halaman edit profil (profil-akun)
+    Route::get('/freelancer/profile/akun', [FreelancerProfileController::class, 'showAccount'])
+        ->name('freelancer-profile-akun');
+    
+    // Update profil freelancer
+    Route::put('/freelancer/profile/update', [FreelancerProfileController::class, 'update'])
+        ->name('freelancer.profile.update');
+    
+    // Halaman kontak dan manage akun (jika sudah dibuat)
+    Route::get('/freelancer/profile/kontak', fn() => view('freelancer.settings.profil-kontak'))
+        ->name('freelancer-profile-kontak');
+    Route::get('/freelancer/profile/manage', fn() => view('freelancer.settings.manage-akun'))
+        ->name('freelancer-manage-akun');
+});
+
+
 Route::get('/notification/freelancer', fn() => view('freelancer.notification'))->name('notification');
 Route::get('/saldo/freelancer', fn() => view('freelancer.tarik-saldo'))->name('saldo');
 

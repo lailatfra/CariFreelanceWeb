@@ -268,7 +268,7 @@
         <!-- Content -->
         <section class="flex-1">
             <!-- Ubah Password -->
-            <div class="card">
+            <!-- <div class="card">
                 <header>
                     <h3>Ubah Password</h3>
                     <p>Pastikan menggunakan password yang kuat dan unik</p>
@@ -290,10 +290,47 @@
                         <button type="submit" class="btn-primary">Simpan</button>
                     </div>
                 </form>
+            </div> -->
+
+            <!-- Ubah Password -->
+            <div class="card">
+                <header>
+                    <h3>Reset Password</h3>
+                    <p>Link reset password akan terkirim ke email yang anda gunakan untuk login. klik link di email yang anda gunakan untuk login untuk melanjutkan.</p>
+                </header>
+
+                {{-- Pesan setelah link terkirim --}}
+                @if (session('status'))
+                    <div class="alert alert-success mt-2">
+                        Link verifikasi telah dikirim ke email 
+                        <strong>{{ auth()->user()->email }}</strong>. 
+                        Silakan cek inbox atau folder spam.
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('password.email') }}">
+                    @csrf
+
+                    <div class="form-group mb-3">
+                        <label for="email">Email Anda</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            class="form-control" 
+                            value="{{ auth()->user()->email }}" 
+                            disabled
+                        >
+                    </div><br>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        Kirim Link Reset Password
+                    </button>
+                </form>
             </div>
 
+            
             <!-- Hapus Akun -->
-            <div class="card">
+            <!-- <div class="card">
                 <header>
                     <h3>Hapus Akun</h3>
                     <p>Tindakan ini tidak dapat dibatalkan. Semua data Anda akan dihapus permanen.</p>
@@ -306,7 +343,7 @@
                     <div style="text-align: right;">
                         <button type="submit" class="btn-danger">Hapus Akun</button>
                     </div>
-                </form>
+                </form> -->
             </div>
         </section>
     </main>

@@ -29,7 +29,7 @@ class FreelancerProfileController extends Controller
             'location'          => 'nullable|string|max:255',
             'category'          => 'nullable|string|max:100',
             'subskills'         => 'nullable|string',
-            'bio'               => 'nullable|string',
+            'bio'               => 'nullable|string|max:1000',
             'identity_document' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:4096',
             'npwp'              => 'nullable|string|max:30',
             'hourly_rate'       => 'nullable|numeric',
@@ -68,9 +68,9 @@ class FreelancerProfileController extends Controller
             'hourly_rate'       => $request->hourly_rate,
             'languages'         => $request->languages,
             'work_type'         => $request->work_type,
-            'rating'            => 0, // default
-            'review_count'      => 0, // default
-            'project_count'     => 0, // default
+            'rating'            => 0,
+            'review_count'      => 0,
+            'project_count'     => 0,
         ]);
 
         // Logout dan bersihkan session register
@@ -84,7 +84,7 @@ class FreelancerProfileController extends Controller
     {
         // Ambil data freelancer profile berdasarkan user yang sedang login
         $freelancerProfile = FreelancerProfile::where('user_id', Auth::id())
-            ->with('user') // Load relasi user untuk mendapatkan email, created_at, dll
+            ->with('user')
             ->first();
 
         // Jika belum ada profile, redirect ke halaman create
@@ -106,54 +106,84 @@ class FreelancerProfileController extends Controller
             return redirect()->route('freelancer.profile.create');
         }
 
-        return view('freelancer.profile.edit', compact('freelancerProfile'));
+        // Gunakan view yang sama dengan profil-akun
+        return view('freelancer.settings.profil-akun', compact('freelancerProfile'));
     }
 
     public function update(Request $request)
     {
         $freelancerProfile = FreelancerProfile::where('user_id', Auth::id())->first();
 
-        $validatedData = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'headline' => 'nullable|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'bio' => 'nullable|string',
-            'skills' => 'nullable|string',
-            'subskills' => 'nullable|string',
-            'experience_years' => 'nullable|integer|min:0',
-            'hourly_rate' => 'nullable|integer|min:0',
-            'category' => 'nullable|string|max:100',
-            'work_type' => 'nullable|string|max:50',
-            'languages' => 'nullable|string',
-            'portofolio_link' => 'nullable|url',
-            'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+        if (!$freelancerProfile) {
+            return redirect()->route('freelancer.profile.create')
+                ->with('error', 'Profile tidak ditemukan. Silakan buat profile terlebih dahulu.');
+        }
+
+        // Validasi data
+        $rules = [
+            'full_name'         => 'required|string|max:255',
+            'headline'          => 'nullable|string|max:255',
+            'location'          => 'nullable|string|max:255',
+            'phone'             => 'nullable|string|max:20',
+            'bio'               => 'nullable|string|max:1000',
+            'skills'            => 'nullable|string',
+            'subskills'         => 'nullable|string',
+            'experience_years'  => 'nullable|integer|min:0|max:50',
+            'hourly_rate'       => 'nullable|numeric|min:0',
+            'category'          => 'nullable|string|max:100',
+            'work_type'         => 'nullable|string|max:50',
+            'languages'         => 'nullable|string',
+            'portofolio_link'   => 'nullable|url',
+            'profile_photo'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'identity_document' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:4096',
+            'npwp'              => 'nullable|string|max:30',
+        ];
+
+        // Username hanya bisa diubah jika berbeda dari yang sekarang
+        if ($request->username !== $freelancerProfile->username) {
+            $rules['username'] = 'required|string|max:50|unique:freelancer_profiles,username';
+        }
+
+        $validatedData = $request->validate($rules);
 
         // Handle file upload untuk profile photo
         if ($request->hasFile('profile_photo')) {
-            $path = $request->file('profile_photo')->store('profile_photos', 'public');
+            // Hapus foto lama jika ada
+            if ($freelancerProfile->profile_photo) {
+                Storage::disk('public')->delete($freelancerProfile->profile_photo);
+            }
+            
+            $path = $request->file('profile_photo')->store('freelancer_photos', 'public');
             $validatedData['profile_photo'] = $path;
         }
 
+        // Handle file upload untuk identity document
+        if ($request->hasFile('identity_document')) {
+            // Hapus dokumen lama jika ada
+            if ($freelancerProfile->identity_document) {
+                Storage::disk('public')->delete($freelancerProfile->identity_document);
+            }
+            
+            $path = $request->file('identity_document')->store('freelancer_documents', 'public');
+            $validatedData['identity_document'] = $path;
+        }
+
+        // Update profile
         $freelancerProfile->update($validatedData);
 
-        return redirect()->route('freelancer.profile.show')
+        return redirect()->route('freelancer-profile-akun')
             ->with('success', 'Profil berhasil diperbarui!');
     }
 
     /**
      * Method untuk menampilkan profil publik berdasarkan user_id
-     * Ini yang akan digunakan dari halaman proposal
      */
     public function showPublic($id)
     {
-        // Cari berdasarkan user_id, bukan id freelancer_profile
         $freelancerProfile = FreelancerProfile::with('user')
             ->where('user_id', $id)
             ->first();
 
-        // Jika tidak ditemukan profil freelancer
         if (!$freelancerProfile) {
             return redirect()->back()
                 ->with('error', 'Profil freelancer tidak ditemukan atau belum lengkap.');
@@ -177,5 +207,22 @@ class FreelancerProfileController extends Controller
         }
 
         return view('freelancer.profile.profile-publik', compact('freelancerProfile'));
+    }
+
+    /**
+     * Method untuk menampilkan halaman account settings
+     */
+    public function showAccount()
+    {
+        $freelancerProfile = FreelancerProfile::where('user_id', Auth::id())
+            ->with('user')
+            ->first();
+
+        if (!$freelancerProfile) {
+            return redirect()->route('freelancer.profile.create')
+                ->with('message', 'Silakan lengkapi profil freelancer Anda terlebih dahulu.');
+        }
+
+        return view('freelancer.settings.profil-akun', compact('freelancerProfile'));
     }
 }

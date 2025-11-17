@@ -24,7 +24,7 @@
             padding: 0 1.5rem;
         }
         aside {
-            width: 16rem; /* 256px */
+            width: 16rem;
             flex-shrink: 0;
             font-size: 0.875rem;
             color: #475569;
@@ -73,6 +73,7 @@
             padding: 1.5rem;
             font-size: 0.875rem;
             color: #475569;
+            margin-bottom: 1.5rem;
         }
         .card header {
             margin-bottom: 1.5rem;
@@ -100,6 +101,9 @@
         }
         .avatar-container img {
             border-radius: 50%;
+            width: 96px;
+            height: 96px;
+            object-fit: cover;
         }
         .avatar-container button {
             position: absolute;
@@ -128,7 +132,12 @@
             color: #1E293B;
             user-select: none;
         }
-        .input[type="text"], select {
+        .input[type="text"],
+        .input[type="number"],
+        .input[type="url"],
+        .input[type="file"],
+        textarea,
+        select {
             border: 1px solid #CBD5E1;
             background-color: white;
             border-radius: 0.375rem;
@@ -137,10 +146,19 @@
             color: #1E293B;
             width: 100%;
             outline: none;
+            box-sizing: border-box;
         }
-        .input[type="text"]:focus, select:focus {
+        .input[type="text"]:focus,
+        .input[type="number"]:focus,
+        .input[type="url"]:focus,
+        textarea:focus,
+        select:focus {
             border-color: #2563EB;
             box-shadow: 0 0 0 2px #2563EB33;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
         .username-box {
             display: flex;
@@ -163,18 +181,6 @@
             outline: none;
             color: #1E293B;
         }
-        .dob-select {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .dob-select select {
-            width: 8rem;
-        }
-        .dob-select select:nth-child(2) {
-            width: 10rem;
-        }
-        /* Button */
         .btn-primary {
             background-color: #2563EB;
             color: white;
@@ -188,35 +194,29 @@
         .btn-primary:hover {
             background-color: #1D4ED8;
         }
-                       /* Navigation Categories - Same styling from original */
-.nav-container {
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    position: sticky;
-    top: -1px;
-    z-index: 100;
-    width: 100vw;
-    
-    margin: 0 !important;
-    margin-left: -1.5rem !important;
-    margin-right: -1.5rem !important;
-    margin-top: -1.5rem !important; /* Tambahkan ini untuk menghilangkan gap atas */
-    
-    padding: 0;
-    transition: all 0.3s ease;
-}
-
+        .nav-container {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: -1px;
+            z-index: 100;
+            width: 100vw;
+            margin: 0 !important;
+            margin-left: -1.5rem !important;
+            margin-right: -1.5rem !important;
+            margin-top: -1.5rem !important;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
         .nav-container.scrolled {
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             top: 60px;
         }
-
         .nav {
             max-width: 100%;
             margin: 0 auto;
             padding: 0 20px;
         }
-
         .nav-list {
             display: flex;
             list-style: none;
@@ -229,11 +229,9 @@
             justify-content: center;
             flex-wrap: nowrap;
         }
-
         .nav-list::-webkit-scrollbar {
             display: none;
         }
-
         .nav-item {
             white-space: nowrap;
             cursor: pointer;
@@ -249,7 +247,6 @@
             align-items: center;
             flex-shrink: 0;
         }
-
         .nav-item:hover, .nav-item.active {
             background: transparent;
             color: #1DA1F2;
@@ -257,7 +254,6 @@
             box-shadow: none;
             transform: translateY(-1px);
         }
-
         .nav-link {
             text-decoration: none;
             color: inherit;
@@ -266,17 +262,50 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
-
         .nav-item:hover .nav-link,
         .nav-item.active .nav-link {
             color: #1DA1F2;
             text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
         }
-
+        .alert {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+        .alert-success {
+            background-color: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #10B981;
+        }
+        .alert-error {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #EF4444;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            main {
+                flex-direction: column;
+            }
+            aside {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+            section.flex-1 {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 <body>
-               <!-- Category Navigation -->
+    <!-- Category Navigation -->
     <div class="nav-container">
         <nav class="nav">
             <ul class="nav-list">
@@ -298,6 +327,7 @@
             </ul>
         </nav>
     </div>
+
     <main style="margin-top: 40px;">
         <!-- Sidebar -->
         <aside>
@@ -309,65 +339,154 @@
                     <li><a href="{{ route('freelancer-manage-akun') }}"><i class="fas fa-lock text-xs"></i><span>Manajemen Akun</span></a></li>
                 </ul>
             </section>
-            <section>
-
-            </section>
         </aside>
 
         <!-- Content -->
         <section class="flex-1">
-            <div class="card" aria-label="Account information form">
-                <header>
-                    <h3>Informasi akun</h3>
-                    <p>Atur informasi dasar akun Anda</p>
-                </header>
-                <div class="avatar-container">
-                    <img src="https://placehold.co/96x96/8DA4F1/FFFFFF/png?text=User+Avatar" alt="User avatar">
-                    <button aria-label="Edit avatar"><i class="fas fa-pen text-xs"></i></button>
-                </div>
-                <form novalidate>
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <div class="username-box">
-                            <input type="text" id="username" value="lk6obm9l">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class=".label" for="displayname">Nama yang digunakan untuk ditampilkan di sistem</label>
-                        <p>Nama tersebut harus terdengar formal untuk membangun kredibilitas Anda</p>
-                        <input class="input" type="text" id="displayname" value="lk6obm9l">
-                    </div>
-                    <div class="form-group">
-                        <label class=".label">Tanggal lahir</label>
-                        <div class="dob-select">
-                            <select aria-label="Tanggal">
-                                <option disabled selected>Tanggal</option>
-                                @for($i=1; $i<=31; $i++)
-                                    <option>{{ $i }}</option>
-                                @endfor
-                            </select>
-                            <select aria-label="Bulan">
-                                <option disabled selected>Bulan</option>
-                                <option>Januari</option><option>Februari</option><option>Maret</option>
-                                <option>April</option><option>Mei</option><option>Juni</option>
-                                <option>Juli</option><option>Agustus</option><option>September</option>
-                                <option>Oktober</option><option>November</option><option>Desember</option>
-                            </select>
-                            <select aria-label="Tahun">
-                                <option disabled selected>Tahun</option>
-                                @for($y=2024; $y>=2000; $y--)
-                                    <option>{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <button type="submit" class="btn-primary">Simpan</button>
-                    </div>
-                </form>
+            @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
             </div>
+            @endif
+
+            @if($errors->any())
+            <div class="alert alert-error">
+                <ul style="margin: 0; padding-left: 1.25rem;">
+                    @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            <!-- Form Tunggal untuk Semua Data -->
+            <form action="{{ route('freelancer.profile.update') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+
+                <!-- Informasi Dasar -->
+                <div class="card">
+                    <header>
+                        <h3>Informasi Dasar</h3>
+                        <p>Atur informasi dasar akun Anda</p>
+                    </header>
+                    
+                    <div class="avatar-container">
+                        <img src="{{ $freelancerProfile->profile_photo ? asset('storage/' . $freelancerProfile->profile_photo) : 'https://placehold.co/96x96/8DA4F1/FFFFFF/png?text=' . strtoupper(substr($freelancerProfile->full_name, 0, 1)) }}" 
+                             alt="User avatar" id="preview-avatar">
+                        <button type="button" onclick="document.getElementById('profile_photo').click()" aria-label="Edit avatar">
+                            <i class="fas fa-pen text-xs"></i>
+                        </button>
+                    </div>
+                    <input type="file" id="profile_photo" name="profile_photo" style="display: none;" accept="image/*">
+
+                    <div class="form-group">
+                        <label class="label" for="username">Username</label>
+                        <div class="username-box">
+                            <span>@</span>
+                            <input type="text" id="username" name="username" value="{{ old('username', $freelancerProfile->username) }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="full_name">Nama Lengkap</label>
+                        <input class="input" type="text" id="full_name" name="full_name" value="{{ old('full_name', $freelancerProfile->full_name) }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="headline">Headline</label>
+                        <p style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.25rem;">Deskripsi singkat tentang keahlian Anda</p>
+                        <input class="input" type="text" id="headline" name="headline" value="{{ old('headline', $freelancerProfile->headline) }}" placeholder="Contoh: Web Developer | Graphic Designer">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="location">Lokasi</label>
+                        <input class="input" type="text" id="location" name="location" value="{{ old('location', $freelancerProfile->location) }}">
+                    </div>
+                </div>
+
+                <!-- Keahlian & Pengalaman -->
+                <div class="card">
+                    <header>
+                        <h3>Keahlian & Pengalaman</h3>
+                        <p>Informasi tentang skill dan pengalaman kerja Anda</p>
+                    </header>
+
+                    <div class="form-group">
+                        <label class="label" for="subskills">Sub-keahlian</label>
+                        <textarea id="subskills" name="subskills" placeholder="Detail keahlian, contoh: Laravel, React, Vue.js, UI/UX Design">{{ old('subskills', $freelancerProfile->subskills) }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="experience_years">Tahun Pengalaman</label>
+                        <input class="input" type="number" id="experience_years" name="experience_years" value="{{ old('experience_years', $freelancerProfile->experience_years) }}" min="0" max="50">
+                    </div>
+                </div>
+
+                <!-- Bio -->
+                <div class="card">
+                    <header>
+                        <h3>Bio & Profil Profesional</h3>
+                        <p>Ceritakan tentang diri Anda kepada calon klien</p>
+                    </header>
+
+                    <div class="form-group">
+                        <label class="label" for="bio">Bio</label>
+                        <textarea id="bio" name="bio" rows="6" maxlength="1000" placeholder="Ceritakan tentang pengalaman, keahlian, dan apa yang membuat Anda berbeda...">{{ old('bio', $freelancerProfile->bio) }}</textarea>
+                        <small style="color: #94A3B8;"><span id="bioCount">{{ strlen($freelancerProfile->bio ?? '') }}</span>/1000 karakter</small>
+                    </div>
+                </div>
+
+                <!-- Kontak & Portofolio -->
+                <div class="card">
+                    <header>
+                        <h3>Kontak & Portofolio</h3>
+                        <p>Informasi kontak dan link portfolio Anda</p>
+                    </header>
+
+                    <div class="form-group">
+                        <label class="label" for="phone">Nomor Telepon</label>
+                        <input class="input" type="text" id="phone" name="phone" value="{{ old('phone', $freelancerProfile->phone) }}" placeholder="08xxxxxxxxxx">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label" for="portofolio_link">Link Portfolio</label>
+                        <input class="input" type="url" id="portofolio_link" name="portofolio_link" value="{{ old('portofolio_link', $freelancerProfile->portofolio_link) }}" placeholder="https://portfolio.com">
+                    </div>
+                </div>
+
+                <!-- Tombol Simpan -->
+                <div style="text-align: right;">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save" style="margin-right: 0.5rem;"></i>
+                        Simpan Semua Perubahan
+                    </button>
+                </div><br>
+            </form>
         </section>
     </main>
+
+    <script>
+        // Preview avatar
+        document.getElementById('profile_photo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-avatar').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Bio character counter
+        const bioTextarea = document.getElementById('bio');
+        const bioCount = document.getElementById('bioCount');
+        
+        bioTextarea.addEventListener('input', function() {
+            bioCount.textContent = this.value.length;
+        });
+    </script>
 </body>
 </html>
 @endsection

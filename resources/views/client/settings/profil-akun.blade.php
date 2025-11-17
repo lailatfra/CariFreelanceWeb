@@ -74,6 +74,7 @@
             padding: 1.5rem;
             font-size: 0.875rem;
             color: #475569;
+            margin-bottom: 1.5rem;
         }
         .card header {
             margin-bottom: 1.5rem;
@@ -132,7 +133,10 @@
             color: #1E293B;
             user-select: none;
         }
-        .input[type="text"], select {
+        .input[type="text"],
+        .input[type="url"],
+        textarea,
+        select {
             border: 1px solid #CBD5E1;
             background-color: white;
             border-radius: 0.375rem;
@@ -141,10 +145,18 @@
             color: #1E293B;
             width: 100%;
             outline: none;
+            box-sizing: border-box;
         }
-        .input[type="text"]:focus, select:focus {
+        .input[type="text"]:focus,
+        .input[type="url"]:focus,
+        textarea:focus,
+        select:focus {
             border-color: #2563EB;
             box-shadow: 0 0 0 2px #2563EB33;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
         .username-box {
             display: flex;
@@ -166,17 +178,6 @@
             padding: 0;
             outline: none;
             color: #1E293B;
-        }
-        .dob-select {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .dob-select select {
-            width: 8rem;
-        }
-        .dob-select select:nth-child(2) {
-            width: 10rem;
         }
         .btn-primary {
             background-color: #2563EB;
@@ -290,6 +291,28 @@
             color: #1DA1F2;
             text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
         }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            main {
+                flex-direction: column;
+            }
+            aside {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+            section.flex-1 {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -359,15 +382,17 @@
             </div>
             @endif
 
-            <div class="card" aria-label="Account information form">
-                <header>
-                    <h3>Informasi akun</h3>
-                    <p>Atur informasi dasar akun Anda</p>
-                </header>
+            <!-- Form Tunggal untuk Semua Data -->
+            <form action="{{ route('profile-akun.update') }}" method="POST" enctype="multipart/form-data">
+                @csrf
 
-                <!-- Avatar Upload Form -->
-                <form action="{{ route('profile-akun.avatar') }}" method="POST" enctype="multipart/form-data" id="avatarForm">
-                    @csrf
+                <!-- Informasi Dasar -->
+                <div class="card">
+                    <header>
+                        <h3>Informasi Dasar</h3>
+                        <p>Atur informasi dasar akun Anda</p>
+                    </header>
+
                     <div class="avatar-container">
                         <img src="{{ $clientProfile && $clientProfile->profile_photo 
                             ? asset('storage/' . $clientProfile->profile_photo) 
@@ -376,13 +401,8 @@
                         <button type="button" aria-label="Edit avatar" onclick="document.getElementById('avatarInput').click()">
                             <i class="fas fa-pen text-xs"></i>
                         </button>
-                        <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;">
                     </div>
-                </form>
-
-                <!-- Account Info Form -->
-                <form action="{{ route('profile-akun.update') }}" method="POST">
-                    @csrf
+                    <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;">
                     
                     <div class="form-group">
                         <label for="username" class="label">Username</label>
@@ -392,104 +412,103 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="label" for="displayname">Nama yang digunakan untuk ditampilkan di sistem</label>
-                        <p style="margin-bottom: 0.5rem;">Nama tersebut harus terdengar formal untuk membangun kredibilitas Anda</p>
+                        <label class="label" for="displayname">Nama yang digunakan untuk ditampilkan</label>
+                        <p style="margin-bottom: 0.5rem; font-size: 0.75rem; color: #94A3B8;">Nama tersebut harus terdengar formal untuk membangun kredibilitas Anda</p>
                         <input class="input" type="text" id="displayname" name="display_name" value="{{ old('display_name', $user->name ?? '') }}" required>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="label">Tanggal lahir</label>
-                        @php
-                            $birthDate = $user->birth_date ? \Carbon\Carbon::parse($user->birth_date) : null;
-                        @endphp
-                        <div class="dob-select">
-                            <select aria-label="Tanggal" name="birth_date">
-                                <option value="" disabled {{ !$birthDate ? 'selected' : '' }}>Tanggal</option>
-                                @for($i=1; $i<=31; $i++)
-                                    <option value="{{ $i }}" {{ $birthDate && $birthDate->day == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                @endfor
-                            </select>
-                            <select aria-label="Bulan" name="birth_month">
-                                <option value="" disabled {{ !$birthDate ? 'selected' : '' }}>Bulan</option>
-                                @php
-                                    $months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                                @endphp
-                                @foreach($months as $index => $month)
-                                    <option value="{{ $index + 1 }}" {{ $birthDate && $birthDate->month == ($index + 1) ? 'selected' : '' }}>{{ $month }}</option>
-                                @endforeach
-                            </select>
-                            <select aria-label="Tahun" name="birth_year">
-                                <option value="" disabled {{ !$birthDate ? 'selected' : '' }}>Tahun</option>
-                                @for($y=date('Y'); $y>=1900; $y--)
-                                    <option value="{{ $y }}" {{ $birthDate && $birthDate->year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                    </div>
+                <!-- Informasi Perusahaan -->
+                <div class="card">
+                    <header>
+                        <h3>Informasi Perusahaan</h3>
+                        <p>Detail tentang perusahaan Anda</p>
+                    </header>
 
                     <div class="form-group">
                         <label class="label" for="company_name">Nama Perusahaan</label>
-                        <input class="input" type="text" id="company_name" name="company_name" value="{{ old('company_name', $clientProfile->company_name ?? $additionalInfo->company_name ?? '') }}">
+                        <input class="input" type="text" id="company_name" name="company_name" 
+                            value="{{ old('company_name', $clientProfile->company_name ?? $additionalInfo->company_name ?? '') }}">
                     </div>
 
                     <div class="form-group">
-                        <label class="label" for="industry">Industri</label>
-                        <input class="input" type="text" id="industry" name="industry" value="{{ old('industry', $additionalInfo->industry ?? '') }}" placeholder="e.g., Technology, Fashion, Finance">
+                        <label class="label" for="tujuan">Tujuan</label>
+                        <input class="input" type="text" id="tujuan" name="tujuan" 
+                            value="{{ old('tujuan', $clientProfile->tujuan ?? '') }}" 
+                            placeholder="Contoh: Mencari freelancer untuk membangun website">
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="label" for="company_size">Ukuran Perusahaan</label>
-                        <select id="company_size" name="company_size">
-                            <option value="" disabled {{ !($additionalInfo->company_size ?? null) ? 'selected' : '' }}>Pilih ukuran perusahaan</option>
-                            <option value="1-10" {{ ($additionalInfo->company_size ?? '') == '1-10' ? 'selected' : '' }}>1-10 karyawan</option>
-                            <option value="11-50" {{ ($additionalInfo->company_size ?? '') == '11-50' ? 'selected' : '' }}>11-50 karyawan</option>
-                            <option value="51-200" {{ ($additionalInfo->company_size ?? '') == '51-200' ? 'selected' : '' }}>51-200 karyawan</option>
-                            <option value="201-500" {{ ($additionalInfo->company_size ?? '') == '201-500' ? 'selected' : '' }}>201-500 karyawan</option>
-                            <option value="500+" {{ ($additionalInfo->company_size ?? '') == '500+' ? 'selected' : '' }}>500+ karyawan</option>
-                        </select>
-                    </div>
+                <!-- Kontak & Lokasi -->
+                <div class="card">
+                    <header>
+                        <h3>Kontak & Lokasi</h3>
+                        <p>Informasi kontak perusahaan Anda</p>
+                    </header>
 
                     <div class="form-group">
                         <label class="label" for="phone">Nomor Telepon</label>
-                        <input class="input" type="text" id="phone" name="phone" value="{{ old('phone', $clientProfile->phone ?? '') }}" placeholder="+62 812 3456 7890">
+                        <input class="input" type="text" id="phone" name="phone" 
+                            value="{{ old('phone', $clientProfile->phone ?? '') }}" 
+                            placeholder="+62 812 3456 7890">
                     </div>
 
                     <div class="form-group">
                         <label class="label" for="location">Lokasi</label>
-                        <input class="input" type="text" id="location" name="location" value="{{ old('location', $clientProfile->location ?? '') }}" placeholder="Jakarta, Indonesia">
+                        <input class="input" type="text" id="location" name="location" 
+                            value="{{ old('location', $clientProfile->location ?? '') }}" 
+                            placeholder="Jakarta, Indonesia">
                     </div>
+                </div>
+
+                <!-- Bio -->
+                <div class="card">
+                    <header>
+                        <h3>Bio / Deskripsi</h3>
+                        <p>Ceritakan tentang perusahaan Anda</p>
+                    </header>
 
                     <div class="form-group">
-                        <label class="label" for="website">Website Perusahaan</label>
-                        <input class="input" type="text" id="website" name="website" value="{{ old('website', $additionalInfo->website ?? '') }}" placeholder="https://example.com">
+                        <label class="label" for="bio">Bio</label>
+                        <textarea id="bio" name="bio" rows="6" maxlength="1000" 
+                            placeholder="Ceritakan sedikit tentang perusahaan Anda...">{{ old('bio', $clientProfile->bio ?? '') }}</textarea>
+                        <small style="color: #94A3B8;"><span id="bioCount">{{ strlen($clientProfile->bio ?? '') }}</span>/1000 karakter</small>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="label" for="bio">Bio / Deskripsi Singkat</label>
-                        <textarea class="input" id="bio" name="bio" rows="4" style="resize: vertical;" placeholder="Ceritakan sedikit tentang perusahaan Anda...">{{ old('bio', $clientProfile->bio ?? '') }}</textarea>
-                    </div>
-
-                    <div style="text-align: right;">
-                        <button type="submit" class="btn-primary">Simpan</button>
-                    </div>
-                </form>
-            </div>
+                <!-- Tombol Simpan -->
+                <div style="text-align: right;">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save" style="margin-right: 0.5rem;"></i>
+                        Simpan Semua Perubahan
+                    </button><br>
+                </div>
+            </form>
         </section>
     </main>
 
     <script>
-        // Auto-submit avatar form when file is selected
+        // Preview avatar
         document.getElementById('avatarInput').addEventListener('change', function(e) {
             if (this.files && this.files[0]) {
-                // Preview image
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('avatarPreview').src = e.target.result;
                 };
                 reader.readAsDataURL(this.files[0]);
-                
-                // Submit form
-                document.getElementById('avatarForm').submit();
+            }
+        });
+
+        // Bio character counter
+        const bioTextarea = document.getElementById('bio');
+        const bioCount = document.getElementById('bioCount');
+        
+        bioTextarea.addEventListener('input', function() {
+            bioCount.textContent = this.value.length;
+            if (this.value.length > 1000) {
+                bioCount.style.color = '#ff5252';
+            } else {
+                bioCount.style.color = '#94A3B8';
             }
         });
 

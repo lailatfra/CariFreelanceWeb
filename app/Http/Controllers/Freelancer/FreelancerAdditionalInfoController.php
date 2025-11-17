@@ -7,16 +7,43 @@ use App\Models\FreelancerAdditionalInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class FreelancerAdditionalInfoController extends Controller
 {
+    /**
+     * Get freelancer profile info
+     */
+    public function getInfo()
+    {
+        try {
+            $userId = Auth::id();
+            Log::info('Getting freelancer info for user ID: ' . $userId);
+            
+            $info = FreelancerAdditionalInfo::where('user_id', $userId)->first();
+            
+            Log::info('Freelancer info found:', ['exists' => !is_null($info), 'data' => $info]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $info
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in getInfo: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Update bio and experience
      */
     public function updateBio(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'bio' => 'required|string|min:50',
+            'bio' => 'required|string|min:10',
             'experience' => 'nullable|string',
             'headline' => 'nullable|string|max:255',
         ]);
@@ -28,19 +55,28 @@ class FreelancerAdditionalInfoController extends Controller
             ], 422);
         }
 
-        $profile = FreelancerAdditionalInfo::updateOrCreate(
-            ['user_id' => Auth::id()],
-            [
-                'bio' => $request->bio,
-                'experience' => $request->experience,
-                'headline' => $request->headline,
-            ]
-        );
+        try {
+            $profile = FreelancerAdditionalInfo::updateOrCreate(
+                ['user_id' => Auth::id()],
+                [
+                    'bio' => $request->bio,
+                    'experience' => $request->experience,
+                    'headline' => $request->headline,
+                ]
+            );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Bio berhasil disimpan!'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Bio berhasil disimpan!',
+                'data' => $profile
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updateBio: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -61,25 +97,34 @@ class FreelancerAdditionalInfoController extends Controller
             ], 422);
         }
 
-        // Combine checkbox skills with custom skills
-        $allSkills = $request->skills;
-        if ($request->custom_skills) {
-            $customSkillsArray = array_map('trim', explode(',', $request->custom_skills));
-            $allSkills = array_merge($allSkills, $customSkillsArray);
+        try {
+            // Combine checkbox skills with custom skills
+            $allSkills = $request->skills;
+            if ($request->custom_skills) {
+                $customSkillsArray = array_map('trim', explode(',', $request->custom_skills));
+                $allSkills = array_merge($allSkills, $customSkillsArray);
+            }
+
+            $profile = FreelancerAdditionalInfo::updateOrCreate(
+                ['user_id' => Auth::id()],
+                [
+                    'skills' => implode(',', $allSkills),
+                    'experience_level' => $request->experience_level,
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => count($allSkills) . ' keahlian berhasil disimpan!',
+                'data' => $profile
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updateSkills: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
         }
-
-        $profile = FreelancerAdditionalInfo::updateOrCreate(
-            ['user_id' => Auth::id()],
-            [
-                'skills' => implode(',', $allSkills),
-                'experience_level' => $request->experience_level,
-            ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => count($allSkills) . ' keahlian berhasil disimpan!'
-        ]);
     }
 
     /**
@@ -90,7 +135,7 @@ class FreelancerAdditionalInfoController extends Controller
         $validator = Validator::make($request->all(), [
             'portfolio_title' => 'required|string|max:255',
             'portfolio_description' => 'required|string',
-            'portfolio_link' => 'nullable|url|max:255',
+            'portofolio_link' => 'nullable|url|max:255',
             'portfolio_category' => 'nullable|string',
             'portfolio_tech' => 'nullable|string',
         ]);
@@ -102,21 +147,30 @@ class FreelancerAdditionalInfoController extends Controller
             ], 422);
         }
 
-        $profile = FreelancerAdditionalInfo::updateOrCreate(
-            ['user_id' => Auth::id()],
-            [
-                'portfolio_title' => $request->portfolio_title,
-                'portfolio_description' => $request->portfolio_description,
-                'portofolio_link' => $request->portfolio_link,
-                'portfolio_category' => $request->portfolio_category,
-                'portfolio_tech' => $request->portfolio_tech,
-            ]
-        );
+        try {
+            $profile = FreelancerAdditionalInfo::updateOrCreate(
+                ['user_id' => Auth::id()],
+                [
+                    'portfolio_title' => $request->portfolio_title,
+                    'portfolio_description' => $request->portfolio_description,
+                    'portofolio_link' => $request->portofolio_link,
+                    'portfolio_category' => $request->portfolio_category,
+                    'portfolio_tech' => $request->portfolio_tech,
+                ]
+            );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Portfolio berhasil disimpan!'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Portfolio berhasil disimpan!',
+                'data' => $profile
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updatePortfolio: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -139,21 +193,30 @@ class FreelancerAdditionalInfoController extends Controller
             ], 422);
         }
 
-        $profile = FreelancerAdditionalInfo::updateOrCreate(
-            ['user_id' => Auth::id()],
-            [
-                'education' => $request->education,
-                'graduation_year' => $request->graduation_year,
-                'certifications' => $request->certifications,
-                'courses' => $request->courses,
-                'languages' => $request->languages,
-            ]
-        );
+        try {
+            $profile = FreelancerAdditionalInfo::updateOrCreate(
+                ['user_id' => Auth::id()],
+                [
+                    'education' => $request->education,
+                    'graduation_year' => $request->graduation_year,
+                    'certifications' => $request->certifications,
+                    'courses' => $request->courses,
+                    'languages' => $request->languages,
+                ]
+            );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Pendidikan & sertifikat berhasil disimpan!'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Pendidikan & sertifikat berhasil disimpan!',
+                'data' => $profile
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updateEducation: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -183,33 +246,29 @@ class FreelancerAdditionalInfoController extends Controller
             ], 422);
         }
 
-        $profile = FreelancerAdditionalInfo::updateOrCreate(
-            ['user_id' => Auth::id()],
-            [
-                'hourly_rate' => $request->hourly_rate,
-                'project_rate' => $request->project_rate,
-                'service_types' => $request->service_types,
-                'availability' => $request->availability,
-                'response_time' => $request->response_time,
-            ]
-        );
+        try {
+            $profile = FreelancerAdditionalInfo::updateOrCreate(
+                ['user_id' => Auth::id()],
+                [
+                    'hourly_rate' => $request->hourly_rate,
+                    'project_rate' => $request->project_rate,
+                    'service_types' => $request->service_types,
+                    'availability' => $request->availability,
+                    'response_time' => $request->response_time,
+                ]
+            );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Tarif berhasil disimpan!'
-        ]);
-    }
-
-    /**
-     * Get freelancer profile info
-     */
-    public function getInfo()
-    {
-        $profile = FreelancerAdditionalInfo::where('user_id', Auth::id())->first();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $profile
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Tarif berhasil disimpan!',
+                'data' => $profile
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updateRate: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

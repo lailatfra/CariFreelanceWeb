@@ -68,18 +68,29 @@
       font-size: 15px;
     }
 
+    .avatar-wrapper {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
     .profile-card .avatar {
       width: 90px;
       height: 90px;
       border-radius: 9999px;
       background: #2563eb;
       color: white;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       font-size: 36px;
       font-weight: 600;
-      margin: auto;
+    }
+
+    .avatar-img {
+      width: 90px;
+      height: 90px;
+      border-radius: 9999px;
+      object-fit: cover;
     }
 
     .profile-card h2 {
@@ -285,7 +296,7 @@
       margin-left: 8px;
     }
 
-    /* Enhanced Modal Styles - Similar to Jobboard */
+    /* Enhanced Modal Styles */
     .modal {
       display: none;
       position: fixed;
@@ -522,112 +533,182 @@
       background: var(--green-600);
     }
     
-                /* Navigation Categories - Same styling from original */
-        .nav-container {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky;
-            top: -1px;
-            z-index: 100;
-            width: 100vw;
-            margin: 0;
-            padding: 0;
-            transition: all 0.3s ease;
-        }
+    /* Navigation Categories */
+    .nav-container {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: -1px;
+      z-index: 100;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      transition: all 0.3s ease;
+    }
 
-        .nav-container.scrolled {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            top: 60px;
-        }
+    .nav-container.scrolled {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      top: 60px;
+    }
 
-        .nav {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+    .nav {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
 
-        .nav-list {
-            display: flex;
-            list-style: none;
-            overflow-x: auto;
-            padding: 4px 0;
-            gap: 90px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: nowrap;
-        }
+    .nav-list {
+      display: flex;
+      list-style: none;
+      overflow-x: auto;
+      padding: 4px 0;
+      gap: 90px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
 
-        .nav-list::-webkit-scrollbar {
-            display: none;
-        }
+    .nav-list::-webkit-scrollbar {
+      display: none;
+    }
 
-        .nav-item {
-            white-space: nowrap;
-            cursor: pointer;
-            padding: 8px 20px;
-            border-radius: 20px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            color: #666;
-            background: transparent;
-            border: none;
-            min-height: 36px;
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-        }
+    .nav-item {
+      white-space: nowrap;
+      cursor: pointer;
+      padding: 8px 20px;
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      color: #666;
+      background: transparent;
+      border: none;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
 
-        .nav-item:hover, .nav-item.active {
-            background: transparent;
-            color: #1DA1F2;
-            text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
-            box-shadow: none;
-            transform: translateY(-1px);
-        }
+    .nav-item:hover, .nav-item.active {
+      background: transparent;
+      color: #1DA1F2;
+      text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
+      box-shadow: none;
+      transform: translateY(-1px);
+    }
 
-        .nav-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
+    .nav-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
 
-        .nav-item:hover .nav-link,
-        .nav-item.active .nav-link {
-            color: #1DA1F2;
-            text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
-        }
+    .nav-item:hover .nav-link,
+    .nav-item.active .nav-link {
+      color: #1DA1F2;
+      text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
+    }
+
+    .data-display {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .data-display strong {
+      color: #374151;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .data-display p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .social-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      color: #2563eb;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .social-link:hover {
+      text-decoration: underline;
+    }
+
+    .social-link i {
+      width: 20px;
+    }
+
+    .avatar-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.avatar-img {
+    width: 130px;      /* besarkan */
+    height: 130px;     /* besarkan */
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ddd;
+}
+
+.avatar {
+    width: 130px; 
+    height: 130px;
+    border-radius: 50%;
+    background: #1e90ff;
+    color: white;
+    font-size: 50px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 
   </style>
 </head>
 
 <body>
-         <!-- Category Navigation -->
-    <div class="nav-container">
-        <nav class="nav">
-            <ul class="nav-list">
-                <li class="nav-item {{ request()->is('popular*') ? 'active' : '' }}">
-                    <a href="/popular" class="nav-link">Pekerjaan Populer</a>
-                </li>
-                <li class="nav-item {{ request()->is('grafis*') ? 'active' : '' }}">
-                    <a href="/grafis" class="nav-link">Grafis & Desain</a>
-                </li>
-                <li class="nav-item {{ request()->is('dokumen*') ? 'active' : '' }}">
-                    <a href="/dokumen" class="nav-link">Dokumen & PPT</a>
-                </li>
-                <li class="nav-item {{ request()->is('web*') ? 'active' : '' }}">
-                    <a href="/web" class="nav-link">Web & App</a>
-                </li>
-                <li class="nav-item {{ request()->is('video*') ? 'active' : '' }}">
-                    <a href="/video" class="nav-link">Video Editing</a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+  <!-- Category Navigation -->
+  <div class="nav-container">
+    <nav class="nav">
+      <ul class="nav-list">
+        <li class="nav-item {{ request()->is('popular*') ? 'active' : '' }}">
+          <a href="/popular" class="nav-link">Pekerjaan Populer</a>
+        </li>
+        <li class="nav-item {{ request()->is('grafis*') ? 'active' : '' }}">
+          <a href="/grafis" class="nav-link">Grafis & Desain</a>
+        </li>
+        <li class="nav-item {{ request()->is('dokumen*') ? 'active' : '' }}">
+          <a href="/dokumen" class="nav-link">Dokumen & PPT</a>
+        </li>
+        <li class="nav-item {{ request()->is('web*') ? 'active' : '' }}">
+          <a href="/web" class="nav-link">Web & App</a>
+        </li>
+        <li class="nav-item {{ request()->is('video*') ? 'active' : '' }}">
+          <a href="/video" class="nav-link">Video Editing</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
   <!-- Notification -->
   <div id="notification" class="notification">
     <div id="notificationMessage"></div>
@@ -636,16 +717,14 @@
   <main class="main">
     <!-- Profile card -->
     <section class="profile-card">
-      <!-- Avatar Wrapper -->
-      <div class="avatar-wrapper" style="text-align: center; margin-bottom: 10px;">
+      <!-- Avatar Wrapper - Centered -->
+      <div class="avatar-wrapper">
         @if($clientProfile->profile_photo && $clientProfile->profile_photo !== 'profile_photos/default.png')
           <img src="{{ asset('storage/' . $clientProfile->profile_photo) }}"
             alt="Foto Profil"
-            class="avatar-img rounded-circle"
-            style="width:80px; height:80px; object-fit:cover;">
+            class="avatar-img">
         @else
-          <div class="avatar"
-            style="width:80px; height:80px; line-height:80px; border-radius:50%; background:#007bff; color:#fff; font-size:28px; margin:0 auto;">
+          <div class="avatar">
             {{ strtoupper(substr($clientProfile->user->name, 0, 1)) }}
           </div>
         @endif
@@ -693,22 +772,22 @@
         @endif
       </ul>
 
-      <a href="/profile/akun">
-      <button>
-        Edit Profil Saya <i class="fas fa-pencil"></i>
-      </button>
+      <a href="{{ route('profile-akun') }}">
+        <button>
+          Edit Profil Saya <i class="fas fa-pencil"></i>
+        </button>
       </a>
       
       <a href="/posting">
-      <button>
-        Posting Pekerjaan Saya <i class="fas fa-plus"></i>
-      </button>
+        <button>
+          Posting Pekerjaan Saya <i class="fas fa-plus"></i>
+        </button>
       </a>
 
       <a href="/profile/job">
-      <button>
-        Lihat Daftar Job Saya <i class="fas fa-list"></i>
-      </button>
+        <button>
+          Lihat Daftar Job Saya <i class="fas fa-list"></i>
+        </button>
       </a>
 
     </section>
@@ -720,7 +799,7 @@
           <strong>Lengkapi profil klien Anda</strong> untuk menarik freelancer terbaik <br>
           dan membangun kepercayaan dengan penyedia layanan.
         </div>
-        <button onclick="location.href='#checklist'">Lengkapi</button>
+        <button onclick="location.href='{{ route('profile-kontak') }}'">Lengkapi</button>
       </div>
 
       <nav class="breadcrumb">
@@ -741,7 +820,7 @@
               <p>Bagikan detail tentang bisnis dan industri Anda untuk membantu freelancer memahami kebutuhan Anda.</p>
             </div>
           </div>
-          <span class="status-blue" onclick="openModal('companyModal')">Tambah</span>
+          <span class="status-blue" onclick="openModal('companyModal')">Lihat/Edit</span>
         </div>
         
         <div class="checklist-item">
@@ -752,7 +831,7 @@
               <p>Bagikan visi dan misi perusahaan untuk menunjukkan nilai dan tujuan bisnis Anda.</p>
             </div>
           </div>
-          <span class="status-blue" onclick="openModal('visionModal')">Tambah</span>
+          <span class="status-blue" onclick="openModal('visionModal')">Lihat/Edit</span>
         </div>
         
         <div class="checklist-item">
@@ -763,7 +842,7 @@
               <p>Beri tahu freelancer tentang gaya komunikasi dan ketersediaan waktu yang Anda sukai.</p>
             </div>
           </div>
-          <span class="status-blue" onclick="openModal('communicationModal')">Tambah</span>
+          <span class="status-blue" onclick="openModal('communicationModal')">Lihat/Edit</span>
         </div>
         
         <div class="checklist-item">
@@ -774,7 +853,7 @@
               <p>Tautkan akun media sosial perusahaan untuk meningkatkan kredibilitas dan transparansi.</p>
             </div>
           </div>
-          <span class="status-blue" onclick="openModal('socialModal')">Tambah</span>
+          <span class="status-blue" onclick="openModal('socialModal')">Lihat/Edit</span>
         </div>
       </div>
     </section>
@@ -788,48 +867,13 @@
         <button class="modal-close" onclick="closeModal('companyModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="companyForm">
-          <div class="form-group">
-            <label for="companyName">Nama Perusahaan</label>
-            <input type="text" id="companyName" name="company_name" placeholder="Masukkan nama perusahaan">
-          </div>
-          <div class="form-group">
-            <label for="industry">Industri</label>
-            <select id="industry"name="industry">
-              <option value="">Pilih industri</option>
-              <option value="teknologi">Teknologi</option>
-              <option value="keuangan">Keuangan</option>
-              <option value="kesehatan">Kesehatan</option>
-              <option value="pendidikan">Pendidikan</option>
-              <option value="retail">Retail</option>
-              <option value="manufaktur">Manufaktur</option>
-              <option value="lainnya">Lainnya</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="companySize">Ukuran Perusahaan</label>
-            <select id="companySize" name="company_size">
-              <option value="">Pilih ukuran perusahaan</option>
-              <option value="1-10">1-10 karyawan</option>
-              <option value="11-50">11-50 karyawan</option>
-              <option value="51-200">51-200 karyawan</option>
-              <option value="201-1000">201-1000 karyawan</option>
-              <option value="1000+">1000+ karyawan</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="companyDescription">Deskripsi Perusahaan</label>
-            <textarea id="companyDescription" name="company_description" placeholder="Ceritakan tentang perusahaan Anda"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="website">Website Perusahaan</label>
-            <input type="url" id="website" name="website" placeholder="https://example.com">
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('companyModal')">Batal</button>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-          </div>
-        </form>
+        <!-- Display existing data -->
+        <div id="companyDataDisplay"></div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('companyModal')">Tutup</button>
+          <button type="button" class="btn btn-primary" onclick="location.href='{{ route('profile-kontak') }}'">Edit</button>
+        </div>
       </div>
     </div>
   </div>
@@ -842,28 +886,13 @@
         <button class="modal-close" onclick="closeModal('visionModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="visionForm">
-          <div class="form-group">
-            <label for="companyVision">Visi Perusahaan</label>
-            <textarea id="companyVision" placeholder="Tuliskan visi perusahaan Anda..."></textarea>
-          </div>
-          <div class="form-group">
-            <label for="companyMission">Misi Perusahaan</label>
-            <textarea id="companyMission" placeholder="Tuliskan misi perusahaan Anda..."></textarea>
-          </div>
-          <div class="form-group">
-            <label for="companyValues">Nilai-Nilai Perusahaan</label>
-            <textarea id="companyValues" placeholder="Tuliskan nilai-nilai yang dijunjung tinggi perusahaan..."></textarea>
-          </div>
-          <div class="form-group">
-            <label for="companyGoals">Target/Goals Perusahaan</label>
-            <textarea id="companyGoals" placeholder="Apa yang ingin dicapai perusahaan dalam 1-3 tahun ke depan?"></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('visionModal')">Batal</button>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-          </div>
-        </form>
+        <!-- Display existing data -->
+        <div id="visionDataDisplay"></div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('visionModal')">Tutup</button>
+          <button type="button" class="btn btn-primary" onclick="location.href='{{ route('profile-kontak') }}'">Edit</button>
+        </div>
       </div>
     </div>
   </div>
@@ -876,58 +905,13 @@
         <button class="modal-close" onclick="closeModal('communicationModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="communicationForm">
-          <div class="form-group">
-            <label>Platform Komunikasi Preferensi</label>
-            <div class="checkbox-group">
-              <div class="checkbox-item">
-                <input type="checkbox" id="email" name="communication" value="email">
-                <label for="email">Email</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="whatsapp" name="communication" value="whatsapp">
-                <label for="whatsapp">WhatsApp</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="slack" name="communication" value="slack">
-                <label for="slack">Slack</label>
-              </div>
-              <div class="checkbox-item">
-                <input type="checkbox" id="teams" name="communication" value="teams">
-                <label for="teams">Microsoft Teams</label>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Frekuensi Update Progress</label>
-            <div class="radio-group">
-              <div class="radio-item">
-                <input type="radio" id="daily" name="frequency" value="daily">
-                <label for="daily">Harian</label>
-              </div>
-              <div class="radio-item">
-                <input type="radio" id="weekly" name="frequency" value="weekly">
-                <label for="weekly">Mingguan</label>
-              </div>
-              <div class="radio-item">
-                <input type="radio" id="biweekly" name="frequency" value="biweekly">
-                <label for="biweekly">Bi-weekly</label>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="timezone">Zona Waktu</label>
-            <select id="timezone">
-              <option value="WIB">WIB (UTC+7)</option>
-              <option value="WITA">WITA (UTC+8)</option>
-              <option value="WIT">WIT (UTC+9)</option>
-            </select>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('communicationModal')">Batal</button>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-          </div>
-        </form>
+        <!-- Display existing data -->
+        <div id="communicationDataDisplay"></div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('communicationModal')">Tutup</button>
+          <button type="button" class="btn btn-primary" onclick="location.href='{{ route('profile-kontak') }}'">Edit</button>
+        </div>
       </div>
     </div>
   </div>
@@ -940,44 +924,13 @@
         <button class="modal-close" onclick="closeModal('socialModal')">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="socialForm">
-          <div class="form-group">
-            <label for="websiteUrl">Website Resmi</label>
-            <input type="url" id="websiteUrl" placeholder="https://perusahaan.com">
-          </div>
-          <div class="form-group">
-            <label for="linkedin">LinkedIn</label>
-            <input type="url" id="linkedin" placeholder="https://linkedin.com/company/nama-perusahaan">
-          </div>
-          <div class="form-group">
-            <label for="instagram">Instagram</label>
-            <input type="url" id="instagram" placeholder="https://instagram.com/nama-perusahaan">
-          </div>
-          <div class="form-group">
-            <label for="facebook">Facebook</label>
-            <input type="url" id="facebook" placeholder="https://facebook.com/nama-perusahaan">
-          </div>
-          <div class="form-group">
-            <label for="twitter">Twitter/X</label>
-            <input type="url" id="twitter" placeholder="https://twitter.com/nama-perusahaan">
-          </div>
-          <div class="form-group">
-            <label for="youtube">YouTube</label>
-            <input type="url" id="youtube" placeholder="https://youtube.com/c/nama-perusahaan">
-          </div>
-          <div class="form-group">
-            <label for="tiktok">TikTok</label>
-            <input type="url" id="tiktok" placeholder="https://tiktok.com/@nama-perusahaan">
-          </div>
-          <div class="form-group">
-            <label for="otherSocial">Media Sosial Lainnya</label>
-            <textarea id="otherSocial" placeholder="Tuliskan link media sosial lainnya yang relevan..."></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('socialModal')">Batal</button>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-          </div>
-        </form>
+        <!-- Display existing data -->
+        <div id="socialDataDisplay"></div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('socialModal')">Tutup</button>
+          <button type="button" class="btn btn-primary" onclick="location.href='{{ route('profile-kontak') }}'">Edit</button>
+        </div>
       </div>
     </div>
   </div>
@@ -995,6 +948,9 @@
         requestAnimationFrame(() => {
           modal.classList.add('active');
         });
+        
+        // Load and display existing data when modal opens
+        displayExistingData(modalId);
       }
     }
 
@@ -1044,256 +1000,125 @@
       }, 3000);
     }
 
-    // Form submission - Company Info
-    document.getElementById('companyForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const form = this;
-      const formData = new FormData(form);
-      
-      const companyName = formData.get('company_name');
-      const industry = formData.get('industry');
-      
-      // Validation
-      if (!companyName || companyName.trim() === '') {
-        showNotification('Nama perusahaan wajib diisi!', 'error');
-        return;
-      }
-      
-      if (!industry) {
-        showNotification('Industri wajib dipilih!', 'error');
-        return;
-      }
+    // Display existing data in modals
+    let existingData = null;
 
-      // Send request
-      fetch('/client/update-company-info', {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-        },
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          const button = document.querySelector('.checklist-item:nth-child(1) span');
-          if (button) {
-            button.textContent = 'Selesai';
-            button.className = 'status-blue';
-          }
-          
-          showNotification(data.message, 'success');
-          closeModal('companyModal');
-          form.reset();
-          updateProgress();
-        } else {
-          showNotification(data.message || 'Terjadi kesalahan', 'error');
+    function displayExistingData(modalId) {
+      if (!existingData) {
+        // Show empty state message
+        const displays = {
+          'companyModal': document.getElementById('companyDataDisplay'),
+          'visionModal': document.getElementById('visionDataDisplay'),
+          'communicationModal': document.getElementById('communicationDataDisplay'),
+          'socialModal': document.getElementById('socialDataDisplay')
+        };
+        
+        const display = displays[modalId];
+        if (display) {
+          display.innerHTML = '<p style="color: #6b7280; font-size: 14px; text-align: center; padding: 20px;">Belum ada data yang tersimpan</p>';
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showNotification('Terjadi kesalahan saat menyimpan data', 'error');
-      });
-    });
-
-    // Form submission - Vision & Mission
-    document.getElementById('visionForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const vision = document.getElementById('companyVision').value.trim();
-      const mission = document.getElementById('companyMission').value.trim();
-      const values = document.getElementById('companyValues').value.trim();
-      const goals = document.getElementById('companyGoals').value.trim();
-      
-      if (!vision) {
-        showNotification('Visi perusahaan wajib diisi!', 'error');
-        return;
-      }
-      
-      if (!mission) {
-        showNotification('Misi perusahaan wajib diisi!', 'error');
         return;
       }
 
-      fetch('/client/update-vision-mission', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          company_vision: vision,
-          company_mission: mission,
-          company_values: values,
-          company_goals: goals
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          const button = document.querySelector('.checklist-item:nth-child(2) span');
-          if (button) {
-            button.textContent = 'Selesai';
-            button.className = 'status-blue';
-          }
-          
-          showNotification(data.message, 'success');
-          closeModal('visionModal');
-          this.reset();
-          updateProgress();
-        } else {
-          showNotification(data.message || 'Terjadi kesalahan', 'error');
+      if (modalId === 'companyModal') {
+        const display = document.getElementById('companyDataDisplay');
+        let html = '<div><h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #374151;">Informasi Perusahaan</h3>';
+        
+        if (existingData.company_name) {
+          html += `<div class="data-display"><strong>Nama Perusahaan:</strong><p>${existingData.company_name}</p></div>`;
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showNotification('Terjadi kesalahan saat menyimpan data', 'error');
-      });
-    });
-
-    // Form submission - Communication
-    document.getElementById('communicationForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const platforms = [];
-      const checkedBoxes = document.querySelectorAll('input[name="communication"]:checked');
-      checkedBoxes.forEach(cb => platforms.push(cb.value));
-      
-      const frequencyEl = document.querySelector('input[name="frequency"]:checked');
-      const frequency = frequencyEl ? frequencyEl.value : null;
-      const timezone = document.getElementById('timezone').value;
-      
-      if (platforms.length === 0) {
-        showNotification('Pilih minimal satu platform komunikasi!', 'error');
-        return;
-      }
-
-      fetch('/client/update-communication', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          communication_platforms: platforms,
-          update_frequency: frequency,
-          timezone: timezone
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          const button = document.querySelector('.checklist-item:nth-child(3) span');
-          if (button) {
-            button.textContent = 'Selesai';
-            button.className = 'status-blue';
-          }
-          
-          showNotification(data.message, 'success');
-          closeModal('communicationModal');
-          this.reset();
-          updateProgress();
-        } else {
-          showNotification(data.message || 'Terjadi kesalahan', 'error');
+        if (existingData.industry) {
+          html += `<div class="data-display"><strong>Industri:</strong><p>${existingData.industry}</p></div>`;
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showNotification('Terjadi kesalahan saat menyimpan data', 'error');
-      });
-    });
-
-    // Form submission - Social Media
-    document.getElementById('socialForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const websiteUrl = document.getElementById('websiteUrl').value.trim();
-      const linkedin = document.getElementById('linkedin').value.trim();
-      const instagram = document.getElementById('instagram').value.trim();
-      const facebook = document.getElementById('facebook').value.trim();
-      const twitter = document.getElementById('twitter').value.trim();
-      const youtube = document.getElementById('youtube').value.trim();
-      const tiktok = document.getElementById('tiktok').value.trim();
-      const otherSocial = document.getElementById('otherSocial').value.trim();
-      
-      const socialLinks = [];
-      if (websiteUrl) socialLinks.push('Website');
-      if (linkedin) socialLinks.push('LinkedIn');
-      if (instagram) socialLinks.push('Instagram');
-      if (facebook) socialLinks.push('Facebook');
-      
-      if (socialLinks.length === 0) {
-        showNotification('Tambahkan minimal satu media sosial!', 'error');
-        return;
-      }
-
-      fetch('/client/update-social-media', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          social_website: websiteUrl,
-          social_linkedin: linkedin,
-          social_instagram: instagram,
-          social_facebook: facebook,
-          social_twitter: twitter,
-          social_youtube: youtube,
-          social_tiktok: tiktok,
-          social_other: otherSocial
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          const button = document.querySelector('.checklist-item:nth-child(4) span');
-          if (button) {
-            button.textContent = 'Selesai';
-            button.className = 'status-blue';
-          }
-          
-          showNotification(`${data.message} (${socialLinks.join(', ')})`, 'success');
-          closeModal('socialModal');
-          this.reset();
-          updateProgress();
-        } else {
-          showNotification(data.message || 'Terjadi kesalahan', 'error');
+        if (existingData.company_size) {
+          html += `<div class="data-display"><strong>Ukuran Perusahaan:</strong><p>${existingData.company_size}</p></div>`;
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        showNotification('Terjadi kesalahan saat menyimpan data', 'error');
-      });
-    });
-
-    // Progress tracking
-    function updateProgress() {
-      const completedItems = document.querySelectorAll('.checklist-item span.status-blue').length;
-      const totalItems = 4;
-      
-      if (completedItems === totalItems) {
-        const alert = document.querySelector('.alert');
-        if (alert) {
-          alert.innerHTML = `
-            <div>
-              <strong>🎉 Profil Anda sudah lengkap!</strong><br>
-              Sekarang Anda siap untuk mulai bekerja sama dengan freelancer terbaik.
-            </div>
-            <button onclick="location.href='/client/home'">Lihat Dashboard</button>
-          `;
-          alert.style.borderColor = '#10b981';
-          alert.style.backgroundColor = '#ecfdf5';
-          alert.style.color = '#065f46';
+        if (existingData.company_description) {
+          html += `<div class="data-display"><strong>Deskripsi:</strong><p>${existingData.company_description}</p></div>`;
+        }
+        if (existingData.website) {
+          html += `<div class="data-display"><strong>Website:</strong><p><a href="${existingData.website}" target="_blank" style="color: #2563eb;">${existingData.website}</a></p></div>`;
         }
         
-        showNotification('Selamat! Profil Anda sudah 100% lengkap!', 'success');
+        html += '</div>';
+        display.innerHTML = html;
+      }
+
+      if (modalId === 'visionModal') {
+        const display = document.getElementById('visionDataDisplay');
+        let html = '<div><h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #374151;">Visi & Misi Perusahaan</h3>';
+        
+        if (existingData.company_vision) {
+          html += `<div class="data-display"><strong>Visi:</strong><p>${existingData.company_vision}</p></div>`;
+        }
+        if (existingData.company_mission) {
+          html += `<div class="data-display"><strong>Misi:</strong><p>${existingData.company_mission}</p></div>`;
+        }
+        if (existingData.company_values) {
+          html += `<div class="data-display"><strong>Nilai-nilai:</strong><p>${existingData.company_values}</p></div>`;
+        }
+        if (existingData.company_goals) {
+          html += `<div class="data-display"><strong>Target/Goals:</strong><p>${existingData.company_goals}</p></div>`;
+        }
+        
+        html += '</div>';
+        display.innerHTML = html;
+      }
+
+      if (modalId === 'communicationModal') {
+        const display = document.getElementById('communicationDataDisplay');
+        let html = '<div><h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #374151;">Preferensi Komunikasi</h3>';
+        
+        if (existingData.communication_platforms) {
+          try {
+            const platforms = JSON.parse(existingData.communication_platforms);
+            html += `<div class="data-display"><strong>Platform Komunikasi:</strong><p>${platforms.join(', ')}</p></div>`;
+          } catch (e) {
+            html += `<div class="data-display"><strong>Platform Komunikasi:</strong><p>${existingData.communication_platforms}</p></div>`;
+          }
+        }
+        if (existingData.update_frequency) {
+          html += `<div class="data-display"><strong>Frekuensi Update:</strong><p>${existingData.update_frequency}</p></div>`;
+        }
+        if (existingData.timezone) {
+          html += `<div class="data-display"><strong>Zona Waktu:</strong><p>${existingData.timezone}</p></div>`;
+        }
+        
+        html += '</div>';
+        display.innerHTML = html;
+      }
+
+      if (modalId === 'socialModal') {
+        const display = document.getElementById('socialDataDisplay');
+        let html = '<div><h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #374151;">Media Sosial Perusahaan</h3>';
+        
+        const socials = [];
+        if (existingData.social_website) socials.push({icon: 'fas fa-globe', name: 'Website', url: existingData.social_website});
+        if (existingData.social_linkedin) socials.push({icon: 'fab fa-linkedin', name: 'LinkedIn', url: existingData.social_linkedin});
+        if (existingData.social_instagram) socials.push({icon: 'fab fa-instagram', name: 'Instagram', url: existingData.social_instagram});
+        if (existingData.social_facebook) socials.push({icon: 'fab fa-facebook', name: 'Facebook', url: existingData.social_facebook});
+        if (existingData.social_twitter) socials.push({icon: 'fab fa-twitter', name: 'Twitter', url: existingData.social_twitter});
+        if (existingData.social_youtube) socials.push({icon: 'fab fa-youtube', name: 'YouTube', url: existingData.social_youtube});
+        if (existingData.social_tiktok) socials.push({icon: 'fab fa-tiktok', name: 'TikTok', url: existingData.social_tiktok});
+        
+        if (socials.length > 0) {
+          socials.forEach(social => {
+            html += `<a href="${social.url}" target="_blank" class="social-link"><i class="${social.icon}"></i><span>${social.name}: ${social.url}</span></a>`;
+          });
+        } else {
+          html += '<p style="color: #6b7280; font-size: 14px;">Belum ada media sosial yang ditambahkan</p>';
+        }
+        
+        if (existingData.social_other) {
+          html += `<div class="data-display" style="margin-top: 12px;"><strong>Media Sosial Lainnya:</strong><p>${existingData.social_other}</p></div>`;
+        }
+        
+        html += '</div>';
+        display.innerHTML = html;
       }
     }
+
+    // Form submission handlers removed - now view only
 
     // Load existing data from database
     function loadExistingData() {
@@ -1307,126 +1132,56 @@
       .then(response => response.json())
       .then(result => {
         if (result.success && result.data) {
-          const data = result.data;
+          existingData = result.data;
           
-          // Update button status for each completed section
-          if (data.company_name) {
-            const button1 = document.querySelector('.checklist-item:nth-child(1) span');
-            if (button1) {
-              button1.textContent = 'Selesai';
-              button1.className = 'status-blue';
-            }
-          }
-          
-          if (data.company_vision) {
-            const button2 = document.querySelector('.checklist-item:nth-child(2) span');
-            if (button2) {
-              button2.textContent = 'Selesai';
-              button2.className = 'status-blue';
-            }
-          }
-          
-          if (data.communication_platforms && data.communication_platforms.length > 0) {
-            const button3 = document.querySelector('.checklist-item:nth-child(3) span');
-            if (button3) {
-              button3.textContent = 'Selesai';
-              button3.className = 'status-blue';
-            }
-          }
-          
-          if (data.social_website || data.social_linkedin || data.social_instagram || data.social_facebook) {
-            const button4 = document.querySelector('.checklist-item:nth-child(4) span');
-            if (button4) {
-              button4.textContent = 'Selesai';
-              button4.className = 'status-blue';
-            }
-          }
-          
-          updateProgress();
+          // Update button status for completed sections
+          updateButtonStatus(result.data);
         }
       })
       .catch(error => {
         console.error('Error loading data:', error);
-        // Tidak perlu menampilkan notif error di sini, karena bisa jadi memang belum ada data
       });
+    }
+
+    // Update button status based on data completion
+    function updateButtonStatus(data) {
+      if (data.company_name) {
+        const button1 = document.querySelector('.checklist-item:nth-child(1) span');
+        if (button1) {
+          button1.textContent = 'Lihat/Edit';
+          button1.className = 'status-blue';
+        }
+      }
+      
+      if (data.company_vision) {
+        const button2 = document.querySelector('.checklist-item:nth-child(2) span');
+        if (button2) {
+          button2.textContent = 'Lihat/Edit';
+          button2.className = 'status-blue';
+        }
+      }
+      
+      if (data.communication_platforms && data.communication_platforms.length > 0) {
+        const button3 = document.querySelector('.checklist-item:nth-child(3) span');
+        if (button3) {
+          button3.textContent = 'Lihat/Edit';
+          button3.className = 'status-blue';
+        }
+      }
+      
+      if (data.social_website || data.social_linkedin || data.social_instagram || data.social_facebook) {
+        const button4 = document.querySelector('.checklist-item:nth-child(4) span');
+        if (button4) {
+          button4.textContent = 'Lihat/Edit';
+          button4.className = 'status-blue';
+        }
+      }
     }
 
     // Form validation and enhancement
     document.addEventListener('DOMContentLoaded', function() {
-      // Load existing data
+      // Load existing data on page load
       loadExistingData();
-
-      // Add input validation styles
-      const inputs = document.querySelectorAll('input, textarea, select');
-      inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-          if (this.hasAttribute('required') && !this.value.trim()) {
-            this.style.borderColor = '#ef4444';
-          } else {
-            this.style.borderColor = '#d1d5db';
-          }
-        });
-
-        input.addEventListener('input', function() {
-          if (this.style.borderColor === 'rgb(239, 68, 68)') {
-            this.style.borderColor = '#d1d5db';
-          }
-        });
-      });
-
-      // Auto-resize textareas
-      const textareas = document.querySelectorAll('textarea');
-      textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-          this.style.height = 'auto';
-          this.style.height = this.scrollHeight + 'px';
-        });
-      });
-
-      // URL validation for social media inputs
-      const urlInputs = document.querySelectorAll('input[type="url"]');
-      urlInputs.forEach(input => {
-        input.addEventListener('blur', function() {
-          if (this.value && !isValidUrl(this.value)) {
-            this.style.borderColor = '#ef4444';
-            showNotification('Format URL tidak valid!', 'error');
-          }
-        });
-      });
-    });
-
-    // URL validation helper
-    function isValidUrl(string) {
-      try {
-        new URL(string);
-        return true;
-      } catch (_) {
-        return false;
-      }
-    }
-
-    // Handle checkbox styling
-    document.querySelectorAll('.checkbox-item').forEach(item => {
-      item.addEventListener('click', function(e) {
-        if (e.target.type !== 'checkbox') {
-          const checkbox = this.querySelector('input[type="checkbox"]');
-          if (checkbox) {
-            checkbox.checked = !checkbox.checked;
-          }
-        }
-      });
-    });
-
-    // Handle radio styling
-    document.querySelectorAll('.radio-item').forEach(item => {
-      item.addEventListener('click', function(e) {
-        if (e.target.type !== 'radio') {
-          const radio = this.querySelector('input[type="radio"]');
-          if (radio) {
-            radio.checked = true;
-          }
-        }
-      });
     });
   </script>
 

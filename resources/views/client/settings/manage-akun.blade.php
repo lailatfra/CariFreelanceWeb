@@ -3,6 +3,7 @@
 @section('content')
 
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1" name="viewport" />
@@ -17,18 +18,21 @@
             color: #1E293B;
             margin: 0;
         }
+
         main {
             display: flex;
             max-width: 100%;
             margin: 1rem auto 0 auto;
             padding: 0 1.5rem;
         }
+
         aside {
             width: 16rem;
             flex-shrink: 0;
             font-size: 0.875rem;
             color: #475569;
         }
+
         aside h2 {
             margin-bottom: 0.75rem;
             font-weight: 600;
@@ -36,11 +40,13 @@
             font-size: 1rem;
             user-select: none;
         }
+
         aside ul {
             list-style: none;
             padding: 0;
             margin: 0;
         }
+
         aside li a {
             display: flex;
             align-items: center;
@@ -51,19 +57,23 @@
             color: inherit;
             transition: background 0.2s, color 0.2s;
         }
+
         aside li a:hover {
             background-color: #EFF6FF;
             color: #2563EB;
         }
+
         .active-link {
             border-right: 4px solid #3B82F6;
             background-color: #EFF6FF;
             color: #2563EB;
         }
+
         section.flex-1 {
             flex: 1;
             margin-left: 2rem;
         }
+
         .card {
             border: 1px solid #E2E8F0;
             background: white;
@@ -73,26 +83,31 @@
             color: #475569;
             margin-bottom: 2rem;
         }
+
         .card header {
             margin-bottom: 1.5rem;
             border-bottom: 1px solid #E2E8F0;
             padding-bottom: 0.75rem;
         }
+
         .card h3 {
             font-weight: 600;
             color: #0F172A;
             font-size: 1rem;
             user-select: none;
         }
+
         .card p {
             font-size: 0.75rem;
             color: #94A3B8;
             margin-top: 0.25rem;
             user-select: none;
         }
+
         form .form-group {
             margin-bottom: 1.5rem;
         }
+
         label {
             margin-bottom: 0.25rem;
             display: block;
@@ -100,6 +115,7 @@
             color: #1E293B;
             user-select: none;
         }
+
         input[type="password"] {
             border: 1px solid #CBD5E1;
             background-color: white;
@@ -110,10 +126,12 @@
             width: 100%;
             outline: none;
         }
+
         input[type="password"]:focus {
             border-color: #2563EB;
             box-shadow: 0 0 0 2px #2563EB33;
         }
+
         .btn-primary {
             background-color: #2563EB;
             color: white;
@@ -124,9 +142,11 @@
             border: none;
             cursor: pointer;
         }
+
         .btn-primary:hover {
             background-color: #1D4ED8;
         }
+
         .btn-danger {
             background-color: #DC2626;
             color: white;
@@ -137,29 +157,31 @@
             border: none;
             cursor: pointer;
         }
+
         .btn-danger:hover {
             background-color: #B91C1C;
         }
-        
-.nav-container {
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    position: sticky;
-    top: -1px;
-    z-index: 100;
-    width: 100vw;
-    
-    margin: 0 !important;
-    margin-left: -1.5rem !important;
-    margin-right: -1.5rem !important;
-    margin-top: -1.5rem !important; /* Tambahkan ini untuk menghilangkan gap atas */
-    
-    padding: 0;
-    transition: all 0.3s ease;
-}
+
+        .nav-container {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: -1px;
+            z-index: 100;
+            width: 100vw;
+
+            margin: 0 !important;
+            margin-left: -1.5rem !important;
+            margin-right: -1.5rem !important;
+            margin-top: -1.5rem !important;
+            /* Tambahkan ini untuk menghilangkan gap atas */
+
+            padding: 0;
+            transition: all 0.3s ease;
+        }
 
         .nav-container.scrolled {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             top: 60px;
         }
 
@@ -202,7 +224,8 @@
             flex-shrink: 0;
         }
 
-        .nav-item:hover, .nav-item.active {
+        .nav-item:hover,
+        .nav-item.active {
             background: transparent;
             color: #1DA1F2;
             text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
@@ -224,11 +247,11 @@
             color: #1DA1F2;
             text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
         }
-
     </style>
 </head>
+
 <body>
-               <!-- Category Navigation -->
+    <!-- Category Navigation -->
     <div class="nav-container">
         <nav class="nav">
             <ul class="nav-list">
@@ -250,20 +273,21 @@
             </ul>
         </nav>
     </div>
-    
+
     <main style="margin-top: 40px;">
         <!-- Sidebar -->
         <aside>
             <section class="mb-8">
                 <h2>Akun Anda</h2>
                 <ul>
-                    <li><a href="{{ route('profile-akun') }}" ><i class="fas fa-user text-xs"></i><span>Informasi Akun</span></a></li>
+                    <li><a href="{{ route('profile-akun') }}"><i class="fas fa-user text-xs"></i><span>Informasi Akun</span></a></li>
                     <li><a href="{{ route('profile-kontak') }}"><i class="fas fa-id-card-alt text-xs"></i><span>Informasi Kontak</span></a></li>
                     <li><a href="{{ route('manage-akun') }}" class="active-link"><i class="fas fa-lock text-xs"></i><span>Manajemen Akun</span></a></li>
                 </ul>
             </section>
             <section>
-                <br><h2>Rating</h2>
+                <br>
+                <h2>Rating</h2>
                 <ul>
                     <li><a href="{{ route('rating') }}"><i class="fas fa-star text-xs"></i><span>Rating Freelancer</span></a></li>
                 </ul>
@@ -273,7 +297,7 @@
         <!-- Content -->
         <section class="flex-1">
             <!-- Ubah Password -->
-            <div class="card">
+            <!-- <div class="card">
                 <header>
                     <h3>Ubah Password</h3>
                     <p>Pastikan menggunakan password yang kuat dan unik</p>
@@ -295,10 +319,59 @@
                         <button type="submit" class="btn-primary">Simpan</button>
                     </div>
                 </form>
+            </div> -->
+
+
+            <!-- Ubah Password -->
+            <div class="card">
+                <header>
+                    <h3>Reset Password</h3>
+                    <p>Link reset password akan terkirim ke email yang anda gunakan untuk login. klik link di email yang anda gunakan untuk login untuk melanjutkan.</p>
+                </header>
+
+                {{-- Pesan setelah link terkirim --}}
+                @if (session('status'))
+                    <div class="alert alert-success mt-2">
+                        Link verifikasi telah dikirim ke email 
+                        <strong>{{ auth()->user()->email }}</strong>. 
+                        Silakan cek inbox atau folder spam.
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('password.email') }}">
+                    @csrf
+
+                    <div class="form-group mb-3">
+                        <label for="email">Email Anda</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            class="form-control" 
+                            value="{{ auth()->user()->email }}" 
+                            disabled
+                        >
+                    </div><br>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        Kirim Link Reset Password
+                    </button>
+                </form>
             </div>
 
+
+            <!-- <div class="card">
+                <form action="{{ route('account.deactivate') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menonaktifkan akun? Anda tidak bisa login lagi.');">
+                    @csrf
+                    <button type="submit" class="btn btn-danger">
+                        Nonaktifkan Akun
+                    </button>
+                </form>
+
+            </div> -->
+
+
             <!-- Hapus Akun -->
-            <div class="card">
+            <!-- <div class="card">
                 <header>
                     <h3>Hapus Akun</h3>
                     <p>Tindakan ini tidak dapat dibatalkan. Semua data Anda akan dihapus permanen.</p>
@@ -312,9 +385,10 @@
                         <button type="submit" class="btn-danger">Hapus Akun</button>
                     </div>
                 </form>
-            </div>
+            </div> -->
         </section>
     </main>
 </body>
+
 </html>
 @endsection
