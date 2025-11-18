@@ -4,8 +4,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 100vh;   /* full tinggi layar */
-  overflow-y: auto; /* kalau item banyak bisa discroll sendiri */
+  height: 100vh;
+  overflow-y: auto;
   z-index: 1030; 
   background: linear-gradient(180deg, #2c7dafff 0%, #1d75acff 50%, #1780c2 100%) !important;
   box-shadow: 3px 0 15px rgba(29, 161, 242, 0.2);
@@ -42,7 +42,7 @@
   max-height: 50px;
   object-fit: contain;
   filter: brightness(1.1) contrast(1.1);
-  border: none !important;    /* hilangkan border */
+  border: none !important;
   outline: none !important;
 }
 
@@ -52,7 +52,7 @@
 }
 
 #content-wrapper {
-  margin-left: 224px; /* sama dengan lebar sidebar */
+  margin-left: 224px;
 }
 
 .nav-item {
@@ -103,18 +103,22 @@
   letter-spacing: 0.3px;
 }
 
+/* Badge untuk notifikasi (opsional) */
+.nav-badge {
+  position: absolute;
+  top: 8px;
+  right: 15px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
 /* Special styling for logout */
-.nav-item:last-child .nav-link {
-  background: rgba(239, 68, 68, 0.15) !important;
-  border-left-color: rgba(239, 68, 68, 0.4);
-}
-
-.nav-item:last-child .nav-link:hover {
-  background: rgba(239, 68, 68, 0.25) !important;
-  border-left-color: rgba(239, 68, 68, 0.7);
-}
-
-/* khusus logout */
 .nav-item:last-child .nav-link {
   display: block;
   width: 93%;
@@ -128,7 +132,6 @@
   border-left-color: rgba(239, 68, 68, 0.7);
 }
 
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .sidebar {
@@ -141,7 +144,7 @@
   }
 }
 
-/* Animation for sidebar items - simplified */
+/* Animation for sidebar items */
 .nav-item {
   opacity: 0;
   animation: fadeInUp 0.4s ease forwards;
@@ -150,6 +153,9 @@
 .nav-item:nth-child(3) { animation-delay: 0.1s; }
 .nav-item:nth-child(4) { animation-delay: 0.2s; }
 .nav-item:nth-child(5) { animation-delay: 0.3s; }
+.nav-item:nth-child(6) { animation-delay: 0.4s; }
+.nav-item:nth-child(7) { animation-delay: 0.5s; }
+.nav-item:nth-child(8) { animation-delay: 0.6s; }
 
 @keyframes fadeInUp {
   from {
@@ -174,62 +180,71 @@
   <!-- Divider -->
   <hr class="sidebar-divider my-0">
 
-<!-- Dashboard -->
-<li class="nav-item">
-  <a class="nav-link {{ Request::is('admin/dashboard') ? 'active' : '' }}" 
-     href="{{ route('admin.dashboard') }}">
-    <i class="fas fa-fw fa-tachometer-alt"></i>
-    <span>Dashboard</span>
-  </a>
-</li>
+  <!-- Dashboard -->
+  <li class="nav-item">
+    <a class="nav-link {{ Request::is('admin/dashboard') ? 'active' : '' }}" 
+       href="{{ route('admin.dashboard') }}">
+      <i class="fas fa-fw fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+  </li>
 
-<!-- Users -->
-<li class="nav-item">
-  <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
-     href="{{ route('admin.users.index') }}">
-    <i class="fas fa-users"></i>
-    <span>Kelola Users</span>
-  </a>
-</li>
+  <!-- Users -->
+  <li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
+       href="{{ route('admin.users.index') }}">
+      <i class="fas fa-users"></i>
+      <span>Kelola Users</span>
+    </a>
+  </li>
 
-<!-- Projects -->
-<li class="nav-item">
-  <a class="nav-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}" 
-     href="{{ route('admin.projects.index') }}">
-    <i class="fas fa-clipboard-list"></i>
-    <span>Kelola Proyek</span>
-  </a>
-</li>
+  <!-- Freelancers -->
+  <li class="nav-item">
+    <a class="nav-link {{ Request::is('admin/freelancers*') ? 'active' : '' }}" 
+       href="{{ route('admin.freelancers.index') }}">
+      <i class="fas fa-user-tie"></i>
+      <span>Kelola Freelancer</span>
+    </a>
+  </li>
 
-<!-- Kelola Penarikan Dana -->
-<li class="nav-item">
-  <a class="nav-link {{ Request::is('admin/withdrawals*') ? 'active' : '' }}" 
-     href="{{ route('admin.withdrawals.index') }}">
-    <i class="fas fa-clipboard-list"></i>
-    <span>Kelola Penarikan Dana</span>
-  </a>
-</li>
+  <!-- Divider untuk grouping yang lebih baik -->
+  <hr class="sidebar-divider">
 
-<!-- Pembatalan Proyek -->
-<li class="nav-item">
-  <a class="nav-link {{ Request::is('admin/cancels*') ? 'active' : '' }}" 
-     href="{{ route('admin.cancels.index') }}">
-    <i class="fas fa-clipboard-list"></i>
-    <span>Pembatalan Proyek</span>
-  </a>
-</li>
+  <!-- Projects -->
+  <li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}" 
+       href="{{ route('admin.projects.index') }}">
+      <i class="fas fa-clipboard-list"></i>
+      <span>Kelola Proyek</span>
+    </a>
+  </li>
 
-<!-- Freelancers -->
-<li class="nav-item">
-  <a class="nav-link {{ Request::is('admin/freelancers*') ? 'active' : '' }}" 
-     href="{{ route('admin.freelancers.index') }}">
-    <i class="fas fa-users"></i>
-    <span>Kelola Freelancer</span>
-  </a>
-</li>
+  <!-- Pembatalan Proyek -->
+  <li class="nav-item">
+    <a class="nav-link {{ Request::is('admin/cancels*') ? 'active' : '' }}" 
+       href="{{ route('admin.cancels.index') }}">
+      <i class="fas fa-ban"></i>
+      <span>Pembatalan Proyek</span>
+    </a>
+  </li>
 
+  <!-- Divider untuk Finance section -->
+  <hr class="sidebar-divider">
 
-  
+  <!-- Penarikan Saldo (dengan badge notifikasi opsional) -->
+  <li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('admin.withdrawals.*') ? 'active' : '' }}" 
+       href="{{ route('admin.withdrawals.index') }}">
+      <i class="fas fa-money-check-alt"></i>
+      <span>Penarikan Saldo</span>
+      @php
+        $pendingCount = \App\Models\Withdrawal::where('status', 'pending')->count();
+      @endphp
+      @if($pendingCount > 0)
+        <span class="nav-badge">{{ $pendingCount }}</span>
+      @endif
+    </a>
+  </li>
 
   <!-- Divider -->
   <hr class="sidebar-divider d-none d-md-block">

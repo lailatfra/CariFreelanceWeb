@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Proposal;
+use App\Models\Wallet;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,6 @@ class PaymentController extends Controller
 {
     protected $midtransService;
     
-    // Admin fee percentage (2.5%)
     const ADMIN_FEE_PERCENTAGE = 2.5;
 
     public function __construct(MidtransService $midtransService)
@@ -26,32 +26,26 @@ class PaymentController extends Controller
 
     public function show(Proposal $proposal)
     {
-        // Pastikan proposal ini milik project dari client yang login
         if ($proposal->project->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Pastikan proposal masih pending
         if ($proposal->status !== 'pending') {
             return redirect()->route('projek')->with('error', 'Proposal ini sudah tidak dapat diproses.');
         }
 
-        // Load relasi yang dibutuhkan
         $proposal->load(['user.freelancerProfile', 'project']);
 
-        // Hitung biaya admin dan total
         $serviceAmount = $proposal->proposal_price;
         $adminFee = $serviceAmount * (self::ADMIN_FEE_PERCENTAGE / 100);
         $totalAmount = $serviceAmount + $adminFee;
 
-        // Pass data ke view
         return view('client.payment.show', compact('proposal', 'serviceAmount', 'adminFee', 'totalAmount'));
     }
 
     public function processPayment(Request $request, Proposal $proposal)
     {
         try {
-            // Validasi proposal
             if ($proposal->project->user_id !== Auth::id()) {
                 return response()->json([
                     'success' => false,
@@ -68,12 +62,10 @@ class PaymentController extends Controller
 
             DB::beginTransaction();
 
-            // Hitung biaya
             $serviceAmount = $proposal->proposal_price;
             $adminFee = $serviceAmount * (self::ADMIN_FEE_PERCENTAGE / 100);
             $totalAmount = $serviceAmount + $adminFee;
 
-            // Buat payment record
             $payment = new Payment();
             $payment->payment_id = $payment->generatePaymentId();
             $payment->proposal_id = $proposal->id;
@@ -82,11 +74,10 @@ class PaymentController extends Controller
             $payment->project_id = $proposal->project_id;
             $payment->service_amount = $serviceAmount;
             $payment->admin_fee = $adminFee;
-            $payment->amount = $totalAmount; // Total amount including admin fee
+            $payment->amount = $totalAmount;
             $payment->status = 'pending';
             $payment->save();
 
-            // Buat Midtrans transaction
             $snapToken = $this->midtransService->createTransaction($payment);
 
             DB::commit();
@@ -190,13 +181,9 @@ class PaymentController extends Controller
                 ], 403);
             }
 
-            // Get latest status from Midtrans
             try {
                 $midtransStatus = $this->midtransService->getTransactionStatus($paymentId);
-                
-                // Update payment status based on Midtrans response
                 $this->updatePaymentStatusFromMidtrans($payment, $midtransStatus);
-                
             } catch (\Exception $e) {
                 Log::warning('Failed to get Midtrans status: ' . $e->getMessage());
             }
@@ -215,65 +202,108 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
     private function createConversation($payment)
-{
-    // Cek apakah conversation sudah ada
-    $existingConversation = Conversation::where('project_id', $payment->project_id)
-        ->where('client_id', $payment->client_id)
-        ->where('freelancer_id', $payment->freelancer_id)
-        ->first();
-    
-    if ($existingConversation) {
-        return $existingConversation;
-    }
-    
-    // Buat conversation baru
-    return Conversation::create([
-        'project_id' => $payment->project_id,
-        'client_id' => $payment->client_id,
-        'freelancer_id' => $payment->freelancer_id,
-        'proposal_id' => $payment->proposal_id,
-        'last_message_at' => now(),
-    ]);
-}
-
-private function updatePaymentStatusFromMidtrans($payment, $midtransStatus)
-{
-    $transactionStatus = $midtransStatus->transaction_status;
-
-    if (in_array($transactionStatus, ['settlement', 'capture'])) {
-        $payment->update([
-            'status' => 'success',
-            'midtrans_transaction_status' => $transactionStatus,
-            'midtrans_response' => $midtransStatus,
-            'paid_at' => now()
-        ]);
-
-        // Accept proposal
-        $payment->proposal->update(['status' => 'accepted']);
+    {
+        $existingConversation = Conversation::where('project_id', $payment->project_id)
+            ->where('client_id', $payment->client_id)
+            ->where('freelancer_id', $payment->freelancer_id)
+            ->first();
         
-        // Reject other proposals
-        Proposal::where('project_id', $payment->project_id)
-            ->where('id', '!=', $payment->proposal_id)
-            ->update(['status' => 'rejected']);
+        if ($existingConversation) {
+            return $existingConversation;
+        }
         
-        // ✅ CREATE CONVERSATION (TAMBAHAN BARU)
-        $this->createConversation($payment);
-
-    } elseif ($transactionStatus === 'pending') {
-        $payment->update([
-            'status' => 'pending',
-            'midtrans_transaction_status' => $transactionStatus,
-            'midtrans_response' => $midtransStatus
-        ]);
-    } else {
-        $payment->update([
-            'status' => 'failed',
-            'midtrans_transaction_status' => $transactionStatus,
-            'midtrans_response' => $midtransStatus
+        return Conversation::create([
+            'project_id' => $payment->project_id,
+            'client_id' => $payment->client_id,
+            'freelancer_id' => $payment->freelancer_id,
+            'proposal_id' => $payment->proposal_id,
+            'last_message_at' => now(),
         ]);
     }
-}
+
+    // ✅ TAMBAH METHOD BARU UNTUK MENAMBAH SALDO FREELANCER
+    private function creditFreelancerWallet($payment)
+    {
+        try {
+            // Buat atau ambil wallet freelancer
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $payment->freelancer_id],
+                ['balance' => 0, 'pending_balance' => 0]
+            );
+
+            // Tambah saldo freelancer (service_amount, tanpa admin_fee)
+            $wallet->credit(
+                $payment->service_amount,
+                "Pembayaran dari project #{$payment->project_id} - {$payment->project->title}",
+                $payment->id
+            );
+
+            Log::info('Freelancer wallet credited', [
+                'freelancer_id' => $payment->freelancer_id,
+                'amount' => $payment->service_amount,
+                'payment_id' => $payment->payment_id
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to credit freelancer wallet: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function updatePaymentStatusFromMidtrans($payment, $midtransStatus)
+    {
+        $transactionStatus = $midtransStatus->transaction_status;
+
+        if (in_array($transactionStatus, ['settlement', 'capture'])) {
+            DB::beginTransaction();
+            try {
+                $payment->update([
+                    'status' => 'success',
+                    'midtrans_transaction_status' => $transactionStatus,
+                    'midtrans_response' => $midtransStatus,
+                    'paid_at' => now()
+                ]);
+
+                // Accept proposal
+                $payment->proposal->update(['status' => 'accepted']);
+                
+                // Reject other proposals
+                Proposal::where('project_id', $payment->project_id)
+                    ->where('id', '!=', $payment->proposal_id)
+                    ->update(['status' => 'rejected']);
+                
+                // Create conversation
+                $this->createConversation($payment);
+
+                // ✅ TAMBAH SALDO KE WALLET FREELANCER
+                $this->creditFreelancerWallet($payment);
+
+                DB::commit();
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Error updating payment status: ' . $e->getMessage());
+                throw $e;
+            }
+
+        } elseif ($transactionStatus === 'pending') {
+            $payment->update([
+                'status' => 'pending',
+                'midtrans_transaction_status' => $transactionStatus,
+                'midtrans_response' => $midtransStatus
+            ]);
+        } else {
+            $payment->update([
+                'status' => 'failed',
+                'midtrans_transaction_status' => $transactionStatus,
+                'midtrans_response' => $midtransStatus
+            ]);
+        }
+    }
 
     private function getRedirectUrl($payment)
     {

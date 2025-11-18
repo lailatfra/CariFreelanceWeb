@@ -1,188 +1,182 @@
 <?php
+// app/Http/Controllers/Admin/WithdrawalController.php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Wallet;
+use App\Models\Withdrawal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class WithdrawalController extends Controller
 {
     public function index(Request $request)
     {
-        // Mock data untuk demo
-        $stats = [
-            'total_pending' => 15,
-            'total_approved_today' => 8,
-            'total_rejected' => 3,
-            'total_amount_pending' => 25000000,
-        ];
+        // Get filter status from request
+        $status = $request->get('status');
         
-        // Mock chart data
-        $chartData = [
-            ['date' => 'Sep 15', 'approved' => 5, 'rejected' => 1],
-            ['date' => 'Sep 16', 'approved' => 3, 'rejected' => 2],
-            ['date' => 'Sep 17', 'approved' => 7, 'rejected' => 0],
-            ['date' => 'Sep 18', 'approved' => 4, 'rejected' => 1],
-            ['date' => 'Sep 19', 'approved' => 6, 'rejected' => 0],
-            ['date' => 'Sep 20', 'approved' => 8, 'rejected' => 2],
-            ['date' => 'Sep 21', 'approved' => 5, 'rejected' => 1],
-        ];
+        // Query withdrawals
+        $query = Withdrawal::with(['user', 'processedBy'])->latest();
         
-        // Mock withdrawals data
-        $withdrawals = collect([
-            [
-                'id' => 1,
-                'freelancer_name' => 'Ahmad Rizki',
-                'freelancer_email' => 'ahmad.rizki@email.com',
-                'amount' => 1500000,
-                'bank_name' => 'Bank BCA',
-                'account_number' => '1234567890',
-                'account_name' => 'Ahmad Rizki',
-                'status' => 'pending',
-                'created_at' => '2024-09-20 14:30:00',
-                'rating' => 4.8
-            ],
-            [
-                'id' => 2,
-                'freelancer_name' => 'Siti Nurhaliza',
-                'freelancer_email' => 'siti.nur@email.com',
-                'amount' => 2000000,
-                'bank_name' => 'Bank Mandiri',
-                'account_number' => '9876543210',
-                'account_name' => 'Siti Nurhaliza',
-                'status' => 'approved',
-                'created_at' => '2024-09-19 10:15:00',
-                'rating' => 4.9
-            ],
-            [
-                'id' => 3,
-                'freelancer_name' => 'Budi Santoso',
-                'freelancer_email' => 'budi.santoso@email.com',
-                'amount' => 750000,
-                'bank_name' => 'Bank BRI',
-                'account_number' => '5678901234',
-                'account_name' => 'Budi Santoso',
-                'status' => 'rejected',
-                'created_at' => '2024-09-18 16:45:00',
-                'rating' => 4.2
-            ],
-            [
-                'id' => 4,
-                'freelancer_name' => 'Maya Sari',
-                'freelancer_email' => 'maya.sari@email.com',
-                'amount' => 1200000,
-                'bank_name' => 'Bank BNI',
-                'account_number' => '3456789012',
-                'account_name' => 'Maya Sari',
-                'status' => 'pending',
-                'created_at' => '2024-09-21 09:20:00',
-                'rating' => 4.7
-            ],
-            [
-                'id' => 5,
-                'freelancer_name' => 'Eko Prasetyo',
-                'freelancer_email' => 'eko.prasetyo@email.com',
-                'amount' => 900000,
-                'bank_name' => 'Bank CIMB Niaga',
-                'account_number' => '7890123456',
-                'account_name' => 'Eko Prasetyo',
-                'status' => 'pending',
-                'created_at' => '2024-09-20 11:30:00',
-                'rating' => 4.5
-            ]
-        ]);
-        
-        // Apply filters
-        if ($request->filled('status')) {
-            $withdrawals = $withdrawals->where('status', $request->status);
+        // Apply status filter if provided
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
         }
         
-        if ($request->filled('search')) {
-            $search = strtolower($request->search);
-            $withdrawals = $withdrawals->filter(function ($item) use ($search) {
-                return str_contains(strtolower($item['freelancer_name']), $search) ||
-                       str_contains(strtolower($item['freelancer_email']), $search) ||
-                       str_contains((string)$item['id'], $search);
-            });
+        // Paginate results
+        $withdrawals = $query->paginate(20);
+
+        return view('admin.withdrawals.index', compact('withdrawals'));
+    }
+
+    public function show(Withdrawal $withdrawal)
+    {
+        $withdrawal->load(['user', 'wallet', 'processedBy']);
+        return view('admin.withdrawals.show', compact('withdrawal'));
+    }
+
+    public function approve(Withdrawal $withdrawal)
+    {
+        if ($withdrawal->status !== 'pending') {
+            return back()->with('error', 'Penarikan ini tidak bisa disetujui.');
         }
-        
-        // Pagination simulation
-        $perPage = 10;
-        $currentPage = $request->get('page', 1);
-        $offset = ($currentPage - 1) * $perPage;
-        $paginatedWithdrawals = $withdrawals->slice($offset, $perPage)->values();
-        
-        return view('admin.withdrawals.index', compact('stats', 'chartData', 'paginatedWithdrawals'));
+
+        try {
+            DB::beginTransaction();
+
+            $withdrawal->status = 'approved';
+            $withdrawal->processed_by = Auth::id();
+            $withdrawal->processed_at = now();
+            $withdrawal->save();
+
+            DB::commit();
+
+            Log::info('Withdrawal approved', [
+                'withdrawal_id' => $withdrawal->withdrawal_id,
+                'admin_id' => Auth::id()
+            ]);
+
+            return back()->with('success', 'Penarikan berhasil disetujui!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Withdrawal approval error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menyetujui penarikan.');
+        }
     }
-    
-    public function show($id)
+
+    public function complete(Request $request, Withdrawal $withdrawal)
     {
-        // Mock detail data
-        $withdrawal = [
-            'id' => $id,
-            'freelancer_name' => 'Ahmad Rizki',
-            'freelancer_email' => 'ahmad.rizki@email.com',
-            'amount' => 1500000,
-            'bank_name' => 'Bank BCA',
-            'account_number' => '1234567890',
-            'account_name' => 'Ahmad Rizki',
-            'status' => 'pending',
-            'created_at' => '2024-09-20 14:30:00',
-            'rating' => 4.8,
-            'admin_notes' => null,
-            'status_logs' => [
-                [
-                    'status' => 'pending',
-                    'notes' => 'Withdrawal request submitted',
-                    'created_at' => '2024-09-20 14:30:00'
-                ]
-            ]
-        ];
-        
-        return response()->json([
-            'success' => true,
-            'data' => $withdrawal
+        if (!in_array($withdrawal->status, ['pending', 'approved'])) {
+            return back()->with('error', 'Penarikan ini tidak bisa diselesaikan.');
+        }
+
+        $request->validate([
+            'proof_image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'admin_notes' => 'nullable|string|max:500'
         ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get wallet with lock
+            $wallet = Wallet::lockForUpdate()->find($withdrawal->wallet_id);
+
+            if (!$wallet) {
+                DB::rollBack();
+                return back()->with('error', 'Wallet tidak ditemukan.');
+            }
+
+            // Pastikan pending balance cukup
+            if ($wallet->pending_balance < $withdrawal->amount) {
+                DB::rollBack();
+                return back()->with('error', 'Saldo pending tidak mencukupi.');
+            }
+
+            // Upload proof
+            $proofPath = $request->file('proof_image')->store('withdrawal-proofs', 'public');
+
+            // Update withdrawal status
+            $withdrawal->status = 'completed';
+            $withdrawal->processed_by = Auth::id();
+            $withdrawal->processed_at = now();
+            $withdrawal->admin_notes = $request->admin_notes;
+            $withdrawal->proof_image = $proofPath;
+            $withdrawal->save();
+
+            // PENTING: Kurangi pending_balance
+            $wallet->pending_balance -= $withdrawal->amount;
+            $wallet->save();
+
+            DB::commit();
+
+            Log::info('Withdrawal completed', [
+                'withdrawal_id' => $withdrawal->withdrawal_id,
+                'amount' => $withdrawal->amount,
+                'admin_id' => Auth::id(),
+                'remaining_pending' => $wallet->pending_balance
+            ]);
+
+            return back()->with('success', 'Penarikan berhasil diselesaikan dan saldo pending telah dikurangi!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Withdrawal completion error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menyelesaikan penarikan: ' . $e->getMessage());
+        }
     }
-    
-    public function approve(Request $request, $id)
+
+    public function reject(Request $request, Withdrawal $withdrawal)
     {
-        // Simulate approval process
-        sleep(1); // Simulate processing time
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Withdrawal berhasil disetujui'
+        if ($withdrawal->status !== 'pending') {
+            return back()->with('error', 'Penarikan ini tidak bisa ditolak.');
+        }
+
+        $request->validate([
+            'admin_notes' => 'required|string|max:500'
         ]);
-    }
-    
-    public function reject(Request $request, $id)
-    {
-        // Simulate rejection process
-        sleep(1); // Simulate processing time
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Withdrawal berhasil ditolak'
-        ]);
-    }
-    
-    public function bulkAction(Request $request)
-    {
-        $action = $request->action;
-        $ids = $request->withdrawal_ids;
-        $count = count($ids);
-        
-        // Simulate bulk processing
-        sleep(2);
-        
-        $message = $action === 'approve' 
-            ? "{$count} withdrawal berhasil disetujui" 
-            : "{$count} withdrawal berhasil ditolak";
-            
-        return response()->json([
-            'success' => true,
-            'message' => $message
-        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get wallet with lock
+            $wallet = Wallet::lockForUpdate()->find($withdrawal->wallet_id);
+
+            if (!$wallet) {
+                DB::rollBack();
+                return back()->with('error', 'Wallet tidak ditemukan.');
+            }
+
+            // Update withdrawal status
+            $withdrawal->status = 'rejected';
+            $withdrawal->processed_by = Auth::id();
+            $withdrawal->processed_at = now();
+            $withdrawal->admin_notes = $request->admin_notes;
+            $withdrawal->save();
+
+            // PENTING: Kembalikan saldo dari pending ke balance
+            $wallet->pending_balance -= $withdrawal->amount;
+            $wallet->balance += $withdrawal->amount;
+            $wallet->save();
+
+            DB::commit();
+
+            Log::info('Withdrawal rejected', [
+                'withdrawal_id' => $withdrawal->withdrawal_id,
+                'admin_id' => Auth::id(),
+                'reason' => $request->admin_notes
+            ]);
+
+            return back()->with('success', 'Penarikan ditolak dan saldo dikembalikan ke user.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Withdrawal rejection error: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menolak penarikan: ' . $e->getMessage());
+        }
     }
 }
