@@ -36,7 +36,27 @@ use App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController;
 use App\http\Controllers\ChatController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProjectCancellationController;
+use App\Http\Controllers\Admin\ClientController;
 
+
+
+Route::middleware(['auth'])->prefix('freelancer')->name('freelancer.')->group(function () {
+    Route::get('/withdrawals', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'index'])
+        ->name('withdrawals.index');
+    Route::get('/withdrawals/create', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'create'])
+        ->name('withdrawals.create');
+    Route::post('/withdrawals', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'store'])
+        ->name('withdrawals.store');
+    Route::get('/withdrawals/{withdrawal}', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'show'])
+        ->name('withdrawals.show');
+});
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('withdrawals', WithdrawalController::class)->only(['index', 'show']);
+    Route::post('withdrawals/{withdrawal}/approve', [WithdrawalController::class, 'approve'])->name('withdrawals.approve');
+    Route::post('withdrawals/{withdrawal}/complete', [WithdrawalController::class, 'complete'])->name('withdrawals.complete');
+    Route::post('withdrawals/{withdrawal}/reject', [WithdrawalController::class, 'reject'])->name('withdrawals.reject');
+});
 
 // guest
 Route::get('/', fn() => view('pages.landing'))->name('home');
@@ -300,7 +320,7 @@ Route::get('/freelancer/proposal', fn() => view('freelancer.proposall'))->name('
 
 
 Route::get('/notification/freelancer', fn() => view('freelancer.notification'))->name('notification');
-Route::get('/saldo/freelancer', fn() => view('freelancer.tarik-saldo'))->name('saldo');
+
 
 // Tambahkan di bagian route client yang sudah ada middleware auth
 Route::middleware(['auth'])->group(function () {
@@ -395,7 +415,6 @@ Route::post('/payment/notification', [App\Http\Controllers\PaymentController::cl
 
 
 
-// Proses login Admin
 Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('login.admin');
 Route::post('/admin/login', function (Request $request) {
     $email = $request->input('email');
@@ -408,6 +427,41 @@ Route::post('/admin/login', function (Request $request) {
 
     return redirect()->route('login.admin')->with('error', 'Email atau password salah!');
 })->name('login.admin.submit');
+
+// Admin Logout
+Route::get('/admin/logout', function () {
+    session()->forget('admin_logged_in');
+    return redirect()->route('login.admin')->with('success', 'Berhasil logout.');
+})->name('logout.admin');
+
+// Admin Routes (dengan custom middleware 'admin')
+Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Dashboard
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    
+    // Users Management
+    Route::resource('users', UserController::class);
+    
+    // Freelancers Management
+    Route::get('/freelancers', [AdminController::class, 'freelancers'])->name('freelancers.index');
+    Route::post('/freelancers/{id}/status', [AdminController::class, 'updateFreelancerStatus'])->name('freelancers.status');
+    
+    // Projects Management
+    Route::resource('projects', ProjectController::class);
+    
+    // Cancels Management
+    Route::get('/cancels', [AdminController::class, 'cancels'])->name('cancels.index');
+    
+    // Withdrawal Management
+Route::controller(WithdrawalController::class)->group(function () {
+    Route::get('/withdrawals', 'index')->name('withdrawals.index');
+    Route::get('/withdrawals/{withdrawal}', 'show')->name('withdrawals.show');
+    Route::post('/withdrawals/{withdrawal}/approve', 'approve')->name('withdrawals.approve');
+    Route::post('/withdrawals/{withdrawal}/complete', 'complete')->name('withdrawals.complete');
+    Route::post('/withdrawals/{withdrawal}/reject', 'reject')->name('withdrawals.reject');
+});
+});
 
 // Route::prefix('admin')->middleware(['auth'])->group(function () {
 // Halaman Dashboard Admin
@@ -425,6 +479,7 @@ Route::get('/admin/freelancers', [FreelancerController::class, 'index'])
 Route::post('/admin/freelancers/{freelancer}/status', [FreelancerController::class, 'updateStatus'])
     ->name('admin.freelancers.status');
 
+// Withdrawals
 Route::get('/admin/withdrawals', function() {
     $stats = [
         'total_pending' => 5,
@@ -437,14 +492,19 @@ Route::get('/admin/withdrawals', function() {
 })->name('admin.withdrawals.index');
 
 
-
-// GANTI route admin cancels yang ini:
+// Pembatalan Proyek - ProjectCancellationController
 Route::prefix('admin')->group(function () {
-    // Route untuk manage cancellations - PAKAI ProjectCancellationController
-    Route::get('/cancels', [ProjectCancellationController::class, 'manageCancellations'])->name('admin.cancels.cancels');
-    Route::get('/cancels/{id}', [ProjectCancellationController::class, 'getCancellationDetails'])->name('admin.cancels.show');
-    Route::post('/cancels/{id}/approve', [ProjectCancellationController::class, 'approveCancellation'])->name('admin.cancels.approve');
-    Route::post('/cancels/{id}/reject', [ProjectCancellationController::class, 'rejectCancellation'])->name('admin.cancels.reject');
+    Route::get('/cancels', [ProjectCancellationController::class, 'manageCancellations'])
+        ->name('admin.cancels.cancels');
+
+    Route::get('/cancels/{id}', [ProjectCancellationController::class, 'getCancellationDetails'])
+        ->name('admin.cancels.show');
+
+    Route::post('/cancels/{id}/approve', [ProjectCancellationController::class, 'approveCancellation'])
+        ->name('admin.cancels.approve');
+
+    Route::post('/cancels/{id}/reject', [ProjectCancellationController::class, 'rejectCancellation'])
+        ->name('admin.cancels.reject');
 });
 
 
@@ -487,3 +547,43 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/search', [ChatController::class, 'search'])->name('search');
     });
 });
+
+
+
+// TEST ROUTE - hapus setelah selesai debug
+Route::get('/test-withdrawal', function() {
+    return 'Route withdrawal works!';
+});
+
+Route::get('/test-withdrawal-auth', function() {
+    $user = Auth::user();
+    return [
+        'authenticated' => Auth::check(),
+        'user' => $user ? [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ] : null
+    ];
+})->middleware('auth');
+
+Route::get('/test-withdrawal-controller', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'index'])
+    ->middleware('auth');
+
+// Tambahkan di web.php
+Route::get('/check-my-role', function() {
+    $user = Auth::user();
+    return response()->json([
+        'authenticated' => Auth::check(),
+        'user_id' => $user?->id,
+        'user_role' => $user?->role,
+        'user_email' => $user?->email,
+        'is_freelancer' => $user?->role === 'freelancer',
+    ]);
+})->middleware('auth');
+
+// Tambahkan di web.php
+Route::get('/test-middleware-chain', function() {
+    return 'Middleware chain passed! User: ' . Auth::user()->name . ', Role: ' . Auth::user()->role;
+})->middleware(['auth', 'role:freelancer']);

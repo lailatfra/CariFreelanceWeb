@@ -527,13 +527,9 @@
                             </div>
                             
                             <div class="balance-actions">
-                                <a href="/saldo/freelancer" class="balance-action-btn primary">
+                                <a href="#" class="balance-action-btn primary">
                                     <i class="fas fa-arrow-down"></i>
                                     Tarik Saldo
-                                </a>
-                                <a href="/saldo/freelancer" class="balance-action-btn full-width">
-                                    <i class="fas fa-history"></i>
-                                    Riwayat Transaksi
                                 </a>
                             </div>
                         </div>
@@ -587,7 +583,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="/saldo/freelancer">
+                                <a class="dropdown-item" href="{{ route('freelancer.withdrawals.index') }}">
                                     <i class="fas fa-credit-card"></i>
                                     Penarikan Saldo
                                 </a>
