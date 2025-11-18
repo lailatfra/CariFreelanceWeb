@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Proposal;
+use App\Models\ProjectCancellation;
 use App\Models\SubmitProject;
 use App\Models\Progress;
 use Illuminate\Http\Request;
@@ -19,7 +20,10 @@ class JobboardController extends Controller
 
         // Ambil projects yang dibuat oleh client ini (open projects)
         $openProjects = Project::where('user_id', $userId)
-            ->where('status', 'open')
+            ->where(function($query) {
+                $query->where('status', 'open')
+                    ->orWhere('status', 'pending_cancellation');
+            })
             ->with('proposalls.user')
             ->orderBy('created_at', 'asc')
             ->get();
@@ -278,5 +282,73 @@ public function getProjectProgress($projectId)
         return view('freelancer.profile.profil', compact('proposal'));
     }
 
-    
+    public function cancels(Request $request)
+    {
+        // Query untuk statistik
+        $stats = [
+            'total_pending' => ProjectCancellation::where('refund_status', 'pending')->count(),
+            'total_approved_month' => ProjectCancellation::where('refund_status', 'approved')
+                ->whereMonth('cancelled_at', now()->month)
+                ->whereYear('cancelled_at', now()->year)
+                ->count(),
+            'total_rejected' => ProjectCancellation::where('refund_status', 'rejected')->count(),
+            'total_refund_pending' => ProjectCancellation::where('refund_status', 'pending')
+                ->sum('refund_amount')
+        ];
+
+        // Query untuk data pembatalan
+        $query = ProjectCancellation::with([
+            'project.user',
+            'user',
+            'project.proposalls' => function($q) {
+                $q->where('status', 'accepted')->with('user');
+            }
+        ]);
+
+        // Filter status
+        if ($request->has('status') && $request->status != '') {
+            $query->where('refund_status', $request->status);
+        }
+
+        // Filter tanggal
+        if ($request->has('date_from') && $request->date_from != '') {
+            $query->whereDate('cancelled_at', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to') && $request->date_to != '') {
+            $query->whereDate('cancelled_at', '<=', $request->date_to);
+        }
+
+        // Filter pencarian
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })->orWhereHas('project', function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        $cancellations = $query->orderBy('created_at', 'desc')->paginate(10);
+
+        return view('admin.cancels.index', compact('stats', 'cancellations'));
+    }
+
+    public function show($id)
+    {
+        $cancellation = ProjectCancellation::with([
+            'project.user',
+            'user',
+            'project.proposalls' => function($q) {
+                $q->where('status', 'accepted')->with('user');
+            },
+            'project.timelines'
+        ])->findOrFail($id);
+
+        return response()->json($cancellation);
+    }
+
+
 }

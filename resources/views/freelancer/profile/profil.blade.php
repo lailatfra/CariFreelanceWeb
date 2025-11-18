@@ -1068,25 +1068,35 @@
     }
 
     // Load existing data from database
-    function loadExistingData() {
-      fetch('/freelancer/additional-info', {
-        method: 'GET',
-        headers: {
-          'X-CSRF-TOKEN': getCsrfToken(),
-          'Accept': 'application/json',
-        }
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success && result.data) {
-          existingData = result.data;
-          console.log('Loaded freelancer data:', existingData);
-        }
-      })
-      .catch(error => {
-        console.error('Error loading data:', error);
-      });
+function loadExistingData() {
+  fetch('/freelancer/additional-info', {  // ✅ URL yang benar
+    method: 'GET',
+    headers: {
+      'X-CSRF-TOKEN': getCsrfToken(),
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
     }
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(result => {
+    console.log('API Response:', result);
+    if (result.success && result.data) {
+      existingData = result.data;
+      console.log('Loaded freelancer data:', existingData);
+    } else {
+      console.log('No data found');
+    }
+  })
+  .catch(error => {
+    console.error('Error loading data:', error);
+  });
+}
 
     // Load data on page load
     document.addEventListener('DOMContentLoaded', function() {

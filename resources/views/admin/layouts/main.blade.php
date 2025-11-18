@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@yield('title', 'Admin Dashboard')</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <link href="{{ asset('admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
   <link href="{{ asset('admin/css/sb-admin-2.min.css') }}" rel="stylesheet">
 </head>

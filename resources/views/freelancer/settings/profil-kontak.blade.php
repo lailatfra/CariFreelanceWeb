@@ -919,7 +919,6 @@
         try {
             console.log('Loading freelancer info...');
             
-            // Coba dengan URL langsung dulu untuk testing
             const response = await fetch('/freelancer/additional-info', {
                 headers: {
                     'Accept': 'application/json',

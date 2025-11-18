@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;  // ← WAJIB ADA
+use App\Http\Controllers\Controller;
 use App\Models\ClientAdditionalInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -138,7 +138,6 @@ class ClientAdditionalInfoController extends Controller
             ], 422);
         }
 
-        // Check if at least one social media is provided
         $hasSocialMedia = $request->social_website || $request->social_linkedin || 
                          $request->social_instagram || $request->social_facebook || 
                          $request->social_twitter || $request->social_youtube || 
@@ -184,6 +183,3 @@ class ClientAdditionalInfoController extends Controller
         ]);
     }
 }
-
-
-// ini models/client/ClientAdditionalInfoController

@@ -432,4 +432,78 @@ class ProjectController extends Controller
             ], 500);
         }
     }
+
+    // ProjectController.php
+
+public function cancelOpen(Request $request, $id)
+{
+    $project = Project::findOrFail($id);
+    
+    // Check if project has freelancer
+    $hasFreelancer = $project->proposalls()->where('status', 'accepted')->exists();
+    
+    if ($hasFreelancer) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Project ini sudah memiliki freelancer. Gunakan cancel working.'
+        ], 400);
+    }
+    
+    // Delete permanently if no freelancer
+    $project->delete();
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Project berhasil dihapus!'
+    ]);
+}
+
+public function cancelWorking(Request $request, $id)
+{
+    $request->validate([
+        'reason' => 'required|string|min:10|max:500',
+        'bank_name' => 'required|string',
+        'account_number' => 'required|numeric',
+        'evidence_files.*' => 'nullable|file|max:5120|mimes:jpg,jpeg,png,gif,pdf,doc,docx,txt'
+    ]);
+    
+    $project = Project::findOrFail($id);
+    
+    // Check if project has freelancer
+    $hasFreelancer = $project->proposalls()->where('status', 'accepted')->exists();
+    
+    if (!$hasFreelancer) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Project ini belum memiliki freelancer.'
+        ], 400);
+    }
+    
+    // Update project with cancellation request
+    $project->update([
+        'cancellation_status' => 'pending',
+        'cancellation_reason' => $request->reason,
+        'cancellation_date' => now(),
+        'cancellation_bank' => $request->bank_name,
+        'cancellation_account' => $request->account_number
+    ]);
+    
+    // Handle file uploads if any
+    if ($request->hasFile('evidence_files')) {
+        $filePaths = [];
+        foreach ($request->file('evidence_files') as $file) {
+            $path = $file->store('cancellation_evidence', 'public');
+            $filePaths[] = $path;
+        }
+        $project->update(['cancellation_evidence' => json_encode($filePaths)]);
+    }
+    
+    // Notify admin (optional - implement notification system)
+    // event(new ProjectCancellationRequested($project));
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Pengajuan pembatalan berhasil dikirim! Tim kami akan meninjaunya dalam 1x24 jam.'
+    ]);
+}
 }

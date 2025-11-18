@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Models\ProjectCancellation;
 
 class Project extends Model
 {
@@ -17,7 +18,9 @@ class Project extends Model
         'deliverables', 'attachments', 'budget_type', 'fixed_budget',
         'min_budget', 'max_budget', 'payment_method', 'dp_percentage', 'timeline_type',
         'timeline_duration', 'deadline', 'urgency', 'additional_info',
-        'status', 'posted_at'
+        'status', 'posted_at',
+        'cancellation_status',
+        
     ];
 
     protected $casts = [
@@ -474,6 +477,26 @@ class Project extends Model
         return $this->hasMany(SubmitProject::class, 'project_id', 'id');
     }
 
+    /**
+     * Check if project is cancelled
+     */
+    public function isCancelled()
+    {
+        return $this->status === 'cancelled';
+    }
+
+    /**
+     * Get cancellation reason if exists
+     */
+    public function getCancellationReasonAttribute()
+    {
+        return $this->cancellation ? $this->cancellation->reason : null;
+    }
+
+    public function cancellation()
+{
+    return $this->hasOne(ProjectCancellation::class);
+}
 
 
 }

@@ -213,7 +213,7 @@
 <!-- Pembatalan Proyek -->
 <li class="nav-item">
   <a class="nav-link {{ Request::is('admin/cancels*') ? 'active' : '' }}" 
-     href="{{ route('admin.cancels.index') }}">
+     href="{{ route('admin.cancels.cancels') }}">
     <i class="fas fa-clipboard-list"></i>
     <span>Pembatalan Proyek</span>
   </a>
