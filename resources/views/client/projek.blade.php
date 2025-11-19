@@ -1447,6 +1447,7 @@
                 <button type="button" class="tab" data-tab="applied" aria-current="page">Job Board</button>
                 <button type="button" class="tab" data-tab="working">Dalam Proses</button>
                 <button type="button" class="tab" data-tab="completed">Selesai</button>
+                <button type="button" class="tab" data-tab="cancelled">Dibatalkan</button>
             </div>
 
 
@@ -1510,38 +1511,48 @@
                                         </a>
 
                                         @if($isPendingCancellation)
-    <div class="action-buttons">
-        <!-- Tombol Setujui (Centang Hijau) -->
-        <button class="btn btn-success" 
-                onclick="handleApproveCancellation({{ $project->id }}, '{{ addslashes($project->title) }}')"
-                title="Setujui Pembatalan">
-            <i class="fas fa-check"></i> Setujui
-        </button>
-        
-        <!-- Tombol Tolak (Silang Merah) -->
-        <button class="btn btn-danger" 
-                onclick="handleRejectCancellation({{ $project->id }}, '{{ addslashes($project->title) }}')"
-                title="Tolak Pembatalan">
-            <i class="fas fa-times"></i> Tolak
-        </button>
-    </div>
-@else
-    <!-- Tombol aksi normal -->
-    <div class="action-buttons">
-        
-        @if(!$hasFreelancer)
-            <button class="btn btn-delete" 
-                    onclick="confirmDeleteProject({{ $project->id }}, '{{ addslashes($project->title) }}')">
-                <i class="fas fa-trash"></i> Hapus
-            </button>
-        @else
-            <button class="btn btn-delete" 
-                    onclick="openCancelModal({{ $project->id }}, '{{ addslashes($project->title) }}', true)">
-                <i class="fas fa-ban"></i> Cancel
-            </button>
-        @endif
-    </div>
-@endif
+                                            <div class="action-buttons">
+                                                <!-- Tombol Setujui (Centang Hijau) -->
+                                                <button class="btn btn-success" 
+                                                        onclick="handleApproveCancellation({{ $project->id }}, '{{ addslashes($project->title) }}')"
+                                                        title="Setujui Pembatalan">
+                                                    <i class="fas fa-check"></i> Setujui
+                                                </button>
+                                                
+                                                <!-- Tombol Tolak (Silang Merah) -->
+                                                <button class="btn btn-danger" 
+                                                        onclick="handleRejectCancellation({{ $project->id }}, '{{ addslashes($project->title) }}')"
+                                                        title="Tolak Pembatalan">
+                                                    <i class="fas fa-times"></i> Tolak
+                                                </button>
+                                            </div>
+                                        @else
+                                            <div class="action-buttons">
+
+                                            {{-- Jika project sudah selesai --}}
+                                            @if($project->status === 'completed')
+                                                <span class="status-badge" style="background:#d1fae5; color:#065f46; padding:6px 12px; border-radius:6px;">
+                                                    ✔ Selesai
+                                                </span>
+
+                                            {{-- Jika belum ada freelancer --}}
+                                            @elseif(!$hasFreelancer)
+                                                <button class="btn btn-delete" 
+                                                        onclick="confirmDeleteProject({{ $project->id }}, '{{ addslashes($project->title) }}')">
+                                                    <i class="fas fa-trash"></i> Cancel
+                                                </button>
+
+                                            {{-- Jika sudah ada freelancer (project sedang berjalan) --}}
+                                            @else
+                                                <button class="btn btn-detail" onclick="goToWorkingTab({{ $project->id }})">
+                                                    <i class="fas fa-tasks"></i> Pantau Proyek
+                                                </button>
+                                            @endif
+
+                                        </div>
+
+
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -1578,6 +1589,25 @@
                         @endphp
                         @foreach($projects as $project)
                             @php
+                                $cancellation = \DB::table('project_cancellations')
+                                    ->where('project_id', $project->id)
+                                    ->first();
+
+                                $showCancelFailed = false;
+
+                                // Jika project dibatalkan:
+                                if ($cancellation) {
+
+                                    // Jika refund_status = completed → tampilkan di tab WORKING sebagai "Cancel Gagal"
+                                    if ($cancellation->refund_status === 'completed') {
+                                        $showCancelFailed = true;
+                                    } 
+                                    // Selain itu → tetap disembunyikan (cancel sukses / pending)
+                                    else {
+                                        continue;
+                                    }
+                                }
+
                                 $acceptedProposal = $project->proposalls()
                                     ->where('status', 'accepted')
                                     ->first();
@@ -1661,6 +1691,12 @@
                                             </button>
                                         @endif
                                         
+                                        @if($showCancelFailed)
+                                            <button class="btn" style="background:#dc3545; color:white; cursor:default;">
+                                                <i class="fas fa-times-circle"></i> Cancel Gagal
+                                            </button>
+                                        @endif
+
                                         {{-- PERBAIKAN: Tambahkan parameter true untuk working project --}}
                                         <button class="btn btn-delete" 
                                                 onclick="openCancelModal({{ $project->id }}, '{{ addslashes($project->title) }}', true)">
@@ -1747,6 +1783,7 @@
                         @endphp
                         @forelse($completed as $index => $submission)
                             @php
+
                                 $acceptedProposal = $submission->project->proposalls()
                                     ->where('status', 'accepted')
                                     ->first();
@@ -1844,6 +1881,76 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Table: Cancelled Projects -->
+<div class="table-wrap tab-content hidden" id="cancelled">
+    <table class="completed-table">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Judul Pekerjaan</th>
+                <th>Freelancer</th>
+                <th>Alasan Pembatalan</th>
+                <th>Tanggal Dibatalkan</th>
+                <th>Refund Amount</th>
+                <th>Status Refund</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($cancelledProjects as $index => $cancel)
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $cancel->project->title }}</td>
+
+                    <td>
+                        {{ $cancel->project->proposalls()
+                            ->where('status', 'accepted')
+                            ->first()
+                            ?->user?->name ?? '-' 
+                        }}
+                    </td>
+
+                    <td>
+                        <span style="font-size: 0.75rem;">
+                            {{ Str::limit($cancel->reason, 50) }}
+                        </span>
+                    </td>
+
+                    <td>{{ $cancel->cancelled_at?->format('d/m/Y') }}</td>
+
+                    <td>Rp {{ number_format($cancel->refund_amount, 0, ',', '.') }}</td>
+
+                    <td>
+                        @if($cancel->refund_status === 'processed')
+                            <span class="status-badge status-processed">berhasil dibatalkan</span>
+
+                        @elseif($cancel->refund_status === 'pending')
+                            <span class="status-badge status-pending">menunggu persetujuan admin</span>
+
+                        @else
+                            <span class="status-badge">-</span>
+                        @endif
+                    </td>
+
+                    <td>
+                        <a href="{{ route('projects.show', $cancel->project->id) }}" class="btn btn-detail">
+                            <i class="fas fa-info-circle"></i> Detail
+                        </a>
+                    </td>
+                </tr>
+
+                @empty
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                        Tidak ada project yang dibatalkan
+                    </td>
+                </tr>
+                @endforelse
+
+        </tbody>
+    </table>
+</div>
         </section>
     </main>
 
@@ -2025,7 +2132,7 @@
                             <div class="step-content">
                                 <div class="step-title">Monitor Progress</div>
                                 <div class="step-description">
-                                    Pindah ke tab "Sedang Dikerjakan" untuk memantau progress. Klik "Lihat Progress" untuk melihat update file dan milestone yang dicapai.
+                                    Pindah ke tab "Sedang Dikerjakan" untuk memantau progress. Klik "Pantau Proyek" untuk melihat update file dan milestone yang dicapai.
                                 </div>
                             </div>
                         </div>
@@ -3998,6 +4105,22 @@ function deleteProject(projectId) {
     });
 }
 
+
+function goToWorkingTab(projectId) {
+    document.querySelector('[data-tab="working"]').click();
+
+    // Scroll ke row yang sesuai
+    setTimeout(() => {
+        const row = document.querySelector(`#working tr[data-project-id="${projectId}"]`);
+        if (row) {
+            row.style.background = "#fef9c3";
+            row.scrollIntoView({ behavior: "smooth", block: "center" });
+
+            // Hilangkan highlight setelah 2 detik
+            setTimeout(() => row.style.background = "", 2000);
+        }
+    }, 300);
+}
 // ============================================
 // Initialize on DOM Ready
 // ============================================

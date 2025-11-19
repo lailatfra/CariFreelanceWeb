@@ -90,4 +90,14 @@ class ProjectCancellation extends Model
             default => 'Unknown'
         };
     }
+
+    public function proposal()
+{
+    return $this->belongsTo(Proposal::class, 'proposal_id');
+}
+
+public function client()
+{
+    return $this->belongsTo(User::class, 'client_id');
+}
 }

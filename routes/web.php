@@ -38,26 +38,18 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProjectCancellationController;
 use App\Http\Controllers\Admin\ClientController;
 
-
-
-Route::middleware(['auth'])->prefix('freelancer')->name('freelancer.')->group(function () {
-    Route::get('/withdrawals', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'index'])
-        ->name('withdrawals.index');
-    Route::get('/withdrawals/create', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'create'])
-        ->name('withdrawals.create');
-    Route::post('/withdrawals', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'store'])
-        ->name('withdrawals.store');
-    Route::get('/withdrawals/{withdrawal}', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'show'])
-        ->name('withdrawals.show');
+// Routes untuk Admin - Kelola Freelancer
+Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Halaman daftar freelancer
+    Route::get('/freelancers', [FreelancerController::class, 'index'])
+        ->name('freelancers.index');
+    
+    // Update status freelancer
+    Route::post('/freelancers/{freelancer}/status', [FreelancerController::class, 'updateStatus'])
+        ->name('freelancers.status');
+    
 });
-
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('withdrawals', WithdrawalController::class)->only(['index', 'show']);
-    Route::post('withdrawals/{withdrawal}/approve', [WithdrawalController::class, 'approve'])->name('withdrawals.approve');
-    Route::post('withdrawals/{withdrawal}/complete', [WithdrawalController::class, 'complete'])->name('withdrawals.complete');
-    Route::post('withdrawals/{withdrawal}/reject', [WithdrawalController::class, 'reject'])->name('withdrawals.reject');
-});
-
 // guest
 Route::get('/', fn() => view('pages.landing'))->name('home');
 Route::get('/tentang/penjelasan', fn() => view('pages.tentang-penjelasan'))->name('tentang.penjelasan');
@@ -76,7 +68,6 @@ Route::post('/register/step2', [RegisterController::class, 'processStep2'])->nam
 
 Route::get('/email/verify', [RegisterController::class, 'verifyNotice'])->middleware('auth')->name('verification.notice');
 
-
 // Register via Google
 Route::get('/auth/google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
@@ -89,32 +80,21 @@ Route::post('/register/set-password', [GoogleController::class, 'savePassword'])
 Route::get('/register/choose-role', [GoogleController::class, 'showChooseRole'])->name('register.chooseRole');
 Route::post('/register/choose-role', [GoogleController::class, 'saveRole'])->name('register.saveRole');
 
-
 // Route untuk mengirim ulang email verifikasi
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
-
     return back()->with('message', 'Link verifikasi telah dikirim ulang ke email kamu.');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
-
 
 // Email verification route
 Route::get('/email/verify/{id}/{hash}', [RegisterController::class, 'verifyEmail'])
     ->middleware(['signed'])
     ->name('verification.verify');
 
-
-// Resend verification
-Route::post('/email/verification-notification', function (Request $request) {
-    $request->user()->sendEmailVerificationNotification();
-    return back()->with('message', 'Link verifikasi telah dikirim ulang ke email kamu.');
-})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
-
 //login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
 
 // Halaman untuk request reset password
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
@@ -126,16 +106,21 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name(
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    Route::post('/akun/nonaktifkan', [AccountController::class, 'deactivate'])
-        ->name('account.deactivate');
+    Route::post('/akun/nonaktifkan', [AccountController::class, 'deactivate'])->name('account.deactivate');
 });
+
+
+
+    
+
+
 
 // Client profile
 Route::middleware('auth')->group(function () {
-    Route::get('/client/profile/create', [ClientProfileController::class, 'create'])->name('client.profile.create')->middleware('auth');
-    Route::post('/client/profile', [ClientProfileController::class, 'store'])->name('client.profile.store')->middleware('auth');
+    Route::get('/client/profile/create', [ClientProfileController::class, 'create'])->name('client.profile.create');
+    Route::post('/client/profile', [ClientProfileController::class, 'store'])->name('client.profile.store');
 });
+
 Route::get('/popular', fn() => view('client.popular'))->name('popular');
 Route::get('/grafis', fn() => view('client.grafis-desain'))->name('grafis');
 Route::get('/dokumen', fn() => view('client.dokumen-ppt'))->name('dokumen');
@@ -150,6 +135,7 @@ Route::get('/popular/{subcategory?}', [PostingController::class, 'showPopularCat
 Route::get('/grafis/{subcategory?}', [PostingController::class, 'showGrafisCategory'])
     ->name('grafis.category')
     ->where('subcategory', '[a-z0-9\-]+');
+
 // Route lama untuk backward compatibility
 Route::get('/web', [PostingController::class, 'showWebCategory'])->name('web');
 Route::get('/projects/{project}', [PostingController::class, 'show'])->name('projects.show');   
@@ -157,106 +143,27 @@ Route::get('/freelancer/proposal/{proposal}', [ProposalController::class, 'showP
 Route::get('/web/job', fn() => view('client.popular.job.job1'))->name('job');
 Route::get('/logo', fn() => view('client.grafis.logo-desain'))->name('logo');
 Route::get('/copy', fn() => view('client.penulisan.copy-writing'))->name('copy');
-Route::get('/chat', fn() => view('client.chat'))->name('chat');
 Route::get('/notification', fn() => view('client.notification'))->name('notification');
-Route::get('/client/profile/{id}', [ClientProfileController::class, 'show'])
-    ->name('client.profile.show');
-
-
-// Route::get('/profile/akun', fn() => view('client.settings.profil-akun'))->name('profile-akun');
-// Route::get('/profile/kontak', fn() => view('client.settings.profil-kontak'))->name('profile-kontak');
-// Route::get('/profile/manage', fn() => view('client.settings.manage-akun'))->name('manage-akun');
-// Route::get('/profile/rating', fn() => view('client.settings.rating'))->name('rating');
+Route::get('/client/profile/{id}', [ClientProfileController::class, 'show'])->name('client.profile.show');
+Route::get('/project/{id}/progress', [ProjectController::class, 'progress'])->name('projects.progress');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Menampilkan halaman edit profil client (profil-akun)
-    Route::get('/profile/akun', [ClientProfileController::class, 'showAccount'])
-        ->name('profile-akun');
+    Route::get('/profile/akun', [ClientProfileController::class, 'showAccount'])->name('profile-akun');
     
     // Update profil client (POST karena ada file upload)
-    Route::post('/profile/akun/update', [ClientProfileController::class, 'updateAccount'])
-        ->name('profile-akun.update');
+    Route::post('/profile/akun/update', [ClientProfileController::class, 'updateAccount'])->name('profile-akun.update');
     
     // Halaman kontak dan manage akun
-    Route::get('/profile/kontak', fn() => view('client.settings.profil-kontak'))
-        ->name('profile-kontak');
-    Route::get('/profile/manage', fn() => view('client.settings.manage-akun'))
-        ->name('manage-akun');
+    Route::get('/profile/kontak', fn() => view('client.settings.profil-kontak'))->name('profile-kontak');
+    Route::get('/profile/manage', fn() => view('client.settings.manage-akun'))->name('manage-akun');
     
     // Rating (jika ada)
-    Route::get('/profile/rating', fn() => view('client.settings.rating'))
-        ->name('rating');
+    Route::get('/profile/rating', fn() => view('client.settings.rating'))->name('rating');
 });
-
-// Route::get('/profile/job', fn() => view('client.projek'))->name('projek');
-Route::get('/freelancer/1', fn() => view('client.freelancer.1'))->name('freelancer1');
-Route::get('/freelancer/{project}', [PostingController::class, 'freelancer'])->name('freelancer.show');
-Route::get('/freelancer1', fn() => view('client.freelancer.1-1'))->name('freelancer1-1');
-// Route::get('/projects/{project}/timeline', [PostingController::class, 'timeline'])
-//     ->name('timeline');
-   
-Route::prefix('projects/{project}')->middleware('auth')->group(function () {
-    Route::patch('/timelines/{timeline}/update-status', [TimelineController::class, 'updateStatus'])->name('timeline.status');
-    Route::get('/timeline', [TimelineController::class, 'timeline'])->name('timeline');
-    Route::get('/timeline/data', [TimelineController::class, 'index'])->name('timeline.data');
-    Route::post('/timeline', [TimelineController::class, 'store'])->name('timelines.store');
-    Route::get('/timelines/{timeline}', [TimelineController::class, 'show']);
-    Route::put('/timelines/{timeline}', [TimelineController::class, 'update']);
-    Route::delete('/timelines/{timeline}', [TimelineController::class, 'destroy']);
-});
-
-//progress
-Route::post('/progress/store', [ProgressController::class, 'store'])->name('progress.store');
-
-
-
-Route::middleware(['auth'])->group(function () {
-    Route::post('/submit-projects', [SubmitProjectController::class, 'store'])
-        ->name('submit-projects.store');
-    Route::get('/submit-projects/{submitProject}', [SubmitProjectController::class, 'show'])
-        ->name('submit-projects.show');
-    Route::get('/submit-projects/status/{projectId}', [SubmitProjectController::class, 'getProjectStatus'])
-        ->name('submit-projects.status');
-    Route::patch('/submit-projects/{submitProject}/status', [SubmitProjectController::class, 'updateStatus'])
-        ->name('submit-projects.update-status');
-    Route::get('/submit-projects/revision-notes/{projectId}', [SubmitProjectController::class, 'getRevisionNotes'])
-        ->name('submit-projects.revision-notes');
-});
-
-
-
-// Client routes
-Route::middleware(['auth', 'role:client'])->group(function () {
-    Route::get('/client/jobboard', [App\Http\Controllers\Client\JobboardController::class, 'index'])
-        ->name('client.jobboard');
-    
-    
-    Route::patch('/client/submit-projects/{submitProject}/status', [App\Http\Controllers\Client\JobboardController::class, 'updateStatus'])
-        ->name('client.submit-projects.update-status');
-});
-
-    Route::get('/client/projects/{projectId}/progress', [App\Http\Controllers\Client\JobboardController::class, 'getProjectProgress'])
-        ->name('client.projects.progress');
-
-
-Route::middleware(['auth'])->group(function () {
-    Route::post('/client/update-company-info', [ClientAdditionalInfoController::class, 'updateCompanyInfo'])->name('client.updateCompanyInfo');
-    Route::post('/client/update-vision-mission', [ClientAdditionalInfoController::class, 'updateVisionMission'])->name('client.updateVisionMission');
-    Route::post('/client/update-communication', [ClientAdditionalInfoController::class, 'updateCommunication'])->name('client.updateCommunication');
-    Route::post('/client/update-social-media', [ClientAdditionalInfoController::class, 'updateSocialMedia'])->name('client.updateSocialMedia');
-    Route::get('/client/get-info', [ClientAdditionalInfoController::class, 'getInfo'])->name('client.getInfo');
-});
-Route::prefix('client')->group(function () {
-    Route::get('/additional-info', [ClientAdditionalInfoController::class, 'getInfo'])->name('client.additional-info.get');
-    Route::post('/additional-info/company', [ClientAdditionalInfoController::class, 'updateCompanyInfo'])->name('client.additional-info.company');
-    Route::post('/additional-info/vision-mission', [ClientAdditionalInfoController::class, 'updateVisionMission'])->name('client.additional-info.vision-mission');
-    Route::post('/additional-info/communication', [ClientAdditionalInfoController::class, 'updateCommunication'])->name('client.additional-info.communication');
-    Route::post('/additional-info/social-media', [ClientAdditionalInfoController::class, 'updateSocialMedia'])->name('client.additional-info.social-media');
-});
-
 
 // ✅ FREELANCER ROUTES - BERSIH & SIMPEL (Mirip Client)
-Route::prefix('freelancer')->middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->prefix('freelancer')->group(function () {
     // GET info (untuk load data di modal)
     Route::get('/additional-info', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'getInfo'])
         ->name('freelancer.additional-info.get');
@@ -270,29 +177,115 @@ Route::prefix('freelancer')->middleware(['auth'])->group(function () {
         ->name('freelancer.additional-info.portfolio');
     Route::post('/additional-info/education', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'updateEducation'])
         ->name('freelancer.additional-info.education');
+    Route::post('/additional-info/rate', [App\Http\Controllers\Freelancer\FreelancerAdditionalInfoController::class, 'updateRate'])
+        ->name('freelancer.additional-info.rate');
     
     // Profile pages
     Route::get('/profile/akun', [FreelancerProfileController::class, 'showAccount'])
         ->name('freelancer-profile-akun');
-    Route::get('/profile/kontak', fn() => view('freelancer.settings.profil-kontak'))
-        ->name('freelancer-profile-kontak');
+    // Route::get('/profile/kontak', [FreelancerProfileController::class, 'showContactInfo'])
+    //     ->name('freelancer-profile-kontak');
     Route::get('/profile/manage', fn() => view('freelancer.settings.manage-akun'))
         ->name('freelancer-manage-akun');
     
     // Update profile
     Route::put('/profile/update', [FreelancerProfileController::class, 'update'])
         ->name('freelancer.profile.update');
+        
+    // Withdrawal routes
+    Route::get('/withdrawals', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'index'])
+        ->name('freelancer.withdrawals.index');
+    Route::get('/withdrawals/create', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'create'])
+        ->name('freelancer.withdrawals.create');
+    Route::post('/withdrawals', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'store'])
+        ->name('freelancer.withdrawals.store');
+    Route::get('/withdrawals/{withdrawal}', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'show'])
+        ->name('freelancer.withdrawals.show');
+}); 
+
+Route::middleware(['auth'])->group(function() {
+    Route::get('/freelancer/profile/kontak', [FreelancerProfileController::class, 'showContactInfo'])
+        ->name('freelancer-profile-kontak');
+    
+    // PERBAIKAN: Gunakan FreelancerAdditionalInfoController
+    Route::get('/freelancer/additional-info', [FreelancerAdditionalInfoController::class, 'getInfo'])
+        ->name('freelancer.additional-info.get');
+    
+    Route::post('/freelancer/additional-info/bio', [FreelancerAdditionalInfoController::class, 'updateBio'])
+        ->name('freelancer.additional-info.bio');
+    
+    Route::post('/freelancer/additional-info/skills', [FreelancerAdditionalInfoController::class, 'updateSkills'])
+        ->name('freelancer.additional-info.skills');
+    
+    Route::post('/freelancer/additional-info/portfolio', [FreelancerAdditionalInfoController::class, 'updatePortfolio'])
+        ->name('freelancer.additional-info.portfolio');
+    
+    Route::post('/freelancer/additional-info/education', [FreelancerAdditionalInfoController::class, 'updateEducation'])
+        ->name('freelancer.additional-info.education');
+    
+    Route::post('/freelancer/additional-info/rate', [FreelancerAdditionalInfoController::class, 'updateRate'])
+        ->name('freelancer.additional-info.rate');
 });
+
+Route::get('/freelancer/1', fn() => view('client.freelancer.1'))->name('freelancer1');
+Route::get('/freelancer/{project}', [PostingController::class, 'freelancer'])->name('freelancer.show');
+Route::get('/freelancer1', fn() => view('client.freelancer.1-1'))->name('freelancer1-1');
+
+
+Route::prefix('projects/{project}')->middleware('auth')->group(function () {
+    Route::patch('/timelines/{timeline}/update-status', [TimelineController::class, 'updateStatus'])->name('timeline.status');
+    Route::get('/timeline', [TimelineController::class, 'timeline'])->name('timeline');
+    Route::get('/timeline/data', [TimelineController::class, 'index'])->name('timeline.data');
+    Route::post('/timeline', [TimelineController::class, 'store'])->name('timelines.store');
+    Route::get('/timelines/{timeline}', [TimelineController::class, 'show']);
+    Route::put('/timelines/{timeline}', [TimelineController::class, 'update']);
+    Route::delete('/timelines/{timeline}', [TimelineController::class, 'destroy']);
+});
+
+
+//progress
+Route::post('/progress/store', [ProgressController::class, 'store'])->name('progress.store');
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/submit-projects', [SubmitProjectController::class, 'store'])->name('submit-projects.store');
+    Route::get('/submit-projects/{submitProject}', [SubmitProjectController::class, 'show'])->name('submit-projects.show');
+    Route::get('/submit-projects/status/{projectId}', [SubmitProjectController::class, 'getProjectStatus'])->name('submit-projects.status');
+    Route::patch('/submit-projects/{submitProject}/status', [SubmitProjectController::class, 'updateStatus'])->name('submit-projects.update-status');
+    Route::get('/submit-projects/revision-notes/{projectId}', [SubmitProjectController::class, 'getRevisionNotes'])->name('submit-projects.revision-notes');
+});
+
+// Client routes
+Route::middleware(['auth', 'role:client'])->group(function () {
+    Route::get('/client/jobboard', [App\Http\Controllers\Client\JobboardController::class, 'index'])->name('client.jobboard');
+    Route::patch('/client/submit-projects/{submitProject}/status', [App\Http\Controllers\Client\JobboardController::class, 'updateStatus'])->name('client.submit-projects.update-status');
+});
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/client/update-company-info', [ClientAdditionalInfoController::class, 'updateCompanyInfo'])->name('client.updateCompanyInfo');
+    Route::post('/client/update-vision-mission', [ClientAdditionalInfoController::class, 'updateVisionMission'])->name('client.updateVisionMission');
+    Route::post('/client/update-communication', [ClientAdditionalInfoController::class, 'updateCommunication'])->name('client.updateCommunication');
+    Route::post('/client/update-social-media', [ClientAdditionalInfoController::class, 'updateSocialMedia'])->name('client.updateSocialMedia');
+    Route::get('/client/get-info', [ClientAdditionalInfoController::class, 'getInfo'])->name('client.getInfo');
+});
+
+Route::prefix('client')->group(function () {
+    Route::get('/additional-info', [ClientAdditionalInfoController::class, 'getInfo'])->name('client.additional-info.get');
+    Route::post('/additional-info/company', [ClientAdditionalInfoController::class, 'updateCompanyInfo'])->name('client.additional-info.company');
+    Route::post('/additional-info/vision-mission', [ClientAdditionalInfoController::class, 'updateVisionMission'])->name('client.additional-info.vision-mission');
+    Route::post('/additional-info/communication', [ClientAdditionalInfoController::class, 'updateCommunication'])->name('client.additional-info.communication');
+    Route::post('/additional-info/social-media', [ClientAdditionalInfoController::class, 'updateSocialMedia'])->name('client.additional-info.social-media');
+});
+
+
 
 // Profile view & public
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile/freelancer', [FreelancerProfileController::class, 'show'])
         ->name('profile-freelancer');
+    Route::get('/freelancer/profile/edit', [FreelancerProfileController::class, 'edit'])
+        ->name('freelancer.profile.edit');
 });
-
-Route::get('/freelancer/profile/{id}/public', [FreelancerProfileController::class, 'showPublic'])
-    ->name('freelancer.profile.public');
-
 
 Route::get('/freelancer/profile/create', [FreelancerProfileController::class, 'create'])->name('freelancer.profile.create')->middleware(['auth', 'verified']); 
 Route::post('/freelancer/profile', [FreelancerProfileController::class, 'store'])->name('freelancer.profile.store')->middleware(['auth', 'verified']);
@@ -303,11 +296,11 @@ Route::get('/freelancer/profile/{id}/public', [FreelancerProfileController::clas
 Route::get('/freelancer/@{username}', [FreelancerProfileController::class, 'showPublicByUsername'])
     ->name('freelancer.profile.username');
 
-
 Route::middleware(['auth'])->group(function () {
     Route::get('/freelancer/proposall/{project}', [ProposalController::class, 'create'])->name('proposal.create');
     Route::post('/freelancer/proposall/{project}', [ProposalController::class, 'store'])->name('proposal.store');
 });
+
 Route::get('/freelancer/profile/job', [ProposalController::class, 'index'])->name('projekf');
 Route::post('/proposals/{proposal}/accept', [App\Http\Controllers\ProposalController::class, 'accept'])
     ->name('proposals.accept');
@@ -318,14 +311,11 @@ Route::get('/freelancer/web', fn() => view('freelancer.popular.web-development')
 Route::get('/freelancer/web/job', fn() => view('freelancer.popular.job.job1'))->name('job');
 Route::get('/freelancer/proposal', fn() => view('freelancer.proposall'))->name('proposal');
 
-
 Route::get('/notification/freelancer', fn() => view('freelancer.notification'))->name('notification');
-
+Route::get('/saldo/freelancer', fn() => view('freelancer.tarik-saldo'))->name('saldo');
 
 // Tambahkan di bagian route client yang sudah ada middleware auth
 Route::middleware(['auth'])->group(function () {
-    // ... routes lain ...
-    
     Route::get('/profile/akun', [ClientProfileController::class, 'showAccount'])->name('profile-akun');
     Route::post('/profile/akun/update', [ClientProfileController::class, 'updateAccount'])->name('profile-akun.update');
     Route::post('/profile/akun/avatar', [ClientProfileController::class, 'updateAvatar'])->name('profile-akun.avatar');
@@ -369,12 +359,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/job', [JobboardController::class, 'index'])
         ->name('projek');
 });
+
 Route::get('/profile/job/{$project}', [JobboardController::class, 'showProposal'])->name('proposals.show');
 Route::get('/profile/job/{$project}/freelancer', [JobboardController::class, 'freelancer'])->name('freelancers.show');
-// Route::get('/submit/download/{id}', [SubmitProjectController::class, 'download'])
-//     ->name('submit.download');
 Route::get('/client/projects/{projectId}/progress',[JobboardController::class, 'getProjectProgress'])->name('client.projects.progress');
-
 
 Route::middleware(['auth'])->group(function () {
     // Cancel Open Project (belum ada freelancer)
@@ -389,7 +377,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cancellations/history', [ProjectCancellationController::class, 'history'])
         ->name('cancellations.history');
 });
-
 
 Route::get('/debug/cancellations', [ProjectCancellationController::class, 'checkCancellationData']);
 
@@ -413,8 +400,7 @@ Route::middleware(['auth'])->group(function () {
 Route::post('/payment/notification', [App\Http\Controllers\PaymentController::class, 'notification'])
     ->name('payment.notification');
 
-
-
+// ADMIN ROUTES
 Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('login.admin');
 Route::post('/admin/login', function (Request $request) {
     $email = $request->input('email');
@@ -428,11 +414,6 @@ Route::post('/admin/login', function (Request $request) {
     return redirect()->route('login.admin')->with('error', 'Email atau password salah!');
 })->name('login.admin.submit');
 
-// Admin Logout
-Route::get('/admin/logout', function () {
-    session()->forget('admin_logged_in');
-    return redirect()->route('login.admin')->with('success', 'Berhasil logout.');
-})->name('logout.admin');
 
 // Admin Routes (dengan custom middleware 'admin')
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -443,35 +424,27 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     // Users Management
     Route::resource('users', UserController::class);
     
-    // Freelancers Management
-    Route::get('/freelancers', [AdminController::class, 'freelancers'])->name('freelancers.index');
-    Route::post('/freelancers/{id}/status', [AdminController::class, 'updateFreelancerStatus'])->name('freelancers.status');
+
     
     // Projects Management
     Route::resource('projects', ProjectController::class);
     
-    // Cancels Management
-    Route::get('/cancels', [AdminController::class, 'cancels'])->name('cancels.index');
-    
     // Withdrawal Management
-Route::controller(WithdrawalController::class)->group(function () {
-    Route::get('/withdrawals', 'index')->name('withdrawals.index');
-    Route::get('/withdrawals/{withdrawal}', 'show')->name('withdrawals.show');
-    Route::post('/withdrawals/{withdrawal}/approve', 'approve')->name('withdrawals.approve');
-    Route::post('/withdrawals/{withdrawal}/complete', 'complete')->name('withdrawals.complete');
-    Route::post('/withdrawals/{withdrawal}/reject', 'reject')->name('withdrawals.reject');
-});
-});
+    Route::controller(WithdrawalController::class)->group(function () {
+        Route::get('/withdrawals', 'index')->name('withdrawals.index');
+        Route::get('/withdrawals/{withdrawal}', 'show')->name('withdrawals.show');
+        Route::post('/withdrawals/{withdrawal}/approve', 'approve')->name('withdrawals.approve');
+        Route::post('/withdrawals/{withdrawal}/complete', 'complete')->name('withdrawals.complete');
+        Route::post('/withdrawals/{withdrawal}/reject', 'reject')->name('withdrawals.reject');
+    });
+    
+    // Manage cancellations - HANYA PAKAI ProjectCancellationController
+    Route::get('/cancels', [ProjectCancellationController::class, 'manageCancellations'])->name('cancels.cancels');
+    Route::get('/cancels/{id}', [ProjectCancellationController::class, 'getCancellationDetails'])->name('cancels.show');
+    Route::post('/cancels/{id}/approve', [ProjectCancellationController::class, 'approveCancellation'])->name('cancels.approve');
+    Route::post('/cancels/{id}/reject', [ProjectCancellationController::class, 'rejectCancellation'])->name('cancels.reject');
 
-// Route::prefix('admin')->middleware(['auth'])->group(function () {
-// Halaman Dashboard Admin
-Route::get('/admin/dashboard', [DashboardController::class, 'index'])
-    ->name('admin.dashboard');
-Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
-Route::post('/admin/users', [UserController::class, 'store']);
-Route::put('/admin/users/{id}', [UserController::class, 'update']);
-Route::delete('/admin/users/{id}', [UserController::class, 'destroy']);
-// });
+});
 
 // Halaman Kelola Freelancer (untuk admin)
 Route::get('/admin/freelancers', [FreelancerController::class, 'index'])
@@ -479,60 +452,13 @@ Route::get('/admin/freelancers', [FreelancerController::class, 'index'])
 Route::post('/admin/freelancers/{freelancer}/status', [FreelancerController::class, 'updateStatus'])
     ->name('admin.freelancers.status');
 
-// Withdrawals
-Route::get('/admin/withdrawals', function() {
-    $stats = [
-        'total_pending' => 5,
-        'total_approved_today' => 2,
-        'total_rejected' => 3,
-        'total_amount_pending' => 25000000
-    ];
-    
-    return view('admin.withdrawals.index', compact('stats'));
-})->name('admin.withdrawals.index');
-
-
-// Pembatalan Proyek - ProjectCancellationController
-Route::prefix('admin')->group(function () {
-    Route::get('/cancels', [ProjectCancellationController::class, 'manageCancellations'])
-        ->name('admin.cancels.cancels');
-
-    Route::get('/cancels/{id}', [ProjectCancellationController::class, 'getCancellationDetails'])
-        ->name('admin.cancels.show');
-
-    Route::post('/cancels/{id}/approve', [ProjectCancellationController::class, 'approveCancellation'])
-        ->name('admin.cancels.approve');
-
-    Route::post('/cancels/{id}/reject', [ProjectCancellationController::class, 'rejectCancellation'])
-        ->name('admin.cancels.reject');
-});
-
-
 // Kelola Projects
 Route::get('/projects', [\App\Http\Controllers\Admin\ProjectController::class, 'index'])->name('admin.projects.index');
-
-// Route::middleware(['auth'])->group(function () {
-    // Cancel Open Project (pengajuan pembatalan - dengan freelancer)
-    Route::post('/projects/{project}/cancel-open', [ProjectCancellationController::class, 'cancelOpenProject'])
-        ->name('projects.cancel-open');
-    
-    // Delete Project Permanently (hapus langsung - tanpa freelancer)
-    Route::delete('/projects/{project}/delete-permanent', [ProjectCancellationController::class, 'deleteProjectPermanently'])
-        ->name('projects.delete-permanent');
-    
-    // Cancel Working Project (sudah ada freelancer)
-    Route::post('/projects/{project}/cancel-working', [ProjectCancellationController::class, 'cancelWorkingProject'])
-        ->name('projects.cancel-working');
-    
-    // Cancellation History
-    Route::get('/cancellations/history', [ProjectCancellationController::class, 'history'])
-        ->name('cancellations.history');
-// });
 
 // Route logout admin
 Route::get('/admin/logout', [AdminController::class, 'logout'])->name('logout.admin');
 
-// Route di web.php - PERBAIKAN
+// CHAT ROUTES
 Route::middleware(['auth'])->group(function () {
     // Route utama chat dengan name 'chat'
     Route::get('/chat', [ChatController::class, 'index'])->name('chat');
@@ -548,9 +474,7 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-
-
-// TEST ROUTE - hapus setelah selesai debug
+// TEST ROUTES (bisa dihapus di production)
 Route::get('/test-withdrawal', function() {
     return 'Route withdrawal works!';
 });
@@ -571,7 +495,6 @@ Route::get('/test-withdrawal-auth', function() {
 Route::get('/test-withdrawal-controller', [App\Http\Controllers\Freelancer\WithdrawalController::class, 'index'])
     ->middleware('auth');
 
-// Tambahkan di web.php
 Route::get('/check-my-role', function() {
     $user = Auth::user();
     return response()->json([
@@ -583,7 +506,6 @@ Route::get('/check-my-role', function() {
     ]);
 })->middleware('auth');
 
-// Tambahkan di web.php
 Route::get('/test-middleware-chain', function() {
     return 'Middleware chain passed! User: ' . Auth::user()->name . ', Role: ' . Auth::user()->role;
 })->middleware(['auth', 'role:freelancer']);

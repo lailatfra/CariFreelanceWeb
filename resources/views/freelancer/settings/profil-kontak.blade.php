@@ -6,6 +6,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Additional Information - CariFreelance</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
     <style>
@@ -748,76 +749,6 @@
             </div>
         </article>
 
-        <!-- Rate & Availability -->
-        <article>
-            <div class="section-toggle" onclick="toggleSection('rateSection')">
-                <header>
-                    <h3>Atur tarif & ketersediaan</h3>
-                    <p>Tentukan tarif layanan Anda dan ketersediaan waktu kerja.</p>
-                </header>
-                <i class="fas fa-chevron-down toggle-icon" id="rateSectionIcon"></i>
-            </div>
-            <div class="section-content hidden" id="rateSection">
-                <form id="rateForm">
-                    @csrf
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label for="hourly_rate" class="label">Tarif Per Jam (Rp)</label>
-                            <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" placeholder="50000" min="10000">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="project_rate" class="label">Tarif Per Proyek (Rp)</label>
-                            <input type="number" id="project_rate" name="project_rate" class="form-control" placeholder="500000" min="50000">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="label">Jenis Layanan yang Ditawarkan</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="service_types[]" value="hourly"> Per Jam
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="service_types[]" value="project"> Per Proyek
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="service_types[]" value="consultation"> Konsultasi
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="service_types[]" value="maintenance"> Maintenance
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="availability" class="label">Ketersediaan</label>
-                        <select id="availability" name="availability" class="form-control">
-                            <option value="">Pilih ketersediaan</option>
-                            <option value="full_time">Full Time (40+ jam/minggu)</option>
-                            <option value="part_time">Part Time (20-30 jam/minggu)</option>
-                            <option value="weekend_only">Weekend Only</option>
-                            <option value="as_needed">Sesuai Kebutuhan</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="response_time" class="label">Waktu Respon Rata-rata</label>
-                        <select id="response_time" name="response_time" class="form-control">
-                            <option value="">Pilih waktu respon</option>
-                            <option value="within_hours">Dalam beberapa jam</option>
-                            <option value="within_day">Dalam 1 hari</option>
-                            <option value="within_2days">Dalam 2 hari</option>
-                            <option value="within_week">Dalam 1 minggu</option>
-                        </select>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary">Simpan Tarif & Ketersediaan</button>
-                    </div>
-                </form>
-            </div>
-        </article>
         
     </section>
 </main>
@@ -919,6 +850,7 @@
         try {
             console.log('Loading freelancer info...');
             
+            // Coba dengan URL langsung dulu untuk testing
             const response = await fetch('/freelancer/additional-info', {
                 headers: {
                     'Accept': 'application/json',
@@ -1118,13 +1050,13 @@
             const result = await response.json();
             console.log('Submit result:', result);
             
-            // if (result.success) {
-            //     showMessage(successMessage, 'success');
-            //     // Reload data setelah berhasil simpan
-            //     setTimeout(() => loadFreelancerInfo(), 1000);
-            // } else {
-            //     showMessage(result.message, 'error');
-            // }
+            if (result.success) {
+                showMessage(successMessage, 'success');
+                // Reload data setelah berhasil simpan
+                setTimeout(() => loadFreelancerInfo(), 1000);
+            } else {
+                showMessage(result.message || 'Gagal menyimpan data', 'error');
+            }
         } catch (error) {
             console.error('Submit error:', error);
             showMessage('Terjadi kesalahan. Silakan coba lagi.', 'error');

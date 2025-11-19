@@ -15,6 +15,11 @@ class FreelancerProfileController extends Controller
         return view('freelancer.profile.create');
     }
 
+    public function showContactInfo()
+    {
+        return view('freelancer.settings.profil-kontak');
+    }
+    
     public function store(Request $request)
     {
         $request->validate([
@@ -225,4 +230,6 @@ class FreelancerProfileController extends Controller
 
         return view('freelancer.settings.profil-akun', compact('freelancerProfile'));
     }
+
+    
 }

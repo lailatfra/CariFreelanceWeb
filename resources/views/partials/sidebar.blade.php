@@ -210,28 +210,19 @@
   <!-- Divider untuk grouping yang lebih baik -->
   <hr class="sidebar-divider">
 
-<!-- Pembatalan Proyek -->
-<li class="nav-item">
-  <a class="nav-link {{ Request::is('admin/cancels*') ? 'active' : '' }}" 
-     href="{{ route('admin.cancels.cancels') }}">
-    <i class="fas fa-clipboard-list"></i>
-    <span>Pembatalan Proyek</span>
-  </a>
-</li>
-
-<!-- Projects -->
-<li class="nav-item">
-  <a class="nav-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}" 
-     href="{{ route('admin.projects.index') }}">
-    <i class="fas fa-clipboard-list"></i>
-    <span>Kelola Proyek</span>
-  </a>
-</li>
+  <!-- Projects -->
+  <li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}" 
+       href="{{ route('admin.projects.index') }}">
+      <i class="fas fa-clipboard-list"></i>
+      <span>Kelola Proyek</span>
+    </a>
+  </li>
 
   <!-- Pembatalan Proyek -->
   <li class="nav-item">
     <a class="nav-link {{ Request::is('admin/cancels*') ? 'active' : '' }}" 
-       href="{{ route('admin.cancels.index') }}">
+       href="{{ route('admin.cancels.cancels') }}">
       <i class="fas fa-ban"></i>
       <span>Pembatalan Proyek</span>
     </a>

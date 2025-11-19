@@ -19,9 +19,10 @@ class ProjectCancellationController extends Controller
     public function __construct()
     {
         // Semua method butuh auth
-        $this->middleware('auth');
+        // $this->middleware('auth');
     }
 
+    
     /**
      * Display cancellation management page for admin
      */

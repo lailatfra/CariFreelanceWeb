@@ -58,4 +58,16 @@ class SubmitProject extends Model
         return view('freelancer.completed', compact('completedProjects'));
     }
     
+    protected static function booted()
+{
+    static::created(function ($submission) {
+        // Ambil project terkait
+        $project = \App\Models\Project::find($submission->project_id);
+
+        if ($project && $project->status !== 'completed') {
+            $project->update(['status' => 'completed']);
+        }
+    });
+}
+
 }

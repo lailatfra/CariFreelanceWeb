@@ -1,4 +1,4 @@
-    @extends('freelancer.layout.freelancer-layout')
+@extends('freelancer.layout.freelancer-layout')
 
     @section('title', 'Ajukan Penarikan Saldo')
 

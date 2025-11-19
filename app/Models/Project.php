@@ -498,5 +498,10 @@ class Project extends Model
     return $this->hasOne(ProjectCancellation::class);
 }
 
+public function projectCancellation()
+{
+    return $this->hasOne(ProjectCancellation::class);
+}
+
 
 }

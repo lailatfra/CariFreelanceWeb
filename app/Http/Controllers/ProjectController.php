@@ -337,7 +337,7 @@ class ProjectController extends Controller
                 ->with('error', 'Progress hanya tersedia untuk project yang sedang atau sudah dikerjakan.');
         }
 
-        return view('client.projects.progress', compact('project'));
+        return view('client.projek', compact('project'));
     }
 
     /**

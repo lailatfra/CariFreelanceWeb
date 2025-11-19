@@ -97,6 +97,13 @@ public function index(Project $project)
     {
         $userId = auth()->id();
         
+        $cancelledProjects = \App\Models\ProjectCancellation::with([
+            'project.proposalls.user'
+        ])
+        ->where('refund_status', 'processed') // hanya processed
+        ->orderByDesc('cancelled_at')
+        ->get();
+        
         // Ambil completed projects (yang sudah disubmit dan status selesai)
         $completed = SubmitProject::with(['project.client', 'proposal'])
                     ->where('user_id', $userId)
@@ -124,7 +131,7 @@ public function index(Project $project)
                            ->where('user_id', $userId)
                            ->get();
 
-        return view('freelancer.projek', compact('completed', 'projects', 'proposals'));
+        return view('freelancer.projek', compact('completed', 'projects', 'proposals', 'cancelledProjects'));
     }
 
 public function accept($id)

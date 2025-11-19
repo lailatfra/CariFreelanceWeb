@@ -1363,8 +1363,8 @@
       <div class="tabs">
         <button type="button" class="tab" data-tab="applied" aria-current="page">Job Board</button>
         <button type="button" class="tab" data-tab="working">Dalam Proses</button>
-        <!-- <button type="button" class="tab" data-tab="review">Menunggu Review</button> -->
         <button type="button" class="tab" data-tab="completed">Selesai</button>
+        <button type="button" class="tab" data-tab="cancelled">Dibatalkan</button>
       </div>
 
       <!-- Table: Job Board (Updated with kategori and aksi) -->
@@ -1775,6 +1775,81 @@
     </tbody>
   </table>
 </div>
+
+<!-- Table: Cancelled Projects -->
+<div class="table-wrap tab-content hidden" id="cancelled">
+    <table class="completed-table">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Judul Pekerjaan</th>
+                <th>Freelancer</th>
+                <th>Alasan Pembatalan</th>
+                <th>Tanggal Dibatalkan</th>
+                <th>Refund Amount</th>
+                <th>Alasan</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @php $no = 1; @endphp
+
+            @foreach($cancelledProjects as $cancel)
+                @if($cancel->refund_status !== 'processed')
+                    @continue
+                @endif
+
+                <tr>
+                    <td>{{ $no++ }}</td>
+                    <td>{{ $cancel->project->title }}</td>
+
+                    <td>
+                        {{ $cancel->project->proposalls()
+                            ->where('status', 'accepted')
+                            ->first()
+                            ?->user?->name ?? '-' 
+                        }}
+                    </td>
+
+                    <!-- Alasan Pembatalan diambil dari project_cancellations.reason -->
+                    <td>
+                        <span style="font-size: 0.75rem;">
+                            {{ Str::limit($cancel->reason, 50) }}
+                        </span>
+                    </td>
+
+                    <td>{{ $cancel->cancelled_at?->format('d/m/Y') }}</td>
+
+                    <td>Rp {{ number_format($cancel->refund_amount, 0, ',', '.') }}</td>
+
+                    <!-- Kolom Status Refund diganti jadi Alasan -->
+                    <td>
+                        <span class="status-badge status-processed">
+                            {{ $cancel->reason }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <a href="{{ route('projects.show', $cancel->project->id) }}" class="btn btn-detail">
+                            <i class="fas fa-info-circle"></i> Detail
+                        </a>
+                    </td>
+                </tr>
+            @endforeach
+
+            @if($no === 1)
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                        Tidak ada project yang dibatalkan
+                    </td>
+                </tr>
+            @endif
+
+        </tbody>
+    </table>
+</div>
+
 
     </section>
   </main>

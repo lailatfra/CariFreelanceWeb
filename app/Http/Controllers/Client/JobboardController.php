@@ -20,13 +20,10 @@ class JobboardController extends Controller
 
         // Ambil projects yang dibuat oleh client ini (open projects)
         $openProjects = Project::where('user_id', $userId)
-            ->where(function($query) {
-                $query->where('status', 'open')
-                    ->orWhere('status', 'pending_cancellation');
-            })
             ->with('proposalls.user')
             ->orderBy('created_at', 'asc')
             ->get();
+
 
         $projects = Project::with([
             'proposalls.user',
@@ -49,6 +46,13 @@ class JobboardController extends Controller
                 $q->where('user_id', $userId);
             })
             ->get();
+
+        
+        $cancelledProjects = \App\Models\ProjectCancellation::with(['project', 'project.proposalls.user'])
+            ->where('refund_status', '!=', 'completed') 
+            ->orderByDesc('cancelled_at')
+            ->get();
+
 
         // Ambil completed projects (status selesai)
         $completed = SubmitProject::with(['project.client', 'user', 'proposal'])
@@ -87,7 +91,7 @@ class JobboardController extends Controller
             return $submission;
         });
 
-        return view('client.projek', compact('openProjects', 'projects', 'completed', 'proposals'));
+        return view('client.projek', compact('openProjects', 'projects', 'completed', 'proposals', 'cancelledProjects'));
     }
 
 public function getProjectProgress($projectId)
@@ -333,7 +337,7 @@ public function getProjectProgress($projectId)
 
         $cancellations = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('admin.cancels.index', compact('stats', 'cancellations'));
+        return view('admin.cancels.cancels', compact('stats', 'cancellations'));
     }
 
     public function show($id)

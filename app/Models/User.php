@@ -64,9 +64,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(FreelancerProfile::class, 'user_id', 'id');
     }
 
+public function wallet()
+{
+    return $this->hasOne(Wallet::class);
+}
 
 
-    public function project()
+    public function projects()
     {
         return $this->belongsTo(Project::class);
     }
