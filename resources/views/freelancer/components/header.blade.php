@@ -509,11 +509,18 @@
                 </a>
 
                 {{-- Search Bar (Desktop) --}}
+                <!-- Di header, ganti bagian search input -->
                 <div class="search-container d-none d-md-block">
                     <div class="position-relative">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" placeholder="Cari freelancer, proyek, atau keahlian...">
-                        <button type="button" class="search-btn">
+                        <input
+                            type="text"
+                            name="q"
+                            id="live-search-desktop"
+                            class="search-input"
+                            placeholder="Cari freelancer, proyek, atau keahlian..."
+                            style="cursor: text;"> <!-- HAPUS readonly -->
+                        <button type="button" class="search-btn" onclick="redirectToSearch()">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
@@ -633,175 +640,106 @@
         </div>
 
         {{-- Mobile Search --}}
-        <div class="mobile-search" id="mobileSearch">
-            <div class="container">
-                <div class="position-relative">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="Cari freelancer atau proyek...">
-                    <button type="button" class="search-btn">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
+        <!-- Mobile search juga -->
+<div class="mobile-search" id="mobileSearch">
+    <div class="container">
+        <div class="position-relative">
+            <i class="fas fa-search search-icon"></i>
+            <input
+                type="text"
+                id="live-search-mobile"
+                class="form-control search-input"
+                placeholder="Cari proyek..."
+                style="cursor: text;"> <!-- HAPUS readonly -->
+            <button type="button" class="search-btn" onclick="redirectToSearch()">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
+    </div>
+</div>
     </header>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Mobile search toggle
-        function toggleMobileSearch() {
-            const mobileSearch = document.getElementById('mobileSearch');
-            mobileSearch.classList.toggle('show');
-        }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Mobile search toggle
+    function toggleMobileSearch() {
+        document.getElementById('mobileSearch').classList.toggle('show');
+    }
 
-        // Balance dropdown toggle
-        function toggleBalanceDropdown() {
-            const balanceDropdown = document.getElementById('balanceDropdown');
-            const balanceDisplay = document.getElementById('balanceDisplay');
-            const isOpen = balanceDropdown.classList.contains('show');
-            
-            // Close all other dropdowns first
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-            document.querySelectorAll('.profile-btn.show').forEach(btn => {
-                btn.classList.remove('show');
-            });
-            
-            // Toggle balance dropdown
-            if (isOpen) {
-                balanceDropdown.classList.remove('show');
-                balanceDisplay.classList.remove('active');
-            } else {
-                balanceDropdown.classList.add('show');
-                balanceDisplay.classList.add('active');
+    // Balance dropdown (khusus freelancer)
+    function toggleBalanceDropdown() {
+        const dropdown = document.getElementById('balanceDropdown');
+        const display = document.getElementById
+
+('balanceDisplay');
+        dropdown.classList.toggle('show');
+        display.classList.toggle('active');
+    }
+
+    function redirectToSearch() {
+    const searchInputDesktop = document.getElementById('live-search-desktop');
+    const searchInputMobile = document.getElementById('live-search-mobile');
+    const keyword = (searchInputDesktop?.value || searchInputMobile?.value || '').trim();
+
+    // SELALU PAKSA category=project saat klik search bar dari header
+    const baseUrl = "{{ route('searchbar') }}?category=project";
+
+    if (keyword) {
+        window.location.href = baseUrl + "&q=" + encodeURIComponent(keyword);
+    } else {
+        window.location.href = baseUrl;
+    }
+}
+
+// Perbaiki event listener untuk klik input search
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInputDesktop = document.getElementById('live-search-desktop');
+    const searchInputMobile = document.getElementById('live-search-mobile');
+
+    // Handle Enter key di desktop search - REDIRECT ke search page
+    if (searchInputDesktop) {
+        searchInputDesktop.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                redirectToSearch();
             }
-        }
-
-        // Enhanced dropdown behavior
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Bootstrap dropdown
-            const dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
-            const dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
-                return new bootstrap.Dropdown(dropdownToggleEl);
-            });
-
-            const dropdownToggle = document.querySelector('.profile-btn');
-            const dropdownMenu = document.querySelector('.profile-container .dropdown-menu');
-            const balanceDropdown = document.getElementById('balanceDropdown');
-            const balanceDisplay = document.getElementById('balanceDisplay');
-            
-            if (dropdownToggle && dropdownMenu) {
-                // Manual dropdown toggle as backup
-                dropdownToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Close balance dropdown first
-                    balanceDropdown.classList.remove('show');
-                    balanceDisplay.classList.remove('active');
-                    
-                    // Toggle dropdown manually if Bootstrap doesn't work
-                    const isOpen = dropdownMenu.classList.contains('show');
-                    
-                    // Close all other dropdowns first
-                    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                        if (menu !== dropdownMenu) {
-                            menu.classList.remove('show');
-                        }
-                    });
-                    
-                    // Toggle current dropdown
-                    if (isOpen) {
-                        dropdownMenu.classList.remove('show');
-                        dropdownToggle.classList.remove('show');
-                    } else {
-                        dropdownMenu.classList.add('show');
-                        dropdownToggle.classList.add('show');
-                    }
-                });
-                
-                // Close dropdowns when clicking outside
-                document.addEventListener('click', function(e) {
-                    const balanceContainer = document.querySelector('.balance-container');
-                    
-                    if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                        dropdownMenu.classList.remove('show');
-                        dropdownToggle.classList.remove('show');
-                    }
-                    
-                    if (!balanceContainer.contains(e.target)) {
-                        balanceDropdown.classList.remove('show');
-                        balanceDisplay.classList.remove('active');
-                    }
-                });
-
-                // Close dropdowns when pressing Escape
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        dropdownMenu.classList.remove('show');
-                        dropdownToggle.classList.remove('show');
-                        balanceDropdown.classList.remove('show');
-                        balanceDisplay.classList.remove('active');
-                    }
-                });
-            }
-
-            // Search input enhancements
-            const searchInputs = document.querySelectorAll('.search-input');
-            searchInputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.style.transform = 'translateY(-1px)';
-                });
-                
-                input.addEventListener('blur', function() {
-                    this.parentElement.style.transform = 'translateY(0)';
-                });
-            });
-
-            // Format balance amount
-            function formatBalance(amount) {
-                return new Intl.NumberFormat('id-ID', {
-                    style: 'currency',
-                    currency: 'IDR',
-                    minimumFractionDigits: 0
-                }).format(amount);
-            }
-
-            // Auto refresh balance (optional - every 30 seconds)
-            function refreshBalance() {
-                fetch('/api/wallet/balance', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.balance !== undefined) {
-                        const formattedAmount = formatBalance(data.balance);
-                        const balanceDisplay = document.getElementById('balanceDisplay');
-                        const balanceAmount = document.getElementById('balanceAmount');
-                        
-                        if (balanceDisplay) {
-                            balanceDisplay.setAttribute('title', 'Saldo: ' + formattedAmount);
-                        }
-                        
-                        if (balanceAmount) {
-                            balanceAmount.textContent = formattedAmount;
-                        }
-                    }
-                })
-                .catch(error => console.error('Error fetching balance:', error));
-            }
-
-            // Uncomment untuk auto refresh setiap 30 detik
-            // setInterval(refreshBalance, 30000);
         });
+    }
 
-        // Smooth scroll behavior
-        document.documentElement.style.scrollBehavior = 'smooth';
-    </script>
+    // Handle Enter key di mobile search - REDIRECT ke search page
+    if (searchInputMobile) {
+        searchInputMobile.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                redirectToSearch();
+            }
+        });
+    }
+
+    // Click event untuk redirect ke search page - HANYA JIKA TIDAK DI HALAMAN SEARCH
+    if (searchInputDesktop) {
+        searchInputDesktop.addEventListener('click', function() {
+            // Jika sudah di halaman search, jangan redirect
+            if (!window.location.href.includes('/search')) {
+                redirectToSearch();
+            }
+            // Jika sudah di halaman search, biarkan live search handle
+        });
+    }
+
+    if (searchInputMobile) {
+        searchInputMobile.addEventListener('click', function() {
+            // Jika sudah di halaman search, jangan redirect
+            if (!window.location.href.includes('/search')) {
+                redirectToSearch();
+            }
+            // Jika sudah di halaman search, biarkan live search handle
+        });
+    }
+});
+
+    // Smooth scroll
+    document.documentElement.style.scrollBehavior = 'smooth';
+</script>
 </body>
 </html>

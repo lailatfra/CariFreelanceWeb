@@ -38,6 +38,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProjectCancellationController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\AdminWalletController;
+use App\Http\Controllers\SearchController;
 
 // Routes untuk Admin - Kelola Freelancer
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -512,3 +513,14 @@ Route::get('/check-my-role', function() {
 Route::get('/test-middleware-chain', function() {
     return 'Middleware chain passed! User: ' . Auth::user()->name . ', Role: ' . Auth::user()->role;
 })->middleware(['auth', 'role:freelancer']);
+
+// // Search routes
+// Route::get('/client/search', [SearchController::class, 'index'])->name('client-search');
+// Route::get('/client/search-ajax', [SearchController::class, 'ajaxSearch'])->name('client-search-ajax');
+
+// // Search routes
+// Route::get('/freelancer/search', [SearchController::class, 'index'])->name('freelancer-search');
+// Route::get('/freelancer/search-ajax', [SearchController::class, 'ajaxSearch'])->name('freelancer-search-ajax');
+
+Route::get('/search', [SearchController::class, 'index'])->name('searchbar');
+Route::get('/search-ajax', [SearchController::class, 'ajaxSearch'])->name('searchbar-ajax');

@@ -233,7 +233,10 @@
                 
                 <div class="detail-row">
                     <span class="detail-label">Tanggal Pembayaran</span>
-                    <span class="detail-value">{{ $payment->paid_at->format('d F Y, H:i') }} WIB</span>
+                    {{-- ✅ FIX: Gunakan optional() atau null coalescing untuk menghindari error --}}
+                    <span class="detail-value">
+                        {{ $payment->paid_at ? $payment->paid_at->format('d F Y, H:i') : now()->format('d F Y, H:i') }} WIB
+                    </span>
                 </div>
                 
                 <div class="detail-row">

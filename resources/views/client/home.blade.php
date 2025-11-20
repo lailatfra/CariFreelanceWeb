@@ -933,6 +933,8 @@
                 // window.location.href = `/freelancer/${freelancerName.toLowerCase().replace(' ', '-')}`;
             });
         });
+
+        
     </script>
 </body>
 </html>

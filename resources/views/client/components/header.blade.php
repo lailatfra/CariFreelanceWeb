@@ -493,6 +493,7 @@
     </style>
 </head>
 
+
 <body>
     <header class="clean-header">
         <div class="container">
@@ -503,15 +504,23 @@
                 </a>
 
                 {{-- Search Bar (Desktop) --}}
+                <!-- Di header, ganti bagian search input -->
                 <div class="search-container d-none d-md-block">
                     <div class="position-relative">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" placeholder="Cari freelancer, proyek, atau keahlian...">
-                        <button type="button" class="search-btn">
+                        <input
+                            type="text"
+                            name="q"
+                            id="live-search-desktop"
+                            class="search-input"
+                            placeholder="Cari freelancer, proyek, atau keahlian..."
+                            style="cursor: text;"> <!-- HAPUS readonly -->
+                        <button type="button" class="search-btn" onclick="redirectToSearch()">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
                 </div>
+
 
                 {{-- Header Actions --}}
                 <div class="header-actions">
@@ -528,14 +537,14 @@
                         </a>
 
                         {{-- Messages --}}
-<a href="{{ route('chat') }}">
-    <button class="action-btn position-relative" title="Pesan">
-        <i class="fas fa-envelope"></i>
-        @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
-            <span class="notification-badge">{{ $unreadMessagesCount }}</span>
-        @endif
-    </button>
-</a>
+                        <a href="{{ route('chat') }}">
+                            <button class="action-btn position-relative" title="Pesan">
+                                <i class="fas fa-envelope"></i>
+                                @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
+                                <span class="notification-badge">{{ $unreadMessagesCount }}</span>
+                                @endif
+                            </button>
+                        </a>
 
                         {{-- Projects --}}
                         <a href="/profile/job">
@@ -599,17 +608,24 @@
         </div>
 
         {{-- Mobile Search --}}
-        <div class="mobile-search" id="mobileSearch">
-            <div class="container">
-                <div class="position-relative">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="Cari freelancer atau proyek...">
-                    <button type="button" class="search-btn">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
+        <!-- Mobile search juga -->
+<div class="mobile-search" id="mobileSearch">
+    <div class="container">
+        <div class="position-relative">
+            <i class="fas fa-search search-icon"></i>
+            <input
+                type="text"
+                id="live-search-mobile"
+                class="form-control search-input"
+                placeholder="Cari proyek..."
+                style="cursor: text;"> <!-- HAPUS readonly -->
+            <button type="button" class="search-btn" onclick="redirectToSearch()">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
+    </div>
+</div>
+
     </header>
 
 
@@ -754,8 +770,67 @@
             };
         });
 
-        // Smooth scroll behavior
-        document.documentElement.style.scrollBehavior = 'smooth';
+        function redirectToSearch() {
+    const searchInputDesktop = document.getElementById('live-search-desktop');
+    const searchInputMobile = document.getElementById('live-search-mobile');
+    const keyword = (searchInputDesktop?.value || searchInputMobile?.value || '').trim();
+
+    // SELALU PAKSA category=project saat klik search bar dari header
+    const baseUrl = "{{ route('searchbar') }}?category=project";
+
+    if (keyword) {
+        window.location.href = baseUrl + "&q=" + encodeURIComponent(keyword);
+    } else {
+        window.location.href = baseUrl;
+    }
+}
+
+// Perbaiki event listener untuk klik input search
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInputDesktop = document.getElementById('live-search-desktop');
+    const searchInputMobile = document.getElementById('live-search-mobile');
+
+    // Handle Enter key di desktop search - REDIRECT ke search page
+    if (searchInputDesktop) {
+        searchInputDesktop.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                redirectToSearch();
+            }
+        });
+    }
+
+    // Handle Enter key di mobile search - REDIRECT ke search page
+    if (searchInputMobile) {
+        searchInputMobile.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                redirectToSearch();
+            }
+        });
+    }
+
+    // Click event untuk redirect ke search page - HANYA JIKA TIDAK DI HALAMAN SEARCH
+    if (searchInputDesktop) {
+        searchInputDesktop.addEventListener('click', function() {
+            // Jika sudah di halaman search, jangan redirect
+            if (!window.location.href.includes('/search')) {
+                redirectToSearch();
+            }
+            // Jika sudah di halaman search, biarkan live search handle
+        });
+    }
+
+    if (searchInputMobile) {
+        searchInputMobile.addEventListener('click', function() {
+            // Jika sudah di halaman search, jangan redirect
+            if (!window.location.href.includes('/search')) {
+                redirectToSearch();
+            }
+            // Jika sudah di halaman search, biarkan live search handle
+        });
+    }
+});
     </script>
 </body>
 

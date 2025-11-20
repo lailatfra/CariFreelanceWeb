@@ -582,6 +582,7 @@
             </div>
         </a>
     </div>
+    
 
     <div class="category-card">
         <a href="{{ route('popular.category', ['subcategory' => 'mobile-app-development']) }}" class="category-link">
