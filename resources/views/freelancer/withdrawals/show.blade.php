@@ -431,4 +431,3 @@ img[data-toggle="modal"]:hover {
 }
 </style>
 @endpush
-@endsection

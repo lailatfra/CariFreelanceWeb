@@ -37,6 +37,7 @@ use App\http\Controllers\ChatController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProjectCancellationController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\AdminWalletController;
 
 // Routes untuk Admin - Kelola Freelancer
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -49,6 +50,8 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::post('/freelancers/{freelancer}/status', [FreelancerController::class, 'updateStatus'])
         ->name('freelancers.status');
     
+        Route::get('/wallet', [AdminWalletController::class, 'index'])
+    ->name('wallet.index');
 });
 // guest
 Route::get('/', fn() => view('pages.landing'))->name('home');

@@ -16,22 +16,27 @@ class Payment extends Model
         'client_id',
         'freelancer_id',
         'project_id',
-        'service_amount',      // ⬅️ TAMBAH INI
-        'admin_fee',           // ⬅️ TAMBAH INI
+        'service_amount',
+        'admin_fee',
         'amount',
         'status',
         'midtrans_transaction_id',
         'midtrans_transaction_status',
         'midtrans_response',
-        'paid_at'
+        'paid_at',
+        'is_released_to_freelancer',  // ⬅️ BARU
+        'released_at',                 // ⬅️ BARU
+        'release_notes'                // ⬅️ BARU
     ];
 
     protected $casts = [
-        'service_amount' => 'decimal:2',  // ⬅️ TAMBAH INI
-        'admin_fee' => 'decimal:2',       // ⬅️ TAMBAH INI
+        'service_amount' => 'decimal:2',
+        'admin_fee' => 'decimal:2',
         'midtrans_response' => 'array',
         'paid_at' => 'datetime',
-        'amount' => 'decimal:2'
+        'released_at' => 'datetime',  // ⬅️ BARU
+        'amount' => 'decimal:2',
+        'is_released_to_freelancer' => 'boolean'  // ⬅️ BARU
     ];
 
     public function proposal()
@@ -54,6 +59,17 @@ class Payment extends Model
         return $this->belongsTo(Project::class);
     }
 
+    // ⬅️ TAMBAHKAN HELPER METHODS BARU
+    public function isReleasedToFreelancer()
+    {
+        return $this->is_released_to_freelancer === true;
+    }
+
+    public function isInEscrow()
+    {
+        return $this->isSuccess() && !$this->isReleasedToFreelancer();
+    }
+
     public function isPending()
     {
         return $this->status === 'pending';
@@ -74,7 +90,6 @@ class Payment extends Model
         return 'PAY-' . date('Ymd') . '-' . strtoupper(uniqid());
     }
 
-    // ⬅️ TAMBAH HELPER METHODS BARU INI
     public function getFormattedServiceAmountAttribute()
     {
         return 'Rp ' . number_format($this->service_amount, 0, ',', '.');

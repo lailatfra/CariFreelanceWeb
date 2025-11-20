@@ -20,13 +20,20 @@ class ProjectCancellation extends Model
         'refund_amount',
         'refund_status',
         'cancelled_at',
-        'cancellation_status' 
+        'repost_project',
+        'transfer_proof',        // ✅ BARU
+        'processed_at',          // ✅ BARU
+        'rejection_reason',      // ✅ BARU
+        'rejected_at'            // ✅ BARU
     ];
 
     protected $casts = [
         'evidence_files' => 'array',
         'refund_amount' => 'decimal:2',
-        'cancelled_at' => 'datetime'
+        'cancelled_at' => 'datetime',
+        'repost_project' => 'boolean', 
+        'processed_at' => 'datetime',   // ✅ BARU
+        'rejected_at' => 'datetime'     // ✅ BARU
     ];
 
     /**
@@ -45,7 +52,7 @@ class ProjectCancellation extends Model
         return $this->belongsTo(User::class);
     }
 
-     public function freelancer()
+    public function freelancer()
     {
         return $this->hasOneThrough(
             User::class,
@@ -92,12 +99,12 @@ class ProjectCancellation extends Model
     }
 
     public function proposal()
-{
-    return $this->belongsTo(Proposal::class, 'proposal_id');
-}
+    {
+        return $this->belongsTo(Proposal::class, 'proposal_id');
+    }
 
-public function client()
-{
-    return $this->belongsTo(User::class, 'client_id');
-}
+    public function client()
+    {
+        return $this->belongsTo(User::class, 'client_id');
+    }
 }

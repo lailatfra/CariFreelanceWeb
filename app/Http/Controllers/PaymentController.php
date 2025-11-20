@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\Proposal;
 use App\Models\Wallet;
+use App\Models\AdminWallet;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,18 +25,23 @@ class PaymentController extends Controller
         $this->midtransService = $midtransService;
     }
 
+    // ⬅️ ✅ TAMBAHKAN METHOD INI (yang hilang)
     public function show(Proposal $proposal)
     {
+        // Check authorization
         if ($proposal->project->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
+        // Check proposal status
         if ($proposal->status !== 'pending') {
             return redirect()->route('projek')->with('error', 'Proposal ini sudah tidak dapat diproses.');
         }
 
+        // Load relations
         $proposal->load(['user.freelancerProfile', 'project']);
 
+        // Calculate amounts
         $serviceAmount = $proposal->proposal_price;
         $adminFee = $serviceAmount * (self::ADMIN_FEE_PERCENTAGE / 100);
         $totalAmount = $serviceAmount + $adminFee;
@@ -223,33 +229,37 @@ class PaymentController extends Controller
         ]);
     }
 
-    // ✅ TAMBAH METHOD BARU UNTUK MENAMBAH SALDO FREELANCER
-    private function creditFreelancerWallet($payment)
+    // ✅ Credit ke admin wallet (escrow)
+    private function creditAdminWallet($payment)
     {
         try {
-            // Buat atau ambil wallet freelancer
-            $wallet = Wallet::firstOrCreate(
-                ['user_id' => $payment->freelancer_id],
-                ['balance' => 0, 'pending_balance' => 0]
-            );
+            $adminWallet = AdminWallet::getWallet();
 
-            // Tambah saldo freelancer (service_amount, tanpa admin_fee)
-            $wallet->credit(
+            // Tambah saldo service (untuk freelancer nanti)
+            $adminWallet->creditService(
                 $payment->service_amount,
-                "Pembayaran dari project #{$payment->project_id} - {$payment->project->title}",
+                "Pembayaran masuk dari Project #{$payment->project_id} - Service Fee (Escrow)",
                 $payment->id
             );
 
-            Log::info('Freelancer wallet credited', [
-                'freelancer_id' => $payment->freelancer_id,
-                'amount' => $payment->service_amount,
-                'payment_id' => $payment->payment_id
+            // Tambah saldo admin fee (keuntungan platform)
+            $adminWallet->creditAdminFee(
+                $payment->admin_fee,
+                "Pembayaran masuk dari Project #{$payment->project_id} - Admin Fee (2.5%)",
+                $payment->id
+            );
+
+            Log::info('Admin wallet credited (escrow)', [
+                'payment_id' => $payment->payment_id,
+                'service_amount' => $payment->service_amount,
+                'admin_fee' => $payment->admin_fee,
+                'total_balance' => $adminWallet->total_balance
             ]);
 
             return true;
 
         } catch (\Exception $e) {
-            Log::error('Failed to credit freelancer wallet: ' . $e->getMessage());
+            Log::error('Failed to credit admin wallet: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -265,7 +275,8 @@ class PaymentController extends Controller
                     'status' => 'success',
                     'midtrans_transaction_status' => $transactionStatus,
                     'midtrans_response' => $midtransStatus,
-                    'paid_at' => now()
+                    'paid_at' => now(),
+                    'is_released_to_freelancer' => false
                 ]);
 
                 // Accept proposal
@@ -279,10 +290,17 @@ class PaymentController extends Controller
                 // Create conversation
                 $this->createConversation($payment);
 
-                // ✅ TAMBAH SALDO KE WALLET FREELANCER
-                $this->creditFreelancerWallet($payment);
+                // Credit ke admin wallet (escrow) - Dana TIDAK masuk ke freelancer dulu
+                $this->creditAdminWallet($payment);
 
                 DB::commit();
+
+                Log::info('Payment successful - funds in escrow', [
+                    'payment_id' => $payment->payment_id,
+                    'service_amount' => $payment->service_amount,
+                    'freelancer_id' => $payment->freelancer_id,
+                    'status' => 'Funds held in escrow until project completion'
+                ]);
 
             } catch (\Exception $e) {
                 DB::rollBack();

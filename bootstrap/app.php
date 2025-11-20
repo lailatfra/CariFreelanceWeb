@@ -12,11 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Alias middleware
         $middleware->alias([
             'checkStatus' => \App\Http\Middleware\CheckUserStatus::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'active' => \App\Http\Middleware\CheckUserActive::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
+        
+        // 👇 TAMBAHKAN INI - Append middleware ke web group
+        $middleware->web(append: [
+            \App\Http\Middleware\ShareWalletData::class,
         ]);
         
         // Uncomment jika mau trace semua request

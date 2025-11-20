@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>CariFreelance - Freelancer Header</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -195,7 +196,6 @@
             border: 2px solid white;
         }
 
-
         /* Profile Button */
         .profile-container {
             position: relative;
@@ -285,7 +285,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
             padding: 1.25rem;
             margin-top: 0.75rem;
-            min-width: 300px;
+            min-width: 320px;
             overflow: hidden;
             position: absolute;
             right: 0;
@@ -316,6 +316,19 @@
             font-size: 0.875rem;
             color: #6b7280;
             margin: 0;
+        }
+
+        .balance-pending {
+            font-size: 0.85rem;
+            color: #f59e0b;
+            margin: 0.5rem 0 0 0;
+            padding: 0.5rem;
+            background: #fffbeb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .balance-actions {
@@ -358,10 +371,6 @@
             background: #2563eb;
             border-color: #2563eb;
             color: white;
-        }
-
-        .balance-action-btn.full-width {
-            margin-top: 0.25rem;
         }
 
         /* Mobile Menu Button */
@@ -444,7 +453,7 @@
             }
         }
 
-        /* Mobile Search (when needed) */
+        /* Mobile Search */
         .mobile-search {
             display: none;
             padding: 1rem;
@@ -481,7 +490,6 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Additional clean styles */
         a {
             text-decoration: none;
         }
@@ -515,21 +523,37 @@
                 <div class="header-actions">
                     {{-- Clean Balance Display --}}
                     <div class="balance-container">
-                        <div class="balance-display" onclick="toggleBalanceDropdown()" id="balanceDisplay" title="Saldo: Rp 2.850.000">
+                        <div class="balance-display" 
+                             onclick="toggleBalanceDropdown()" 
+                             id="balanceDisplay" 
+                             title="Saldo: {{ isset($userWallet) ? $userWallet->formatted_balance : 'Rp 0' }}">
                             <i class="fas fa-wallet"></i>
                         </div>
                         
                         {{-- Balance Dropdown --}}
                         <div class="balance-dropdown" id="balanceDropdown">
                             <div class="balance-dropdown-header">
-                                <h6 class="balance-total">Rp 2.850.000</h6>
+                                <h6 class="balance-total" id="balanceAmount">
+                                    {{ isset($userWallet) ? $userWallet->formatted_balance : 'Rp 0' }}
+                                </h6>
                                 <p class="balance-subtitle">Total Saldo Tersedia</p>
+                                
+                                @if(isset($userWallet) && $userWallet->pending_balance > 0)
+                                <p class="balance-pending">
+                                    <i class="fas fa-clock"></i> 
+                                    Pending: Rp {{ number_format($userWallet->pending_balance, 0, ',', '.') }}
+                                </p>
+                                @endif
                             </div>
                             
                             <div class="balance-actions">
-                                <a href="#" class="balance-action-btn primary">
+                                <a href="{{ route('freelancer.withdrawals.create') }}" class="balance-action-btn primary">
                                     <i class="fas fa-arrow-down"></i>
                                     Tarik Saldo
+                                </a>
+                                <a href="{{ route('freelancer.withdrawals.index') }}" class="balance-action-btn">
+                                    <i class="fas fa-history"></i>
+                                    Riwayat
                                 </a>
                             </div>
                         </div>
@@ -546,15 +570,14 @@
                         </a>
 
                         {{-- Messages --}}
-<a href="{{ route('chat') }}">
-    <button class="action-btn position-relative" title="Pesan">
-        <i class="fas fa-envelope"></i>
-        @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
-            <span class="notification-badge">{{ $unreadMessagesCount }}</span>
-        @endif
-    </button>
-</a>
-
+                        <a href="{{ route('chat') }}">
+                            <button class="action-btn position-relative" title="Pesan">
+                                <i class="fas fa-envelope"></i>
+                                @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
+                                    <span class="notification-badge">{{ $unreadMessagesCount }}</span>
+                                @endif
+                            </button>
+                        </a>
 
                         {{-- Projects --}}
                         <a href="/freelancer/profile/job">
@@ -588,12 +611,6 @@
                                     Penarikan Saldo
                                 </a>
                             </li>
-                            <!-- <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-chart-line"></i>
-                                    Laporan
-                                </a>
-                            </li> -->
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form action="{{ route('logout') }}" method="POST" class="d-inline w-100">
@@ -628,7 +645,6 @@
             </div>
         </div>
     </header>
- 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -752,19 +768,36 @@
                 }).format(amount);
             }
 
-            // Update balance function
-            window.updateBalance = function(newAmount) {
-                const balanceElement = document.getElementById('balanceAmount');
-                const balanceTotalElement = document.querySelector('.balance-total');
-                const formattedAmount = formatBalance(newAmount);
-                
-                if (balanceElement) {
-                    balanceElement.textContent = formattedAmount;
-                }
-                if (balanceTotalElement) {
-                    balanceTotalElement.textContent = formattedAmount;
-                }
-            };
+            // Auto refresh balance (optional - every 30 seconds)
+            function refreshBalance() {
+                fetch('/api/wallet/balance', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.balance !== undefined) {
+                        const formattedAmount = formatBalance(data.balance);
+                        const balanceDisplay = document.getElementById('balanceDisplay');
+                        const balanceAmount = document.getElementById('balanceAmount');
+                        
+                        if (balanceDisplay) {
+                            balanceDisplay.setAttribute('title', 'Saldo: ' + formattedAmount);
+                        }
+                        
+                        if (balanceAmount) {
+                            balanceAmount.textContent = formattedAmount;
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching balance:', error));
+            }
+
+            // Uncomment untuk auto refresh setiap 30 detik
+            // setInterval(refreshBalance, 30000);
         });
 
         // Smooth scroll behavior

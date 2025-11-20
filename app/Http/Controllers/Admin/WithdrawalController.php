@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
+use App\Models\AdminWallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,21 +17,20 @@ class WithdrawalController extends Controller
 {
     public function index(Request $request)
     {
-        // Get filter status from request
         $status = $request->get('status');
         
-        // Query withdrawals
         $query = Withdrawal::with(['user', 'processedBy'])->latest();
         
-        // Apply status filter if provided
         if ($status && $status !== 'all') {
             $query->where('status', $status);
         }
         
-        // Paginate results
         $withdrawals = $query->paginate(20);
 
-        return view('admin.withdrawals.index', compact('withdrawals'));
+        // ⬅️ TAMBAH INI: Get Admin Wallet untuk ditampilkan di view
+        $adminWallet = AdminWallet::getWallet();
+
+        return view('admin.withdrawals.index', compact('withdrawals', 'adminWallet'));
     }
 
     public function show(Withdrawal $withdrawal)
@@ -83,7 +83,15 @@ class WithdrawalController extends Controller
         try {
             DB::beginTransaction();
 
-            // Get wallet with lock
+            // CEK ADMIN WALLET DULU
+            $adminWallet = AdminWallet::getWallet();
+            
+            if ($adminWallet->service_balance < $withdrawal->amount) {
+                DB::rollBack();
+                return back()->with('error', 'Saldo admin tidak mencukupi untuk transfer ini. Saldo tersedia: ' . $adminWallet->formatted_service_balance);
+            }
+
+            // Get freelancer wallet with lock
             $wallet = Wallet::lockForUpdate()->find($withdrawal->wallet_id);
 
             if (!$wallet) {
@@ -108,9 +116,16 @@ class WithdrawalController extends Controller
             $withdrawal->proof_image = $proofPath;
             $withdrawal->save();
 
-            // PENTING: Kurangi pending_balance
+            // Kurangi pending_balance freelancer
             $wallet->pending_balance -= $withdrawal->amount;
             $wallet->save();
+
+            // KURANGI SERVICE BALANCE ADMIN
+            $adminWallet->debitService(
+                $withdrawal->amount,
+                "Transfer ke {$withdrawal->user->name} - Withdrawal #{$withdrawal->withdrawal_id}",
+                $withdrawal->id
+            );
 
             DB::commit();
 
@@ -118,10 +133,11 @@ class WithdrawalController extends Controller
                 'withdrawal_id' => $withdrawal->withdrawal_id,
                 'amount' => $withdrawal->amount,
                 'admin_id' => Auth::id(),
-                'remaining_pending' => $wallet->pending_balance
+                'freelancer_pending_remaining' => $wallet->pending_balance,
+                'admin_service_balance_remaining' => $adminWallet->service_balance
             ]);
 
-            return back()->with('success', 'Penarikan berhasil diselesaikan dan saldo pending telah dikurangi!');
+            return back()->with('success', 'Penarikan berhasil diselesaikan! Saldo admin dan freelancer telah diupdate.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -143,7 +159,6 @@ class WithdrawalController extends Controller
         try {
             DB::beginTransaction();
 
-            // Get wallet with lock
             $wallet = Wallet::lockForUpdate()->find($withdrawal->wallet_id);
 
             if (!$wallet) {
@@ -151,14 +166,13 @@ class WithdrawalController extends Controller
                 return back()->with('error', 'Wallet tidak ditemukan.');
             }
 
-            // Update withdrawal status
             $withdrawal->status = 'rejected';
             $withdrawal->processed_by = Auth::id();
             $withdrawal->processed_at = now();
             $withdrawal->admin_notes = $request->admin_notes;
             $withdrawal->save();
 
-            // PENTING: Kembalikan saldo dari pending ke balance
+            // Kembalikan saldo dari pending ke balance
             $wallet->pending_balance -= $withdrawal->amount;
             $wallet->balance += $withdrawal->amount;
             $wallet->save();

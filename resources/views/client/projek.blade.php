@@ -1476,6 +1476,9 @@
                                     ->where('status', 'accepted')
                                     ->with('user')
                                     ->first();
+                                $isCompleted = $project->submitProjects()
+                                    ->where('status', 'selesai')
+                                    ->exists();
                                 
                                 $hasFreelancer = $acceptedProposal !== null;
                                 $isPendingCancellation = $project->cancellation_status === 'pending';
@@ -1509,7 +1512,20 @@
                                         <a href="{{ route('projects.show', $project->id) }}" class="btn btn-detail">
                                             <i class="fas fa-info-circle"></i> Detail
                                         </a>
-
+                                        @if(!$hasFreelancer)
+                                            <a href="{{ route('projects.edit', $project->id) }}" class="btn btn-edit">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            
+                                        @elseif($isCompleted)
+                                            <button class="btn btn-results" onclick="showCompletedTab()">
+                                                <i class="fas fa-check-circle"></i> Lihat Hasil
+                                            </button>
+                                        @else
+                                            <button class="btn btn-monitor" onclick="showWorkingTab()">
+                                                <i class="fas fa-eye"></i> Pantau Projek
+                                            </button>
+                                        @endif
                                         @if($isPendingCancellation)
                                             <div class="action-buttons">
                                                 <!-- Tombol Setujui (Centang Hijau) -->
@@ -2180,140 +2196,140 @@
     </div>
 </div>
 
-<!-- Cancel Modal for Open Projects - DIPERBAIKI 100% -->
+<!-- MODAL CANCEL OPEN PROJECT -->
 <div id="cancelOpenModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
             <div class="modal-title-section">
                 <h2 class="modal-title">
                     <i class="fas fa-exclamation-triangle"></i>
-                    Cancel Projek: <span id="cancelProjectTitle"></span>
+                    Batalkan Project
                 </h2>
-                <p class="modal-subtitle">Peringatan: Tindakan ini tidak dapat dibatalkan</p>
+                <p class="modal-subtitle">Isi alasan pembatalan dan informasi refund</p>
             </div>
             <span class="close" onclick="closeModal('cancelOpenModal')">×</span>
         </div>
-        
-        <div class="modal-body">
-            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 24px; border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-info-circle" style="color: #d97706;"></i>
-                    <strong style="color: #92400e;">Peringatan:</strong>
-                </div>
-                <p style="color: #78350f; margin: 8px 0 0 0; font-size: 14px;">
-                    Menghapus projek ini akan menghilangkan semua data dan tidak dapat dikembalikan.
-                </p>
-            </div>
 
-            <!-- FORM DIMULAI DI SINI -->
-            <form id="cancelOpenForm" onsubmit="event.preventDefault(); submitOpenCancel();">
-                <input type="hidden" id="cancelProjectId" name="project_id">
-                
-                <div style="margin-bottom: 24px; padding: 0 1.5rem;">
+        <div class="modal-body">
+            <form id="cancelOpenForm" enctype="multipart/form-data">
+                <input type="hidden" id="cancelOpenProjectId" name="project_id">
+
+                <!-- Alasan Pembatalan -->
+                <div class="form-group">
                     <label for="cancelOpenReason" class="form-label">
-                        <strong>Alasan penghapusan:</strong> <span style="color: #ef4444;">*</span>
+                        <strong>Alasan Pembatalan:</strong> <span style="color: #ef4444;">*</span>
                     </label>
-                    <textarea 
-                        id="cancelOpenReason" 
+                    <textarea
+                        id="cancelOpenReason"
                         name="reason"
-                        class="form-textarea" 
-                        rows="4" 
-                        placeholder="Jelaskan alasan penghapusan projek ini..." 
+                        class="form-control"
+                        rows="4"
+                        placeholder="Jelaskan alasan pembatalan project ini (minimal 10 karakter)"
                         required
                         minlength="10"
                         maxlength="500"></textarea>
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">Minimal 10 karakter diperlukan</div>
-                    <div class="char-counter">
-                        Karakter: <span id="cancelOpenCharCount">0</span>/500
-                    </div>
+                    <small style="color: #6b7280; font-size: 12px;">
+                        <span id="cancelOpenReasonCount">0</span>/500 karakter
+                    </small>
                 </div>
 
-                <div style="margin-bottom: 24px; padding: 0 1.5rem;">
-                    <label for="cancelEvidenceFiles" class="form-label">
-                        <strong>Upload Bukti (Opsional):</strong>
+                <!-- Informasi Bank -->
+                <div class="form-group">
+                    <label for="cancelOpenBankName" class="form-label">
+                        <strong>Nama Bank:</strong> <span style="color: #ef4444;">*</span>
                     </label>
-                    <div 
-                        style="border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; background: #f9fafb; cursor: pointer;" 
-                        onclick="document.getElementById('cancelEvidenceFiles').click()"
-                        id="cancelDropZone">
-                        <input 
-                            type="file" 
-                            id="cancelEvidenceFiles" 
-                            name="evidence_files[]" 
-                            multiple 
-                            accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt" 
-                            style="display: none;">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #3b82f6; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #3b82f6; font-weight: 600;">Klik untuk upload file bukti</p>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">
-                            Gambar, PDF, DOC - Maksimal 5MB per file
-                        </p>
-                    </div>
-                    <div id="cancelFileList" class="files-preview"></div>
-                </div>
-
-                <div style="margin-bottom: 24px; padding: 0 1.5rem;">
-                    <label for="bankSelect" class="form-label">
-                        <strong>Pilih Bank:</strong> <span style="color: #ef4444;">*</span>
-                    </label>
-                    <select id="bankSelect" name="bank_name" class="form-select" required>
-                        <option value="" disabled selected>Pilih Bank</option>
-                        <option value="bca">BCA</option>
-                        <option value="mandiri">Mandiri</option>
-                        <option value="bni">BNI</option>
-                        <option value="bri">BRI</option>
-                        <option value="cimb">CIMB Niaga</option>
-                        <option value="danamon">Danamon</option>
-                        <option value="permata">Permata</option>
-                        <option value="bsi">BSI (Bank Syariah Indonesia)</option>
+                    <select id="cancelOpenBankName" name="bank_name" class="form-control" required>
+                        <option value="">Pilih Bank</option>
+                        <option value="BCA">BCA</option>
+                        <option value="MANDIRI">Mandiri</option>
+                        <option value="BNI">BNI</option>
+                        <option value="BRI">BRI</option>
+                        <option value="CIMB">CIMB Niaga</option>
+                        <option value="PERMATA">Permata</option>
+                        <option value="DANAMON">Danamon</option>
+                        <option value="BTN">BTN</option>
+                        <option value="BSI">BSI (Bank Syariah Indonesia)</option>
+                        <option value="GOPAY">GoPay</option>
+                        <option value="OVO">OVO</option>
+                        <option value="DANA">DANA</option>
                     </select>
                 </div>
 
-                <div style="margin-bottom: 24px; padding: 0 1.5rem;">
-                    <label for="accountNumber" class="form-label">
+                <div class="form-group">
+                    <label for="cancelOpenAccountNumber" class="form-label">
                         <strong>Nomor Rekening:</strong> <span style="color: #ef4444;">*</span>
                     </label>
-                    <input 
-                        type="text" 
-                        id="accountNumber" 
+                    <input
+                        type="text"
+                        id="cancelOpenAccountNumber"
                         name="account_number"
-                        class="form-input" 
-                        placeholder="Contoh: 1234567890" 
-                        required 
-                        pattern="[0-9]+" 
-                        title="Hanya angka yang diperbolehkan">
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">Masukkan nomor rekening untuk pengembalian dana</div>
+                        class="form-control"
+                        placeholder="Contoh: 1234567890"
+                        required
+                        pattern="[0-9]+"
+                        maxlength="20">
+                    <small style="color: #6b7280; font-size: 12px;">Hanya angka tanpa spasi atau tanda baca</small>
                 </div>
-                
-                <div class="project-info-card" style="margin-bottom: 0;">
-                    <h4 style="margin: 0 0 12px 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-info-circle" style="color: #3b82f6;"></i> 
-                        Informasi Projek
-                    </h4>
-                    <div class="meta-item">
-                        <i class="fas fa-tag meta-icon"></i>
-                        <span><strong>Judul:</strong> <span id="cancelProjectInfoTitle">-</span></span>
-                    </div>
+
+                <!-- ✅ CHECKBOX POSTING ULANG PROYEK -->
+<div class="form-group" style="margin-top: 20px; padding: 15px; background: #f0fdf4; border: 1px solid #d1fae5; border-radius: 8px;">
+    <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0;">
+        <input 
+            type="checkbox" 
+            id="repostProject" 
+            name="repost_project" 
+            value="1"
+            style="margin-top: 2px; width: 18px; height: 18px; cursor: pointer;">
+        <span style="flex: 1; font-size: 14px; color: #065f46;">
+            <strong>Posting ulang proyek ini setelah dibatalkan</strong>
+            <br>
+            <small style="color: #047857;">Proyek akan otomatis di-posting kembali setelah pembatalan disetujui admin</small>
+        </span>
+    </label>
+</div>
+
+                <!-- Upload Evidence (Optional) -->
+                <div class="form-group">
+                    <label for="cancelOpenEvidence" class="form-label">
+                        <strong>Upload Bukti Pendukung:</strong> <span style="color: #9ca3af;">(Opsional)</span>
+                    </label>
+                    <input
+                        type="file"
+                        id="cancelOpenEvidence"
+                        name="evidence_files[]"
+                        class="form-control"
+                        accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt"
+                        multiple>
+                    <small style="color: #6b7280; font-size: 12px;">
+                        Format: JPG, PNG, PDF, DOC, DOCX, TXT (Max. 5MB per file)
+                    </small>
+                    <div id="cancelOpenFileList" style="margin-top: 10px;"></div>
+                </div>
+
+                <!-- Info Warning -->
+                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 6px; margin-top: 15px;">
+                    <p style="margin: 0; font-size: 13px; color: #92400e;">
+                        <i class="fas fa-info-circle" style="color: #f59e0b;"></i>
+                        <strong>Perhatian:</strong> Pengajuan pembatalan akan diproses oleh admin dalam 1-2 hari kerja.
+                    </p>
                 </div>
             </form>
-            <!-- FORM BERAKHIR DI SINI -->
         </div>
-        
-        <!-- FOOTER DI LUAR FORM -->
+
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeModal('cancelOpenModal')">
-                <i class="fas fa-arrow-left"></i> 
-                Kembali
+                <i class="fas fa-times"></i>
+                Batal
             </button>
-            <button type="button" class="btn btn-danger" onclick="submitOpenCancel()" id="submitCancelBtn">
-                <i class="fas fa-trash"></i> 
-                Ya, Cancel Projek
+            <button type="button" class="btn btn-danger" onclick="submitCancelOpen()">
+                <i class="fas fa-paper-plane"></i>
+                Kirim Pengajuan
             </button>
         </div>
     </div>
 </div>
 
-<!-- Cancel Modal for Working Projects - DIPERBAIKI SAMA DENGAN OPEN -->
+<!-- Cancel Modal for Working Projects - COMPACT VERSION -->
 <div id="cancelWorkingModal" class="modal">
     <div class="modal-content">
         <div class="modal-header" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
@@ -2328,46 +2344,52 @@
         </div>
         
         <div class="modal-body">
-            <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin-bottom: 24px; border-radius: 8px;">
+            <!-- ✅ WARNING BOX - COMPACT -->
+            <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px; margin-bottom: 20px; border-radius: 6px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
-                    <strong style="color: #dc2626;">Peringatan Penting:</strong>
+                    <i class="fas fa-exclamation-triangle" style="color: #ef4444; font-size: 14px;"></i>
+                    <strong style="color: #dc2626; font-size: 13px;">Peringatan Penting:</strong>
                 </div>
-                <p style="color: #991b1b; margin: 8px 0 0 0; font-size: 14px;">
+                <p style="color: #991b1b; margin: 6px 0 0 0; font-size: 12px; line-height: 1.4;">
                     Membatalkan projek yang sedang dikerjakan akan menghentikan semua progress. 
-                    Refund akan dihitung berdasarkan progress yang sudah diselesaikan.
+                    Refund tidak akan dikembalikan penuh, karena kebijakan website kami.
                 </p>
             </div>
 
-            <!-- FORM SAMA DENGAN CANCEL OPEN -->
+            <!-- FORM COMPACT -->
             <form id="cancelWorkingForm">
                 <input type="hidden" id="cancelWorkingProjectId" name="project_id">
                 
-                <div style="margin-bottom: 24px; padding: 0 1.5rem;">
-                    <label for="cancelWorkingReason" class="form-label">
-                        <strong>Alasan pembatalan:</strong> <span style="color: #ef4444;">*</span>
+                <!-- ✅ ALASAN PEMBATALAN - COMPACT -->
+                <div style="margin-bottom: 20px; padding: 0 1.5rem;">
+                    <label for="cancelWorkingReason" class="form-label" style="display: block; margin-bottom: 6px;">
+                        <strong style="font-size: 13px;">Alasan pembatalan:</strong> <span style="color: #ef4444;">*</span>
                     </label>
                     <textarea 
                         id="cancelWorkingReason" 
                         name="reason"
                         class="form-textarea" 
-                        rows="4" 
+                        rows="3"
                         placeholder="Jelaskan alasan pembatalan projek ini..." 
                         required
                         minlength="10"
-                        maxlength="500"></textarea>
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">Minimal 10 karakter diperlukan</div>
-                    <div class="char-counter">
-                        Karakter: <span id="cancelWorkingCharCount">0</span>/500
+                        maxlength="500"
+                        style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; resize: vertical;"></textarea>
+                    <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                        <div style="font-size: 11px; color: #6b7280;">Minimal 10 karakter</div>
+                        <div class="char-counter" style="font-size: 11px; color: #9ca3af;">
+                            <span id="cancelWorkingCharCount">0</span>/500
+                        </div>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 24px; padding: 0 1.5rem;">
-                    <label for="cancelEvidenceFilesWorking" class="form-label">
-                        <strong>Upload Bukti (Opsional):</strong>
+                <!-- ✅ UPLOAD BUKTI - COMPACT -->
+                <div style="margin-bottom: 20px; padding: 0 1.5rem;">
+                    <label for="cancelEvidenceFilesWorking" class="form-label" style="display: block; margin-bottom: 6px;">
+                        <strong style="font-size: 13px;">Upload Bukti (Opsional):</strong>
                     </label>
                     <div 
-                        style="border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; background: #f9fafb; cursor: pointer;" 
+                        style="border: 2px dashed #d1d5db; border-radius: 6px; padding: 12px; text-align: center; background: #f9fafb; cursor: pointer; transition: all 0.3s;" 
                         onclick="document.getElementById('cancelEvidenceFilesWorking').click()"
                         id="cancelDropZoneWorking">
                         <input 
@@ -2377,20 +2399,21 @@
                             multiple 
                             accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt" 
                             style="display: none;">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #3b82f6; margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: #3b82f6; font-weight: 600;">Klik untuk upload file bukti</p>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">
-                            Gambar, PDF, DOC - Maksimal 5MB per file
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; color: #3b82f6; margin-bottom: 6px;"></i>
+                        <p style="margin: 0; color: #3b82f6; font-weight: 600; font-size: 13px;">Klik untuk upload file bukti</p>
+                        <p style="margin: 4px 0 0 0; font-size: 11px; color: #6b7280;">
+                            Gambar, PDF, DOC - Max 5MB/file
                         </p>
                     </div>
-                    <div id="cancelFileListWorking" class="files-preview"></div>
+                    <div id="cancelFileListWorking" class="files-preview" style="margin-top: 8px;"></div>
                 </div>
 
-                <div style="margin-bottom: 24px; padding: 0 1.5rem;">
-                    <label for="bankSelectWorking" class="form-label">
-                        <strong>Pilih Bank:</strong> <span style="color: #ef4444;">*</span>
+                <!-- ✅ BANK SELECT - COMPACT -->
+                <div style="margin-bottom: 16px; padding: 0 1.5rem;">
+                    <label for="bankSelectWorking" class="form-label" style="display: block; margin-bottom: 6px;">
+                        <strong style="font-size: 13px;">Pilih Bank:</strong> <span style="color: #ef4444;">*</span>
                     </label>
-                    <select id="bankSelectWorking" name="bank_name" class="form-select" required>
+                    <select id="bankSelectWorking" name="bank_name" class="form-select" required style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white;">
                         <option value="" disabled selected>Pilih Bank</option>
                         <option value="bca">BCA</option>
                         <option value="mandiri">Mandiri</option>
@@ -2403,9 +2426,10 @@
                     </select>
                 </div>
 
-                <div style="margin-bottom: 24px; padding: 0 1.5rem;">
-                    <label for="accountNumberWorking" class="form-label">
-                        <strong>Nomor Rekening:</strong> <span style="color: #ef4444;">*</span>
+                <!-- ✅ NOMOR REKENING - COMPACT -->
+                <div style="margin-bottom: 20px; padding: 0 1.5rem;">
+                    <label for="accountNumberWorking" class="form-label" style="display: block; margin-bottom: 6px;">
+                        <strong style="font-size: 13px;">Nomor Rekening:</strong> <span style="color: #ef4444;">*</span>
                     </label>
                     <input 
                         type="text" 
@@ -2415,32 +2439,50 @@
                         placeholder="Contoh: 1234567890" 
                         required 
                         pattern="[0-9]+" 
-                        title="Hanya angka yang diperbolehkan">
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">Masukkan nomor rekening untuk pengembalian dana</div>
+                        title="Hanya angka yang diperbolehkan"
+                        style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">Masukkan nomor rekening untuk pengembalian dana</div>
                 </div>
                 
-                <!-- Project Progress Info -->
+                <!-- ✅ CHECKBOX POSTING ULANG PROYEK - WORKING -->
+<div style="margin-bottom: 20px; padding: 0 1.5rem;">
+    <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0; padding: 12px; background: #f0fdf4; border: 1px solid #d1fae5; border-radius: 8px;">
+        <input 
+            type="checkbox" 
+            id="repostProjectWorking" 
+            name="repost_project" 
+            value="1"
+            style="margin-top: 2px; width: 18px; height: 18px; cursor: pointer;">
+        <span style="flex: 1; font-size: 13px; color: #065f46;">
+            <strong>Posting ulang proyek ini setelah dibatalkan</strong>
+            <br>
+            <small style="color: #047857;">Proyek akan otomatis di-posting kembali setelah pembatalan disetujui admin</small>
+        </span>
+    </label>
+</div>
+
+                <!-- ✅ PROJECT PROGRESS INFO - COMPACT -->
                 <div class="project-info-card" style="margin-bottom: 0;">
-                    <h4 style="margin: 0 0 12px 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-chart-line" style="color: #3b82f6;"></i> 
+                    <h4 style="margin: 0 0 10px 0; color: #1e293b; display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                        <i class="fas fa-chart-line" style="color: #3b82f6; font-size: 13px;"></i> 
                         Progress Saat Ini
                     </h4>
                     <div class="project-meta">
-                        <div class="meta-item">
-                            <i class="fas fa-user meta-icon"></i>
-                            <span><strong>Freelancer:</strong> <span id="cancelWorkingFreelancer">-</span></span>
+                        <div class="meta-item" style="padding: 6px 0;">
+                            <i class="fas fa-user meta-icon" style="font-size: 12px;"></i>
+                            <span style="font-size: 12px;"><strong>Freelancer:</strong> <span id="cancelWorkingFreelancer">-</span></span>
                         </div>
-                        <div class="meta-item">
-                            <i class="fas fa-percentage meta-icon"></i>
-                            <span><strong>Progress:</strong> <span id="cancelWorkingProgress">0%</span></span>
+                        <div class="meta-item" style="padding: 6px 0;">
+                            <i class="fas fa-percentage meta-icon" style="font-size: 12px;"></i>
+                            <span style="font-size: 12px;"><strong>Progress:</strong> <span id="cancelWorkingProgress">0%</span></span>
                         </div>
-                        <div class="meta-item">
-                            <i class="fas fa-calendar meta-icon"></i>
-                            <span><strong>Deadline:</strong> <span id="cancelWorkingDeadline">-</span></span>
+                        <div class="meta-item" style="padding: 6px 0;">
+                            <i class="fas fa-calendar meta-icon" style="font-size: 12px;"></i>
+                            <span style="font-size: 12px;"><strong>Deadline:</strong> <span id="cancelWorkingDeadline">-</span></span>
                         </div>
-                        <div class="meta-item">
-                            <i class="fas fa-info-circle meta-icon"></i>
-                            <span><strong>Status:</strong> <span id="cancelWorkingStatus">-</span></span>
+                        <div class="meta-item" style="padding: 6px 0; border-bottom: none;">
+                            <i class="fas fa-info-circle meta-icon" style="font-size: 12px;"></i>
+                            <span style="font-size: 12px;"><strong>Status:</strong> <span id="cancelWorkingStatus">-</span></span>
                         </div>
                     </div>
                 </div>
@@ -2448,11 +2490,11 @@
         </div>
         
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('cancelWorkingModal')">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('cancelWorkingModal')" style="padding: 8px 16px; font-size: 13px;">
                 <i class="fas fa-arrow-left"></i> 
                 Kembali
             </button>
-            <button type="button" class="btn btn-danger" onclick="submitWorkingCancel()">
+            <button type="button" class="btn btn-danger" onclick="submitWorkingCancel()" style="padding: 8px 16px; font-size: 13px;">
                 <i class="fas fa-ban"></i> 
                 Ya, Batalkan Projek
             </button>
@@ -3301,54 +3343,60 @@ function openCancelOpenModal(projectId, projectTitle) {
 
 
 
-            // Function to submit open project cancellation
-            window.submitOpenCancel = function() {
-    console.log('🟢 submitOpenCancel DIPANGGIL!');
-    
+            // ============================================
+// FUNCTION: Submit Cancellation - UPDATED WITH REDIRECT LOGIC
+// ============================================
+window.submitOpenCancel = function() {
     // Get values
     const reason = document.getElementById('cancelOpenReason')?.value.trim();
     const bankName = document.getElementById('bankSelect')?.value;
     const accountNumber = document.getElementById('accountNumber')?.value.trim();
     const projectId = document.getElementById('cancelProjectId')?.value;
     
-    console.log('📋 DATA FORM:', {
-        reason: reason ? 'ADA (' + reason.length + ' chars)' : 'KOSONG',
-        bankName: bankName || 'KOSONG',
-        accountNumber: accountNumber || 'KOSONG',
-        projectId: projectId || 'KOSONG',
-        filesCount: cancelEvidenceFiles.length
-    });
+    // ✅ Ambil status checkbox untuk redirect logic
+    const repostCheckbox = document.getElementById('repostProject');
+    const shouldRepost = (repostCheckbox && repostCheckbox.checked);
     
     // Validation
-    if (!reason || reason.length < 10) {
-        console.error('❌ Validasi gagal: reason');
+    if (!reason) {
+        showNotification('Alasan harus diisi!', 'error');
+        return false;
+    }
+    
+    if (reason.length < 10) {
         showNotification('Alasan minimal 10 karakter!', 'error');
         return false;
     }
     
+    if (reason.length > 500) {
+        showNotification('Alasan maksimal 500 karakter!', 'error');
+        return false;
+    }
+    
     if (!bankName) {
-        console.error('❌ Validasi gagal: bank');
         showNotification('Bank harus dipilih!', 'error');
         return false;
     }
     
-    if (!accountNumber || !/^\d+$/.test(accountNumber)) {
-        console.error('❌ Validasi gagal: account number');
-        showNotification('Nomor rekening harus diisi (hanya angka)!', 'error');
+    if (!accountNumber) {
+        showNotification('Nomor rekening harus diisi!', 'error');
         return false;
     }
     
-    console.log('✅ Validasi lolos!');
+    if (!/^\d+$/.test(accountNumber)) {
+        showNotification('Nomor rekening hanya boleh angka!', 'error');
+        return false;
+    }
     
     // Prepare FormData
     const formData = new FormData();
     formData.append('reason', reason);
     formData.append('bank_name', bankName);
     formData.append('account_number', accountNumber);
+    formData.append('repost_project', shouldRepost ? '1' : '0');
     
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     if (!csrfToken) {
-        console.error('❌ CSRF token tidak ada!');
         showNotification('CSRF token tidak ditemukan!', 'error');
         return false;
     }
@@ -3357,30 +3405,17 @@ function openCancelOpenModal(projectId, projectTitle) {
     // Add files
     cancelEvidenceFiles.forEach((file, index) => {
         formData.append(`evidence_files[${index}]`, file);
-        console.log(`📎 File ${index}: ${file.name}`);
     });
     
-    // LOG SEMUA ISI FORMDATA
-    console.log('📦 FormData yang akan dikirim:');
-    for (let pair of formData.entries()) {
-        if (pair[1] instanceof File) {
-            console.log(`  ${pair[0]}: [FILE] ${pair[1].name}`);
-        } else {
-            console.log(`  ${pair[0]}: ${pair[1]}`);
-        }
-    }
-    
-    // Update button
+    // Update button to loading state
     const submitBtn = document.getElementById('submitCancelBtn');
     const originalHTML = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
     
-    // URL YANG BENAR
+    // Send request
     const url = `/projects/${projectId}/cancel-open`;
-    console.log('🌐 Mengirim POST ke:', url);
     
-    // SEND REQUEST
     fetch(url, {
         method: 'POST',
         headers: {
@@ -3391,26 +3426,146 @@ function openCancelOpenModal(projectId, projectTitle) {
         body: formData
     })
     .then(response => {
-        console.log('📥 Response diterima:', {
-            status: response.status,
-            statusText: response.statusText,
-            ok: response.ok,
-            headers: {
-                contentType: response.headers.get('content-type')
-            }
-        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHTML;
         
-        // Clone response untuk bisa dibaca 2x
+        if (data.success) {
+            showNotification(data.message || 'Project berhasil dibatalkan!', 'success');
+            closeModal('cancelOpenModal');
+            
+            // ✅ REDIRECT LOGIC BERDASARKAN CHECKBOX
+            setTimeout(() => {
+                if (shouldRepost) {
+                    // Jika checkbox tercentang, redirect ke halaman edit
+                    window.location.href = `/projects/${projectId}/edit`;
+                } else {
+                    // Jika tidak, reload jobboard seperti biasa
+                    location.reload();
+                }
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Gagal membatalkan project', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHTML;
+        
+        showNotification('Terjadi kesalahan: ' + error.message, 'error');
+    });
+    
+    return false;
+};
+
+// ============================================
+// FUNCTION: Submit Working Cancel - UPDATED WITH REDIRECT LOGIC
+// ============================================
+window.submitWorkingCancel = function() {
+    console.log('🟡 submitWorkingCancel DIPANGGIL!');
+    
+    const reason = document.getElementById('cancelWorkingReason')?.value.trim();
+    const bankName = document.getElementById('bankSelectWorking')?.value;
+    const accountNumber = document.getElementById('accountNumberWorking')?.value.trim();
+    const projectId = document.getElementById('cancelWorkingProjectId')?.value;
+    
+    // ✅ Ambil status checkbox untuk redirect logic
+    const repostCheckbox = document.getElementById('repostProjectWorking');
+    const shouldRepost = (repostCheckbox && repostCheckbox.checked);
+    const repostValue = shouldRepost ? '1' : '0';
+    
+    console.log('📋 DATA WORKING:', { 
+        reason: reason?.length, 
+        bankName: bankName,
+        accountNumber: accountNumber,
+        projectId,
+        repost_project: repostValue,
+        shouldRepost: shouldRepost
+    });
+    
+    // Validation
+    if (!reason || reason.length < 10) {
+        showNotification('Alasan minimal 10 karakter!', 'error');
+        return false;
+    }
+
+    if (!bankName) {
+        showNotification('Bank harus dipilih!', 'error');
+        return false;
+    }
+
+    if (!accountNumber || !/^\d+$/.test(accountNumber)) {
+        showNotification('Nomor rekening harus diisi (hanya angka)!', 'error');
+        return false;
+    }
+    
+    const formData = new FormData();
+    formData.append('reason', reason);
+    formData.append('bank_name', bankName);
+    formData.append('account_number', accountNumber);
+    formData.append('repost_project', repostValue);
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!csrfToken) {
+        showNotification('CSRF token tidak ditemukan!', 'error');
+        return false;
+    }
+    formData.append('_token', csrfToken);
+    
+    // Handle file uploads
+    const fileInput = document.getElementById('cancelEvidenceFilesWorking');
+    if (fileInput && fileInput.files) {
+        console.log('📁 Files found:', fileInput.files.length);
+        Array.from(fileInput.files).forEach((file, index) => {
+            console.log(`📎 File ${index}:`, file.name, file.size, file.type);
+            formData.append('evidence_files[]', file);
+        });
+    } else {
+        console.log('📁 No files selected');
+    }
+    
+    // Update button state
+    const submitBtn = document.querySelector('#cancelWorkingModal button[onclick*="submitWorkingCancel"]');
+    const originalHTML = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    
+    const url = `/projects/${projectId}/cancel-working`;
+    console.log('🌐 Mengirim POST WORKING ke:', url);
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        console.log('📥 Response status:', response.status, response.statusText);
+        
         return response.text().then(text => {
-            console.log('📄 Raw response:', text.substring(0, 500));
+            console.log('📄 Raw response text:', text);
             
             try {
                 const json = JSON.parse(text);
-                console.log('✅ JSON parsed:', json);
-                return { ok: response.ok, status: response.status, data: json };
+                return { 
+                    ok: response.ok, 
+                    status: response.status, 
+                    data: json 
+                };
             } catch (e) {
                 console.error('❌ JSON parse error:', e);
-                throw new Error('Server tidak mengembalikan JSON valid');
+                console.error('Raw text that failed to parse:', text);
+                throw new Error(`Server returned invalid JSON: ${text.substring(0, 200)}`);
             }
         });
     })
@@ -3421,16 +3576,26 @@ function openCancelOpenModal(projectId, projectTitle) {
         submitBtn.innerHTML = originalHTML;
         
         if (result.ok && result.data.success) {
-            console.log('🎉 SUCCESS!');
-            showNotification(result.data.message || 'Project berhasil dibatalkan!', 'success');
-            closeModal('cancelOpenModal');
+            let successMessage = result.data.message;
+            if (shouldRepost) {
+                successMessage += '<br><br><small style="color: #059669;"><i class="fas fa-check-circle"></i> Proyek akan otomatis di-posting ulang setelah disetujui</small>';
+            }
             
+            showNotification(successMessage, 'success');
+            closeModal('cancelWorkingModal');
+            
+            // ✅ REDIRECT LOGIC BERDASARKAN CHECKBOX
             setTimeout(() => {
-                console.log('🔄 Reloading page...');
-                location.reload();
+                if (shouldRepost) {
+                    // Jika checkbox tercentang, redirect ke halaman edit
+                    window.location.href = `/projects/${projectId}/edit`;
+                } else {
+                    // Jika tidak, reload jobboard seperti biasa
+                    location.reload();
+                }
             }, 1500);
         } else {
-            console.error('❌ Request gagal:', result);
+            console.error('❌ Server returned error:', result.data);
             showNotification(result.data.message || 'Gagal membatalkan project', 'error');
         }
     })
@@ -3441,7 +3606,14 @@ function openCancelOpenModal(projectId, projectTitle) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalHTML;
         
-        showNotification('Error: ' + error.message, 'error');
+        let errorMessage = 'Terjadi kesalahan: ' + error.message;
+        if (error.message.includes('500')) {
+            errorMessage = 'Terjadi kesalahan server (500). Silakan cek log server atau hubungi admin.';
+        } else if (error.message.includes('Network Error')) {
+            errorMessage = 'Koneksi jaringan bermasalah. Periksa koneksi internet Anda.';
+        }
+        
+        showNotification(errorMessage, 'error');
     });
     
     return false;
@@ -3750,47 +3922,71 @@ function handleFileUpload() {
     });
 }
 
-function updateFileList() {
-    const fileList = document.getElementById('cancelFileList');
-    if (!fileList) return;
+// ✅ File input handler untuk cancel working
+const cancelFileInput = document.getElementById('cancelEvidenceFilesWorking');
+const cancelFileList = document.getElementById('cancelFileListWorking');
+
+if (cancelFileInput && cancelFileList) {
+    cancelFileInput.addEventListener('change', function() {
+        updateFileList(this.files, cancelFileList);
+    });
+}
+
+// ✅ Function untuk update file list preview
+function updateFileList(files, container) {
+    container.innerHTML = '';
     
-    fileList.innerHTML = cancelEvidenceFiles.map((file, index) => {
-        const size = (file.size / 1024).toFixed(1) + ' KB';
-        const ext = file.name.split('.').pop().toLowerCase();
+    if (files.length === 0) return;
+    
+    Array.from(files).forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
         
-        let icon = 'fas fa-file';
-        let color = '#6b7280';
-        
-        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-            icon = 'fas fa-image';
-            color = '#059669';
-        } else if (ext === 'pdf') {
-            icon = 'fas fa-file-pdf';
-            color = '#dc2626';
-        } else if (['doc', 'docx'].includes(ext)) {
-            icon = 'fas fa-file-word';
-            color = '#1d4ed8';
+        let displayName = file.name;
+        if (displayName.length > 35) {
+            const ext = displayName.split('.').pop();
+            displayName = displayName.substring(0, 35 - ext.length - 4) + '...' + ext;
         }
         
-        return `
-            <div class="file-item">
-                <div class="file-info">
-                    <i class="${icon} file-icon" style="color: ${color};"></i>
-                    <span class="file-name" title="${file.name}">${file.name}</span>
-                    <span class="file-size">(${size})</span>
-                </div>
-                <button type="button" class="file-remove" onclick="removeFile(${index})">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+        fileItem.innerHTML = `
+            <span class="file-name">
+                <i class="fas fa-file" style="margin-right: 6px; color: #6b7280;"></i>
+                ${displayName} (${formatFileSize(file.size)})
+            </span>
+            <button type="button" class="file-remove" onclick="removeFileFromList(${index}, 'cancelEvidenceFilesWorking')">
+                <i class="fas fa-times"></i>
+            </button>
         `;
-    }).join('');
+        
+        container.appendChild(fileItem);
+    });
 }
 
 window.removeFile = function(index) {
     cancelEvidenceFiles.splice(index, 1);
     updateFileList();
 };
+
+// ✅ Function untuk remove file dari list
+function removeFileFromList(index, inputId) {
+    const input = document.getElementById(inputId);
+    const dt = new DataTransfer();
+    const files = input.files;
+    
+    for (let i = 0; i < files.length; i++) {
+        if (i !== index) {
+            dt.items.add(files[i]);
+        }
+    }
+    
+    input.files = dt.files;
+    
+    const container = inputId === 'cancelEvidenceFilesWorking' 
+        ? document.getElementById('cancelFileListWorking')
+        : document.getElementById('cancelFileList');
+    
+    updateFileList(input.files, container);
+}
 
 // ============================================
 // Character Counter
@@ -3815,89 +4011,6 @@ function setupCharCounter() {
     });
 }
 
-// Function untuk cancel working project - DIPERBAIKI
-window.submitWorkingCancel = function() {
-    console.log('🟡 submitWorkingCancel DIPANGGIL!');
-    
-    const reason = document.getElementById('cancelWorkingReason')?.value.trim();
-    const bankName = document.getElementById('bankSelectWorking')?.value; // Perhatikan ID yang berbeda
-    const accountNumber = document.getElementById('accountNumberWorking')?.value.trim();
-    const projectId = document.getElementById('cancelWorkingProjectId')?.value;
-    
-    console.log('📋 DATA WORKING:', { 
-        reason: reason?.length, 
-        bankName: bankName,
-        accountNumber: accountNumber,
-        projectId 
-    });
-    
-    // Validation
-    if (!reason || reason.length < 10) {
-        showNotification('Alasan minimal 10 karakter!', 'error');
-        return false;
-    }
-
-    if (!bankName) {
-        showNotification('Bank harus dipilih!', 'error');
-        return false;
-    }
-
-    if (!accountNumber || !/^\d+$/.test(accountNumber)) {
-        showNotification('Nomor rekening harus diisi (hanya angka)!', 'error');
-        return false;
-    }
-    
-    const formData = new FormData();
-    formData.append('reason', reason);
-    formData.append('bank_name', bankName);
-    formData.append('account_number', accountNumber);
-    
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-    formData.append('_token', csrfToken);
-    
-    // PERBAIKAN: Gunakan selector yang benar
-    const submitBtn = document.querySelector('#cancelWorkingModal button[onclick*="submitWorkingCancel"]');
-    const originalHTML = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-    
-    const url = `/projects/${projectId}/cancel-working`;
-    console.log('🌐 Mengirim POST WORKING ke:', url);
-    
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalHTML;
-        
-        if (data.success) {
-            showNotification(data.message, 'success');
-            closeModal('cancelWorkingModal');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showNotification(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalHTML;
-        showNotification('Error: ' + error.message, 'error');
-    });
-    
-    return false;
-};
-
-// Function khusus untuk cancel working (dengan freelancer)
-// Function khusus untuk cancel working (dengan freelancer) - DIPERBAIKI
 function openCancelWorkingModal(projectId, projectTitle) {
     console.log('🟡 Opening cancel WORKING modal for project:', projectId);
     
@@ -3975,7 +4088,7 @@ function openCancelWorkingModal(projectId, projectTitle) {
 function setupWorkingModalEventListeners() {
     const cancelWorkingTextarea = document.getElementById('cancelWorkingReason');
     const cancelWorkingCharCounter = document.getElementById('cancelWorkingCharCount');
-    
+
     if (cancelWorkingTextarea && cancelWorkingCharCounter) {
         cancelWorkingTextarea.addEventListener('input', function() {
             const count = this.value.length;
@@ -4129,6 +4242,129 @@ document.addEventListener('DOMContentLoaded', function() {
     setupCharCounter();
     setupWorkingModalEventListeners();
 });
+
+async function submitCancelOpen() {
+    const form = document.getElementById('cancelOpenForm');
+    const formData = new FormData(form);
+    const projectId = document.getElementById('cancelOpenProjectId').value;
+    
+    // ✅ PERBAIKAN: Ambil nilai checkbox dengan benar
+    const repostCheckbox = document.getElementById('repostProject');
+    const repostValue = (repostCheckbox && repostCheckbox.checked) ? '1' : '0';
+    
+    // ✅ PENTING: Set nilai ke FormData (akan override value dari form)
+    formData.set('repost_project', repostValue);
+    
+    console.log('📋 Checkbox Status:', {
+        checked: repostCheckbox?.checked,
+        value: repostValue,
+        formDataValue: formData.get('repost_project')
+    });
+
+    // Validasi
+    const reason = formData.get('reason');
+    const bankName = formData.get('bank_name');
+    const accountNumber = formData.get('account_number');
+
+    if (!reason || reason.length < 10) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Validasi Gagal',
+            text: 'Alasan pembatalan minimal 10 karakter!',
+            confirmButtonColor: '#dc2626'
+        });
+        return;
+    }
+
+    if (!bankName) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Validasi Gagal',
+            text: 'Silakan pilih bank!',
+            confirmButtonColor: '#dc2626'
+        });
+        return;
+    }
+
+    if (!accountNumber || !/^[0-9]+$/.test(accountNumber)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Validasi Gagal',
+            text: 'Nomor rekening harus berupa angka!',
+            confirmButtonColor: '#dc2626'
+        });
+        return;
+    }
+
+    try {
+        // ✅ LOG untuk debugging
+        console.log('🚀 Mengirim data:', {
+            projectId,
+            reason: reason.substring(0, 50) + '...',
+            bankName,
+            accountNumber: accountNumber.substring(0, 4) + '****',
+            repost_project: repostValue
+        });
+
+        const response = await fetch(`/projects/${projectId}/cancel-open`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeModal('cancelOpenModal');
+            
+            // ✅ Pesan berbeda jika checkbox dicentang
+            let successMessage = result.message;
+            if (repostValue === '1') {
+                successMessage += '<br><br><small style="color: #059669;"><i class="fas fa-check-circle"></i> Proyek akan otomatis di-posting ulang setelah disetujui</small>';
+            }
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Pengajuan Berhasil!',
+                html: successMessage,
+                confirmButtonColor: '#10b981'
+            }).then(() => {
+                window.location.reload();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: result.message || 'Terjadi kesalahan',
+                confirmButtonColor: '#dc2626'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Terjadi kesalahan koneksi',
+            confirmButtonColor: '#dc2626'
+        });
+    }
+}
+
+// Character counter untuk reason
+document.addEventListener('DOMContentLoaded', function() {
+    const reasonTextarea = document.getElementById('cancelOpenReason');
+    const reasonCount = document.getElementById('cancelOpenReasonCount');
+    
+    if (reasonTextarea && reasonCount) {
+        reasonTextarea.addEventListener('input', function() {
+            reasonCount.textContent = this.value.length;
+        });
+    }
+});
+
     </script>
 </body>
 </html>

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class ProjectCancellationController extends Controller
 {
+    
     /**
      * Constructor - Apply auth middleware to all methods
      */
@@ -104,19 +105,21 @@ class ProjectCancellationController extends Controller
     }
 
 /**
- * Approve cancellation request - FIXED VERSION
- */
-/**
- * Approve cancellation request - FIXED FOR CORRECT ENUM VALUES
+ * Approve cancellation request - NO WALLET DEDUCTION
  */
 public function approveCancellation(Request $request, $id)
 {
-    \Log::info('=== APPROVE CANCELLATION START ===', ['id' => $id]);
+    \Log::info('=== APPROVE CANCELLATION START (NO WALLET) ===', ['id' => $id]);
     
     try {
+        // VALIDASI FILE
+        $validated = $request->validate([
+            'transfer_proof' => 'required|image|mimes:jpeg,jpg,png,pdf|max:5120'
+        ]);
+
         DB::beginTransaction();
 
-        $cancellation = ProjectCancellation::find($id);
+        $cancellation = ProjectCancellation::with(['project.proposalls'])->find($id);
         
         if (!$cancellation) {
             return response()->json([
@@ -124,47 +127,100 @@ public function approveCancellation(Request $request, $id)
                 'message' => 'Data pembatalan tidak ditemukan'
             ], 404);
         }
-        
-        \Log::info('Cancellation found', [
-            'id' => $cancellation->id,
-            'current_refund_status' => $cancellation->refund_status
-        ]);
 
-        // ✅ PERBAIKAN: Gunakan 'processed' untuk refund_status (bukan 'approved')
+        // AMBIL ACCEPTED PROPOSAL
+        $acceptedProposal = $cancellation->project->proposalls()
+            ->where('status', 'accepted')
+            ->first();
+
+        if (!$acceptedProposal) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada proposal yang diterima untuk project ini'
+            ], 400);
+        }
+
+        // HITUNG REFUND (TANPA DEBET WALLET)
+        $proposalPrice = $acceptedProposal->proposal_price;
+        $adminFee = $proposalPrice * 0.02;
+        $refundAmount = $proposalPrice - $adminFee;
+
+        // UPLOAD BUKTI TRANSFER
+        $transferProofPath = null;
+        if ($request->hasFile('transfer_proof')) {
+            $file = $request->file('transfer_proof');
+            $filename = 'transfer_proof_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $transferProofPath = $file->storeAs('transfer_proofs', $filename, 'public');
+        }
+
+        // UPDATE CANCELLATION STATUS
         $cancellation->update([
-            'refund_status' => 'processed', // ✅ INI YANG BENAR untuk project_cancellations
+            'refund_status' => 'processed',
+            'refund_amount' => $refundAmount,
+            'transfer_proof' => $transferProofPath,
+            'processed_at' => now(),
             'updated_at' => now()
         ]);
-        
-        \Log::info('Cancellation updated successfully with refund_status: processed');
 
-        // ✅ PERBAIKAN: Gunakan 'approved' untuk cancellation_status di projects
-        if ($cancellation->project) {
+        // CEK REPOST
+        $shouldRepost = (bool) $cancellation->repost_project;
+
+        if ($shouldRepost) {
+            // RESET PROPOSALS KE PENDING
+            \App\Models\Proposal::where('project_id', $cancellation->project_id)
+                ->update(['status' => 'pending']);
+
+            // UPDATE PROJECT JADI OPEN KEMBALI
             $cancellation->project->update([
-                'cancellation_status' => 'approved', // ✅ INI YANG BENAR untuk projects
-                'status' => 'cancelled', 
-                // 'approved_at' => now(),
+                'cancellation_status' => null,
+                'status' => 'open',
+                'rejection_reason' => null,
                 'updated_at' => now()
             ]);
-            \Log::info('Project updated successfully with cancellation_status: approved');
+
+            $successMessage = 
+                'Pembatalan proyek disetujui! Proyek otomatis di-posting ulang, semua freelancer bisa mengirim proposal kembali.';
+        } else {
+            // PROJECT DIPERMANEN BATAL
+            $cancellation->project->update([
+                'cancellation_status' => 'approved',
+                'status' => 'cancelled',
+                'updated_at' => now()
+            ]);
+
+            $successMessage = 
+                'Pembatalan proyek disetujui tanpa posting ulang.';
         }
 
         DB::commit();
-        \Log::info('=== APPROVE CANCELLATION SUCCESS ===');
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Pembatalan proyek berhasil disetujui! Status refund: processed'
+            'message' => $successMessage,
+            'data' => [
+                'refund_amount' => $refundAmount,
+                'admin_fee_deducted' => $adminFee,
+                'project_reposted' => $shouldRepost
+            ]
         ], 200);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $e->errors()
+        ], 422);
 
     } catch (\Exception $e) {
         DB::rollBack();
-        \Log::error('=== APPROVE CANCELLATION FAILED ===', [
+        \Log::error('ERROR APPROVE CANCELLATION', [
             'error' => $e->getMessage(),
             'line' => $e->getLine(),
             'file' => $e->getFile()
         ]);
-        
+
         return response()->json([
             'success' => false,
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -172,15 +228,202 @@ public function approveCancellation(Request $request, $id)
     }
 }
 
+
 /**
- * Reject cancellation request
+ * Approve cancellation request - WITH TRANSFER PROOF & AUTO DEDUCT WALLET
  */
+// public function approveCancellation(Request $request, $id)
+// {
+//     \Log::info('=== APPROVE CANCELLATION START ===', ['id' => $id]);
+    
+//     try {
+//         // ✅ VALIDASI FILE BUKTI TRANSFER
+//         $validated = $request->validate([
+//             'transfer_proof' => 'required|image|mimes:jpeg,jpg,png,pdf|max:5120'
+//         ]);
+
+//         DB::beginTransaction();
+
+//         $cancellation = ProjectCancellation::with(['project.proposalls'])->find($id);
+        
+//         if (!$cancellation) {
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Data pembatalan tidak ditemukan'
+//             ], 404);
+//         }
+        
+//         \Log::info('Cancellation found', [
+//             'id' => $cancellation->id,
+//             'current_refund_status' => $cancellation->refund_status,
+//             'repost_project' => $cancellation->repost_project
+//         ]);
+
+//         // ✅ GET ACCEPTED PROPOSAL & GET EXACT PROPOSAL PRICE
+//         $acceptedProposal = $cancellation->project->proposalls()
+//             ->where('status', 'accepted')
+//             ->first();
+
+//         if (!$acceptedProposal) {
+//             DB::rollBack();
+//             \Log::error('No accepted proposal found', ['project_id' => $cancellation->project_id]);
+            
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Tidak ada proposal yang diterima untuk project ini'
+//             ], 400);
+//         }
+
+//         // ✅ AMBIL PROPOSAL PRICE TANPA PENGURANGAN (EXACT AMOUNT)
+//         $refundAmount = $acceptedProposal->proposal_price;
+
+//         \Log::info('Refund amount (exact proposal price)', [
+//             'proposal_price' => $refundAmount,
+//             'project_id' => $cancellation->project_id
+//         ]);
+
+//         // ✅ UPLOAD FILE BUKTI TRANSFER
+//         $transferProofPath = null;
+//         if ($request->hasFile('transfer_proof')) {
+//             $file = $request->file('transfer_proof');
+//             $filename = 'transfer_proof_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
+//             $transferProofPath = $file->storeAs('transfer_proofs', $filename, 'public');
+//             \Log::info('Transfer proof uploaded', ['path' => $transferProofPath]);
+//         }
+
+//         // ✅ GET ADMIN WALLET
+//         $adminWallet = \App\Models\AdminWallet::getWallet();
+
+//         // ✅ CEK APAKAH SALDO MENCUKUPI
+//         if ($adminWallet->service_balance < $refundAmount) {
+//             DB::rollBack();
+//             \Log::error('Insufficient admin wallet balance', [
+//                 'required' => $refundAmount,
+//                 'available' => $adminWallet->service_balance
+//             ]);
+            
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Saldo service admin tidak mencukupi untuk refund. Saldo: Rp ' . number_format($adminWallet->service_balance, 0, ',', '.') . ', Dibutuhkan: Rp ' . number_format($refundAmount, 0, ',', '.')
+//             ], 400);
+//         }
+
+//         // ✅ KURANGI SALDO ADMIN WALLET (EXACT PROPOSAL PRICE)
+//         $adminWallet->debitService(
+//             $refundAmount,
+//             "Refund pembatalan project: {$cancellation->project->title} - Client: {$cancellation->user->name}",
+//             null
+//         );
+
+//         \Log::info('Admin wallet debited', [
+//             'amount' => $refundAmount,
+//             'new_service_balance' => $adminWallet->fresh()->service_balance
+//         ]);
+
+//         // ✅ UPDATE CANCELLATION
+//         $cancellation->update([
+//             'refund_status' => 'processed',
+//             'refund_amount' => $refundAmount,
+//             'transfer_proof' => $transferProofPath,
+//             'processed_at' => now(),
+//             'updated_at' => now()
+//         ]);
+        
+//         \Log::info('Cancellation approved with transfer proof and wallet deducted', [
+//             'transfer_proof' => $transferProofPath,
+//             'refund_amount' => $refundAmount
+//         ]);
+
+//         // ✅ CEK APAKAH USER INGIN POSTING ULANG PROJECT
+//         $shouldRepost = (bool) $cancellation->repost_project;
+        
+//         \Log::info('Checking repost status', [
+//             'repost_project' => $cancellation->repost_project,
+//             'shouldRepost' => $shouldRepost
+//         ]);
+
+//         if ($shouldRepost) {
+//             // ✅ RESET SEMUA PROPOSALS MENJADI PENDING (KOSONGKAN FREELANCER)
+//             \App\Models\Proposal::where('project_id', $cancellation->project_id)
+//                 ->update(['status' => 'pending']);
+            
+//             \Log::info('All proposals reset to pending', [
+//                 'project_id' => $cancellation->project_id
+//             ]);
+
+//             // ✅ UPDATE PROJECT STATUS - POSTING ULANG
+//             $cancellation->project->update([
+//                 'cancellation_status' => null,
+//                 'status' => 'open',
+//                 'rejection_reason' => null,
+//                 'updated_at' => now()
+//             ]);
+            
+//             \Log::info('Project reposted successfully', [
+//                 'project_id' => $cancellation->project_id,
+//                 'new_status' => 'open'
+//             ]);
+
+//             $successMessage = 'Pembatalan proyek berhasil disetujui dengan bukti transfer! Proyek telah otomatis di-posting ulang dan semua freelancer dapat mengajukan proposal kembali. Saldo admin telah dikurangi sebesar Rp ' . number_format($refundAmount, 0, ',', '.');
+//         } else {
+//             // ✅ JIKA TIDAK POSTING ULANG - TANDAI SEBAGAI CANCELLED
+//             $cancellation->project->update([
+//                 'cancellation_status' => 'approved',
+//                 'status' => 'cancelled',
+//                 'updated_at' => now()
+//             ]);
+            
+//             \Log::info('Project cancelled permanently (not reposted)');
+
+//             $successMessage = 'Pembatalan proyek berhasil disetujui dengan bukti transfer! Saldo admin telah dikurangi sebesar Rp ' . number_format($refundAmount, 0, ',', '.');
+//         }
+
+//         DB::commit();
+//         \Log::info('=== APPROVE CANCELLATION SUCCESS ===');
+        
+//         return response()->json([
+//             'success' => true,
+//             'message' => $successMessage,
+//             'data' => [
+//                 'refund_amount' => $refundAmount,
+//                 'wallet_balance_after' => $adminWallet->fresh()->service_balance,
+//                 'project_reposted' => $shouldRepost
+//             ]
+//         ], 200);
+
+//     } catch (\Illuminate\Validation\ValidationException $e) {
+//         DB::rollBack();
+//         \Log::error('Validation error', ['errors' => $e->errors()]);
+        
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Validasi gagal',
+//             'errors' => $e->errors()
+//         ], 422);
+
+//     } catch (\Exception $e) {
+//         DB::rollBack();
+//         \Log::error('=== APPROVE CANCELLATION FAILED ===', [
+//             'error' => $e->getMessage(),
+//             'line' => $e->getLine(),
+//             'file' => $e->getFile(),
+//             'trace' => $e->getTraceAsString()
+//         ]);
+        
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+//         ], 500);
+//     }
+// }
+
 /**
- * Reject cancellation request - FIXED FOR CORRECT ENUM VALUES  
+ * Reject cancellation request - WITH REJECTION REASON
  */
 public function rejectCancellation(Request $request, $id)
 {
     try {
+        // ✅ VALIDASI ALASAN PENOLAKAN
         $validated = $request->validate([
             'reason' => 'required|string|min:10|max:500'
         ]);
@@ -189,22 +432,21 @@ public function rejectCancellation(Request $request, $id)
 
         $cancellation = ProjectCancellation::findOrFail($id);
         
-        // ✅ PERBAIKAN: Untuk reject, mungkin gunakan 'completed' atau biarkan 'pending'
-        // Tergantung business logic Anda
+        // ✅ UPDATE DENGAN ALASAN PENOLAKAN & TANGGAL REJECT
         $cancellation->update([
-            'refund_status' => 'completed', // atau 'pending' tergantung kebutuhan
+            'refund_status' => 'completed', // atau buat status 'rejected' baru
             'rejection_reason' => $validated['reason'],
+            'rejected_at' => now(),
             'updated_at' => now()
         ]);
 
-        // ✅ PERBAIKAN: Gunakan 'rejected' untuk cancellation_status di projects
+        // ✅ UPDATE PROJECT STATUS
         $project = $cancellation->project;
         $previousStatus = $cancellation->project_status === 'working' ? 'in_progress' : 'open';
         
         $project->update([
-            'cancellation_status' => 'rejected', // ✅ INI YANG BENAR untuk projects
+            'cancellation_status' => 'rejected',
             'status' => $previousStatus,
-            // 'rejected_at' => now(),
             'rejection_reason' => $validated['reason']
         ]);
 
@@ -212,7 +454,7 @@ public function rejectCancellation(Request $request, $id)
 
         return response()->json([
             'success' => true,
-            'message' => 'Pembatalan proyek berhasil ditolak.'
+            'message' => 'Pembatalan proyek berhasil ditolak dengan alasan yang telah dicatat.'
         ], 200);
 
     } catch (\Exception $e) {
@@ -226,164 +468,176 @@ public function rejectCancellation(Request $request, $id)
     }
 }
 
-    /**
-     * Cancel Open Project
-     */
     public function cancelOpenProject(Request $request, $projectId)
-    {
-        Log::info('🔴 CANCEL REQUEST RECEIVED', [
-            'project_id' => $projectId,
-            'method' => $request->method(),
-            'has_files' => $request->hasFile('evidence_files'),
-            'user_id' => Auth::id(),
-            'all_data' => $request->except('_token')
+{
+    Log::info('🔴 CANCEL REQUEST RECEIVED', [
+        'project_id' => $projectId,
+        'method' => $request->method(),
+        'has_files' => $request->hasFile('evidence_files'),
+        'user_id' => Auth::id(),
+        'repost_project' => $request->input('repost_project'), // ✅ LOG CHECKBOX
+        'all_data' => $request->except('_token')
+    ]);
+
+    try {
+        // Validasi input
+        $validated = $request->validate([
+            'reason' => 'required|string|min:10|max:500',
+            'bank_name' => 'required|string',
+            'account_number' => 'required|string|regex:/^[0-9]+$/',
+            'repost_project' => 'nullable|boolean', // ✅ VALIDASI CHECKBOX
+            'evidence_files' => 'nullable|array',
+            'evidence_files.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx,txt|max:5120'
         ]);
 
-        try {
-            // Validasi input
-            $validated = $request->validate([
-                'reason' => 'required|string|min:10|max:500',
-                'bank_name' => 'required|string',
-                'account_number' => 'required|string|regex:/^[0-9]+$/',
-                'evidence_files' => 'nullable|array',
-                'evidence_files.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,pdf,doc,docx,txt|max:5120'
-            ]);
+        Log::info('✅ Validation passed', $validated);
 
-            Log::info('✅ Validation passed', $validated);
+        DB::beginTransaction();
 
-            DB::beginTransaction();
-
-            // Cari project
-            $project = Project::findOrFail($projectId);
+        // Cari project
+        $project = Project::findOrFail($projectId);
+        
+        // Cek ownership
+        if ($project->user_id !== Auth::id()) {
+            DB::rollBack();
+            Log::warning('❌ Unauthorized access attempt');
             
-            // Cek ownership
-            if ($project->user_id !== Auth::id()) {
-                DB::rollBack();
-                Log::warning('❌ Unauthorized access attempt');
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak memiliki akses untuk membatalkan project ini'
-                ], 403, [], JSON_UNESCAPED_UNICODE);
-            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk membatalkan project ini'
+            ], 403, [], JSON_UNESCAPED_UNICODE);
+        }
 
-            // Cek apakah sudah ada freelancer
-            $hasFreelancer = Proposal::where('project_id', $projectId)
-                ->where('status', 'accepted')
-                ->exists();
+        // Cek apakah sudah ada freelancer
+        $hasFreelancer = Proposal::where('project_id', $projectId)
+            ->where('status', 'accepted')
+            ->exists();
 
-            // Handle file uploads
-            $evidenceFiles = [];
-            if ($request->hasFile('evidence_files')) {
-                foreach ($request->file('evidence_files') as $index => $file) {
-                    try {
-                        $filename = time() . '_' . $index . '_' . $file->getClientOriginalName();
-                        $path = $file->storeAs('cancellation_evidence', $filename, 'public');
-                        
-                        $evidenceFiles[] = [
-                            'original_name' => $file->getClientOriginalName(),
-                            'path' => $path,
-                            'url' => Storage::url($path),
-                            'size' => $file->getSize(),
-                            'mime_type' => $file->getMimeType()
-                        ];
+        // Handle file uploads
+        $evidenceFiles = [];
+        if ($request->hasFile('evidence_files')) {
+            foreach ($request->file('evidence_files') as $index => $file) {
+                try {
+                    $filename = time() . '_' . $index . '_' . $file->getClientOriginalName();
+                    $path = $file->storeAs('cancellation_evidence', $filename, 'public');
+                    
+                    $evidenceFiles[] = [
+                        'original_name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'url' => Storage::url($path),
+                        'size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType()
+                    ];
 
-                        Log::info('📎 File uploaded', ['path' => $path]);
-                    } catch (\Exception $e) {
-                        Log::error('❌ File upload error', ['error' => $e->getMessage()]);
-                        throw $e;
-                    }
+                    Log::info('📎 File uploaded', ['path' => $path]);
+                } catch (\Exception $e) {
+                    Log::error('❌ File upload error', ['error' => $e->getMessage()]);
+                    throw $e;
                 }
             }
-
-            // Calculate refund amount
-            $refundAmount = $project->fixed_budget ?? $project->min_budget ?? 0;
-
-            // Prepare data untuk insert
-            $cancellationData = [
-                'project_id' => (int) $project->id,
-                'user_id' => (int) Auth::id(),
-                'project_status' => 'open',
-                'reason' => $validated['reason'],
-                'evidence_files' => !empty($evidenceFiles) ? json_encode($evidenceFiles) : null,
-                'bank_name' => $validated['bank_name'],
-                'account_number' => $validated['account_number'],
-                'refund_amount' => (float) $refundAmount,
-                'refund_status' => 'pending',
-                'cancelled_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now()
-            ];
-
-            Log::info('📝 Preparing to create cancellation', $cancellationData);
-
-            // Create cancellation record
-            $cancellation = ProjectCancellation::create($cancellationData);
-
-            if (!$cancellation) {
-                throw new \Exception('Failed to create cancellation record');
-            }
-
-            Log::info('✅ Cancellation record created', [
-                'id' => $cancellation->id,
-                'project_id' => $cancellation->project_id,
-                'data_stored' => $cancellation->toArray()
-            ]);
-
-            // Update project status to pending cancellation
-            $project->update([
-                'cancellation_status' => 'pending',
-                'status' => 'pending_cancellation'
-            ]);
-
-            DB::commit();
-
-            // Verifikasi data tersimpan
-            $savedCancellation = ProjectCancellation::find($cancellation->id);
-            Log::info('✅ Data verified in database', [
-                'exists' => !is_null($savedCancellation),
-                'data' => $savedCancellation ? $savedCancellation->toArray() : null
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Pengajuan pembatalan project berhasil dikirim. Tim kami akan meninjau permintaan Anda dalam 1-2 hari kerja.',
-                'data' => [
-                    'cancellation_id' => $cancellation->id,
-                    'refund_amount' => number_format($refundAmount, 0, ',', '.'),
-                    'files_count' => count($evidenceFiles),
-                    'bank_name' => strtoupper($validated['bank_name']),
-                    'account_masked' => substr($validated['account_number'], 0, 4) . '****'
-                ]
-            ], 200, [], JSON_UNESCAPED_UNICODE);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            
-            Log::error('❌ Validation failed', ['errors' => $e->errors()]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422, [], JSON_UNESCAPED_UNICODE);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            Log::error('❌ CANCEL ERROR', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500, [], JSON_UNESCAPED_UNICODE);
         }
+
+        // Calculate refund amount
+        $refundAmount = $project->fixed_budget ?? $project->min_budget ?? 0;
+
+        // ✅ AMBIL NILAI CHECKBOX (bisa berupa string "1" atau "0")
+        $repostProject = filter_var($request->input('repost_project', false), FILTER_VALIDATE_BOOLEAN);
+
+        // Prepare data untuk insert
+        $cancellationData = [
+            'project_id' => (int) $project->id,
+            'user_id' => (int) Auth::id(),
+            'project_status' => 'open',
+            'reason' => $validated['reason'],
+            'evidence_files' => !empty($evidenceFiles) ? json_encode($evidenceFiles) : null,
+            'bank_name' => $validated['bank_name'],
+            'account_number' => $validated['account_number'],
+            'refund_amount' => (float) $refundAmount,
+            'refund_status' => 'pending',
+            'repost_project' => $repostProject, // ✅ SIMPAN STATUS CHECKBOX
+            'cancelled_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now()
+        ];
+
+        Log::info('📝 Preparing to create cancellation', $cancellationData);
+
+        // Create cancellation record
+        $cancellation = ProjectCancellation::create($cancellationData);
+
+        if (!$cancellation) {
+            throw new \Exception('Failed to create cancellation record');
+        }
+
+        Log::info('✅ Cancellation record created', [
+            'id' => $cancellation->id,
+            'project_id' => $cancellation->project_id,
+            'repost_project' => $cancellation->repost_project,
+            'data_stored' => $cancellation->toArray()
+        ]);
+
+        // Update project status to pending cancellation
+        $project->update([
+            'cancellation_status' => 'pending',
+            'status' => 'pending_cancellation'
+        ]);
+
+        DB::commit();
+
+        // Verifikasi data tersimpan
+        $savedCancellation = ProjectCancellation::find($cancellation->id);
+        Log::info('✅ Data verified in database', [
+            'exists' => !is_null($savedCancellation),
+            'repost_project' => $savedCancellation->repost_project,
+            'data' => $savedCancellation ? $savedCancellation->toArray() : null
+        ]);
+
+        // ✅ PESAN BERBEDA JIKA USER CHECKLIST POSTING ULANG
+        $message = 'Pengajuan pembatalan project berhasil dikirim. Tim kami akan meninjau permintaan Anda dalam 1-2 hari kerja.';
+        if ($repostProject) {
+            $message .= ' Proyek akan otomatis di-posting ulang setelah pembatalan disetujui.';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => [
+                'cancellation_id' => $cancellation->id,
+                'refund_amount' => number_format($refundAmount, 0, ',', '.'),
+                'files_count' => count($evidenceFiles),
+                'bank_name' => strtoupper($validated['bank_name']),
+                'account_masked' => substr($validated['account_number'], 0, 4) . '****',
+                'repost_project' => $repostProject // ✅ KIRIM INFO KE FRONTEND
+            ]
+        ], 200, [], JSON_UNESCAPED_UNICODE);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        DB::rollBack();
+        
+        Log::error('❌ Validation failed', ['errors' => $e->errors()]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $e->errors()
+        ], 422, [], JSON_UNESCAPED_UNICODE);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        Log::error('❌ CANCEL ERROR', [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+        ], 500, [], JSON_UNESCAPED_UNICODE);
     }
+}
 
     /**
      * Delete Project Permanently
@@ -471,98 +725,110 @@ public function rejectCancellation(Request $request, $id)
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    /**
-     * Cancel Working Project
-     */
-    public function cancelWorkingProject(Request $request, $projectId)
-    {
-        Log::info('🟡 CANCEL WORKING REQUEST', ['project_id' => $projectId, 'user_id' => Auth::id()]);
+    // Di ProjectController atau cancellation controller
+public function cancelWorkingProject(Request $request, $projectId)
+{
+    \Log::info('🟡 CANCEL WORKING REQUEST STARTED', [
+        'project_id' => $projectId,
+        'user_id' => auth()->id(),
+        'all_data' => $request->all()
+    ]);
 
-        try {
-            $validated = $request->validate([
-                'reason' => 'required|string|min:10|max:500'
-            ]);
+    try {
+        $validated = $request->validate([
+            'reason' => 'required|min:10|max:500',
+            'bank_name' => 'required|string',
+            'account_number' => 'required|string',
+            'repost_project' => 'sometimes|boolean',
+            'evidence_files' => 'sometimes|array',
+            'evidence_files.*' => 'file|max:5120',
+        ]);
 
-            DB::beginTransaction();
+        \Log::info('✅ Validation passed', $validated);
 
-            $project = Project::with('proposalls')->findOrFail($projectId);
-            
-            if ($project->user_id !== Auth::id()) {
-                DB::rollBack();
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized'
-                ], 403, [], JSON_UNESCAPED_UNICODE);
-            }
-
-            $acceptedProposal = $project->proposalls()
-                ->where('status', 'accepted')
-                ->first();
-
-            if (!$acceptedProposal) {
-                DB::rollBack();
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Project belum memiliki freelancer'
-                ], 400, [], JSON_UNESCAPED_UNICODE);
-            }
-
-            // Calculate refund based on progress
-            $progress = $project->progress ?? 0;
-            $refundPercentage = 100 - ($progress * 0.5);
-            $refundAmount = ($acceptedProposal->proposal_price * $refundPercentage) / 100;
-
-            $cancellation = ProjectCancellation::create([
-                'project_id' => $project->id,
-                'user_id' => Auth::id(),
-                'project_status' => 'working',
-                'reason' => $validated['reason'],
-                'refund_amount' => $refundAmount,
-                'refund_status' => 'pending',
-                'cancelled_at' => now()
-            ]);
-
-            $project->update(['status' => 'cancelled']);
-
-            DB::commit();
-
-            Log::info('✅ Working project cancelled', ['cancellation_id' => $cancellation->id]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Project berhasil dibatalkan. Refund ' . round($refundPercentage, 0) . '% akan diproses.',
-                'data' => [
-                    'cancellation_id' => $cancellation->id,
-                    'refund_amount' => number_format($refundAmount, 0, ',', '.'),
-                    'refund_percentage' => round($refundPercentage, 2)
-                ]
-            ], 200, [], JSON_UNESCAPED_UNICODE);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            
+        // Cari project
+        $project = Project::find($projectId);
+        if (!$project) {
+            \Log::error('❌ Project not found', ['project_id' => $projectId]);
             return response()->json([
                 'success' => false,
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422, [], JSON_UNESCAPED_UNICODE);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            Log::error('❌ CANCEL WORKING ERROR', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500, [], JSON_UNESCAPED_UNICODE);
+                'message' => 'Project tidak ditemukan'
+            ], 404);
         }
+
+        \Log::info('🔍 Project found', ['project_title' => $project->title]);
+
+        // Hitung refund amount (contoh: 50% dari budget)
+        $refundAmount = $project->budget * 0.5;
+        \Log::info('💰 Refund calculated', ['budget' => $project->budget, 'refund' => $refundAmount]);
+
+        // Data untuk cancellation
+        $cancellationData = [
+            'project_id' => $projectId,
+            'user_id' => auth()->id(),
+            'reason' => $validated['reason'],
+            'bank_name' => $validated['bank_name'],
+            'account_number' => $validated['account_number'],
+            'refund_amount' => $refundAmount,
+            'refund_status' => 'pending',
+            'repost_project' => $validated['repost_project'] ?? false, // ✅ SIMPAN CHECKBOX
+            'cancelled_at' => now(),
+        ];
+
+        \Log::info('📝 Cancellation data prepared', $cancellationData);
+
+        // Simpan cancellation (TANPA cancellation_status)
+        $cancellation = ProjectCancellation::create($cancellationData);
+        \Log::info('✅ Cancellation record created', ['cancellation_id' => $cancellation->id]);
+
+        // Handle file upload jika ada
+        if ($request->hasFile('evidence_files')) {
+            $filePaths = [];
+            foreach ($request->file('evidence_files') as $file) {
+                $path = $file->store('cancellation-evidence');
+                $filePaths[] = $path;
+                \Log::info('📁 File stored', ['path' => $path]);
+            }
+            $cancellation->update(['evidence_files' => $filePaths]);
+        }
+
+        // ✅ UPDATE PROJECT STATUS - set cancellation_status di tabel projects
+        $project->update([
+            'cancellation_status' => 'pending', // ✅ Update di tabel projects
+            'status' => 'cancelled' // atau status lain yang sesuai
+        ]);
+        
+        \Log::info('✅ Project status updated', [
+            'cancellation_status' => 'pending',
+            'status' => 'cancelled'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengajuan pembatalan berhasil dikirim!'
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        \Log::error('❌ Validation failed', ['errors' => $e->errors()]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Validasi gagal: ' . implode(', ', array_flatten($e->errors()))
+        ], 422);
+        
+    } catch (\Exception $e) {
+        \Log::error('💥 Server error in cancelWorkingProject', [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan server: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Show cancellation history

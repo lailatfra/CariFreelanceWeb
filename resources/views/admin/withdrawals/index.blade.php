@@ -8,6 +8,9 @@
   <h1 class="h3 mb-0 text-gray-800">
     <i class="fas fa-wallet mr-2"></i>Kelola Penarikan Saldo
   </h1>
+  <a href="{{ route('admin.wallet.index') }}" class="btn btn-primary btn-sm shadow-sm">
+    <i class="fas fa-chart-line mr-2"></i>Lihat Detail Wallet
+  </a>
 </div>
 
 <!-- Success/Error Alert -->
@@ -30,6 +33,75 @@
   </button>
 </div>
 @endif
+
+<!-- ⬅️ TAMBAHAN: ADMIN WALLET INFO -->
+<div class="row mb-4">
+  <!-- Service Balance Card -->
+  <div class="col-xl-4 col-md-6 mb-4">
+    <div class="card border-left-primary shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+              Saldo Service (Untuk Transfer)
+            </div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">
+              {{ $adminWallet->formatted_service_balance }}
+            </div>
+            <small class="text-muted">Saldo tersedia untuk transfer ke freelancer</small>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-hand-holding-usd fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Fee Balance Card -->
+  <div class="col-xl-4 col-md-6 mb-4">
+    <div class="card border-left-success shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+              Saldo Admin Fee (Keuntungan)
+            </div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">
+              {{ $adminWallet->formatted_admin_fee_balance }}
+            </div>
+            <small class="text-muted">Keuntungan platform dari biaya admin 2.5%</small>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Balance Card -->
+  <div class="col-xl-4 col-md-6 mb-4">
+    <div class="card border-left-info shadow h-100 py-2">
+      <div class="card-body">
+        <div class="row no-gutters align-items-center">
+          <div class="col mr-2">
+            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+              Total Saldo Platform
+            </div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">
+              {{ $adminWallet->formatted_total_balance }}
+            </div>
+            <small class="text-muted">Total keseluruhan saldo</small>
+          </div>
+          <div class="col-auto">
+            <i class="fas fa-wallet fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
@@ -373,6 +445,26 @@
                 <form action="{{ route('admin.withdrawals.complete', $withdrawal) }}" method="POST" enctype="multipart/form-data">
                   @csrf
                   <div class="modal-body">
+                    <!-- ⬅️ TAMBAHAN: WARNING SALDO -->
+                    <div class="alert alert-warning">
+                      <h6 class="font-weight-bold">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Periksa Saldo Admin
+                      </h6>
+                      <strong>Saldo Service Tersedia:</strong> {{ $adminWallet->formatted_service_balance }}<br>
+                      <strong>Jumlah Transfer:</strong> {{ $withdrawal->formatted_amount }}<br>
+                      @if($adminWallet->service_balance < $withdrawal->amount)
+                        <div class="text-danger mt-2 font-weight-bold">
+                          <i class="fas fa-times-circle mr-1"></i>
+                          SALDO TIDAK MENCUKUPI! Transfer tidak dapat dilakukan.
+                        </div>
+                      @else
+                        <div class="text-success mt-2 font-weight-bold">
+                          <i class="fas fa-check-circle mr-1"></i>
+                          Saldo mencukupi untuk transfer ini.
+                        </div>
+                      @endif
+                    </div>
+
                     <div class="alert alert-info">
                       <h6 class="font-weight-bold">Informasi Transfer:</h6>
                       <strong>ID:</strong> {{ $withdrawal->withdrawal_id }}<br>
@@ -422,7 +514,7 @@
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">
                       <i class="fas fa-times mr-2"></i>Batal
                     </button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" {{ $adminWallet->service_balance < $withdrawal->amount ? 'disabled' : '' }}>
                       <i class="fas fa-paper-plane mr-2"></i>Selesaikan Transfer
                     </button>
                   </div>
