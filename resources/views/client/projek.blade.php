@@ -2505,105 +2505,82 @@
     <script>
 
         console.log('🔍 DEBUG: Project Status Check');
-document.querySelectorAll('tr').forEach((row, index) => {
-    const projectId = row.querySelector('td:first-child')?.textContent;
-    const buttons = row.querySelectorAll('button');
-    const hasFreelancer = row.textContent.includes('Pilih freelancer') ? false : true;
+// ============================================
+// COMPLETE JOBBOARD CLIENT JAVASCRIPT - FINAL VERSION
+// ============================================
+
+// Global variables
+let currentSubmissionId = null;
+let currentProjectId = null;
+let currentRatingProjectId = null;
+let selectedRating = 0;
+let selectedAssessments = {};
+let currentCancelProject = null;
+let cancelEvidenceFiles = [];
+
+// ============================================
+// TAB FUNCTIONALITY
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
     
-    if (projectId && buttons.length > 0) {
-        console.log(`Project ${projectId}: hasFreelancer = ${hasFreelancer}`);
-    }
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.removeAttribute('aria-current'));
+            tab.setAttribute('aria-current', 'page');
+            contents.forEach(c => c.classList.add('hidden'));
+            document.getElementById(tab.dataset.tab).classList.remove('hidden');
+        });
+    });
 });
 
+function showWorkingTab() {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(t => t.removeAttribute('aria-current'));
+    document.querySelector('[data-tab="working"]').setAttribute('aria-current', 'page');
+    contents.forEach(c => c.classList.add('hidden'));
+    document.getElementById('working').classList.remove('hidden');
+}
 
-        // Tab functionality
-        const tabs = document.querySelectorAll('.tab');
-        const contents = document.querySelectorAll('.tab-content');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.removeAttribute('aria-current'));
-                tab.setAttribute('aria-current', 'page');
-                contents.forEach(c => c.classList.add('hidden'));
-                document.getElementById(tab.dataset.tab).classList.remove('hidden');
-            });
-        });
+function showCompletedTab() {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(t => t.removeAttribute('aria-current'));
+    document.querySelector('[data-tab="completed"]').setAttribute('aria-current', 'page');
+    contents.forEach(c => c.classList.add('hidden'));
+    document.getElementById('completed').classList.remove('hidden');
+}
 
-        // Tab switching functions
-        function showWorkingTab() {
-            tabs.forEach(t => t.removeAttribute('aria-current'));
-            document.querySelector('[data-tab="working"]').setAttribute('aria-current', 'page');
-            contents.forEach(c => c.classList.add('hidden'));
-            document.getElementById('working').classList.remove('hidden');
+function goToWorkingTab(projectId) {
+    document.querySelector('[data-tab="working"]').click();
+    setTimeout(() => {
+        const row = document.querySelector(`#working tr[data-project-id="${projectId}"]`);
+        if (row) {
+            row.style.background = "#fef9c3";
+            row.scrollIntoView({ behavior: "smooth", block: "center" });
+            setTimeout(() => row.style.background = "", 2000);
         }
+    }, 300);
+}
 
-        function showCompletedTab() {
-            tabs.forEach(t => t.removeAttribute('aria-current'));
-            document.querySelector('[data-tab="completed"]').setAttribute('aria-current', 'page');
-            contents.forEach(c => c.classList.add('hidden'));
-            document.getElementById('completed').classList.remove('hidden');
-        }
-
-        // Tutorial Modal Function
-        function openTutorialModal() {
-            openModal('tutorialModal');
-        }
-
-        // Delete project function
-        function deleteProject(projectId) {
-            if (confirm('Apakah Anda yakin ingin menghapus project ini?')) {
-                fetch(`/projects/${projectId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification(data.message, 'success');
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        showNotification(data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    showNotification('Error: ' + error.message, 'error');
-                });
-            }
-        }
-
-        // Notification
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            const messageEl = document.getElementById('notificationMessage');
-            if (!notification || !messageEl) return;
-
-            messageEl.textContent = message;
-            notification.className = `notification show ${type}`;
-            setTimeout(() => notification.classList.remove('show'), 3000);
-        }
-
-        // Modal handling
-        let currentSubmissionId = null;
-        let currentProjectId = null;
-        let currentRatingProjectId = null;
-        let selectedRating = 0;
-        let selectedAssessments = {};
+// ============================================
+// MODAL FUNCTIONS
+// ============================================
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        // Reset any existing styles that might interfere
         modal.style.display = 'flex';
         modal.style.alignItems = 'center';
         modal.style.justifyContent = 'center';
         
-        // Add show class after a small delay for animation
         setTimeout(() => {
             modal.classList.add('show');
         }, 10);
         
-        // Prevent body scroll when modal is open
         document.body.style.overflow = 'hidden';
     }
 }
@@ -2612,8 +2589,6 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('show');
-        
-        // Allow body scroll again
         document.body.style.overflow = '';
         
         setTimeout(() => {
@@ -2622,9 +2597,8 @@ function closeModal(modalId) {
     }
 }
 
-// Tambahkan event listener untuk close modal ketika klik di luar modal
+// Close modal on outside click
 document.addEventListener('DOMContentLoaded', function() {
-    // Close modal when clicking outside
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
         modal.addEventListener('click', function(event) {
@@ -2634,7 +2608,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Close modal with Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const openModals = document.querySelectorAll('.modal.show');
@@ -2644,149 +2617,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-        // Rating Modal Functions
-        function openRatingModal(projectId, currentRating) {
-            currentRatingProjectId = projectId;
-            selectedRating = Math.floor(currentRating);
-            selectedAssessments = {};
-            
-            // Reset form
-            document.getElementById('reviewText').value = '';
-            updateStarDisplay(selectedRating);
-            updateRatingText(selectedRating);
-            resetAssessmentSelections();
-            
-            openModal('ratingModal');
-        }
 
-        function updateStarDisplay(rating) {
-            const stars = document.querySelectorAll('#starRating .star');
-            stars.forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.add('active');
-                } else {
-                    star.classList.remove('active');
-                }
-            });
-        }
+// ============================================
+// NOTIFICATION SYSTEM
+// ============================================
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    const messageEl = document.getElementById('notificationMessage');
+    
+    if (!notification || !messageEl) {
+        console.warn('Notification elements not found');
+        return;
+    }
 
-        function updateRatingText(rating) {
-            const ratingTexts = {
-                0: 'Pilih rating',
-                1: 'Sangat buruk',
-                2: 'Buruk', 
-                3: 'Cukup',
-                4: 'Bagus',
-                5: 'Sangat bagus'
-            };
-            document.getElementById('ratingText').textContent = ratingTexts[rating] || 'Pilih rating';
-        }
+    messageEl.innerHTML = message;
+    notification.className = `notification show ${type}`;
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 5000);
+}
 
-        function resetAssessmentSelections() {
-            selectedAssessments = {};
-            const assessmentOptions = document.querySelectorAll('.assessment-option');
-            assessmentOptions.forEach(option => {
-                option.classList.remove('selected');
-            });
-        }
-
-        function submitRating() {
-            if (selectedRating === 0) {
-                showNotification('Silakan pilih rating terlebih dahulu!', 'error');
-                return;
-            }
-
-            const reviewText = document.getElementById('reviewText').value.trim();
-            
-            // Update the rating display in the table (frontend only)
-            const projectRow = document.querySelector(`tr[data-project-id="${currentRatingProjectId}"]`);
-            if (projectRow) {
-                const ratingCell = projectRow.querySelector('.rating-display');
-                if (ratingCell) {
-                    // Update stars
-                    const stars = ratingCell.querySelectorAll('.fa-star');
-                    stars.forEach((star, index) => {
-                        if (index < selectedRating) {
-                            star.style.color = 'var(--yellow-600)';
-                        } else {
-                            star.style.color = 'var(--gray-300)';
-                        }
-                    });
-                    
-                    // Update rating text
-                    const ratingSpan = ratingCell.querySelector('span');
-                    if (ratingSpan) {
-                        ratingSpan.textContent = `(${selectedRating}.0)`;
-                    }
-                }
-            }
-
-            // Create rating summary message
-            let assessmentSummary = '';
-            if (Object.keys(selectedAssessments).length > 0) {
-                const assessmentText = [];
-                if (selectedAssessments.timeliness) {
-                    assessmentText.push(`Ketepatan Waktu: ${selectedAssessments.timeliness}`);
-                }
-                if (selectedAssessments.quality) {
-                    assessmentText.push(`Kualitas: ${selectedAssessments.quality}`);
-                }
-                if (assessmentText.length > 0) {
-                    assessmentSummary = ` dengan penilaian ${assessmentText.join(', ')}`;
-                }
-            }
-
-            showNotification(`Rating ${selectedRating} bintang berhasil diberikan${assessmentSummary}!`, 'success');
-            closeModal('ratingModal');
-        }
-
-        // Star rating click handlers and assessment handlers
-        document.addEventListener('DOMContentLoaded', function() {
-            const stars = document.querySelectorAll('#starRating .star');
-            stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    selectedRating = parseInt(this.dataset.rating);
-                    updateStarDisplay(selectedRating);
-                    updateRatingText(selectedRating);
-                });
-
-                star.addEventListener('mouseenter', function() {
-                    const hoverRating = parseInt(this.dataset.rating);
-                    updateStarDisplay(hoverRating);
-                });
-            });
-
-            document.getElementById('starRating').addEventListener('mouseleave', function() {
-                updateStarDisplay(selectedRating);
-            });
-
-            // Assessment option handlers
-            const assessmentOptions = document.querySelectorAll('.assessment-option');
-            assessmentOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    const assessmentGroup = this.closest('.assessment-options');
-                    const assessmentType = assessmentGroup.dataset.assessment;
-                    const value = this.dataset.value;
-                    
-                    // Remove selection from other options in the same group
-                    assessmentGroup.querySelectorAll('.assessment-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                    });
-                    
-                    // Select this option
-                    this.classList.add('selected');
-                    selectedAssessments[assessmentType] = value;
-                });
-            });
-        });
-
-        // Progress Modal - Fixed to use consistent routes
+// ============================================
+// PROGRESS MODAL
+// ============================================
 function viewProgress(projectId) {
     currentProjectId = projectId;
     const progressContent = document.getElementById('progressContent');
-    const progressModal = document.getElementById('progressModal');
 
-    // Loading state dengan design baru
     progressContent.innerHTML = `
         <div class="modal-header">
             <div class="modal-title-section">
@@ -2807,7 +2665,6 @@ function viewProgress(projectId) {
     `;
     openModal('progressModal');
 
-    // Fetch data menggunakan route yang benar
     fetch(`/submit-projects/status/${projectId}`, {
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -2815,7 +2672,7 @@ function viewProgress(projectId) {
         }
     })
     .then(response => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
     })
     .then(data => {
@@ -2826,12 +2683,11 @@ function viewProgress(projectId) {
                         <i class="fas fa-chart-line"></i>
                         Progress Details
                     </h2>
-                    <p class="modal-subtitle">Pantau perkembangan pekerjaan freelancer Anda</p>
+                    <p class="modal-subtitle">Pantau perkembangan pekerjaan</p>
                 </div>
                 <span class="close" onclick="closeModal('progressModal')">×</span>
             </div>
             <div class="modal-body">
-                <!-- Project Info Card -->
                 <div class="project-info-card">
                     <h3 class="project-title">
                         <i class="fas fa-project-diagram"></i>
@@ -2850,11 +2706,9 @@ function viewProgress(projectId) {
                             <i class="fas fa-calendar meta-icon"></i>
                             <span><strong>Last Update:</strong> ${new Date().toLocaleDateString('id-ID')}</span>
                         </div>
-
                     </div>
                 </div>
 
-                <!-- Progress Links Section -->
                 <div class="section">
                     <div class="section-header">
                         <i class="fas fa-tasks" style="color: #3b82f6; font-size: 20px;"></i>
@@ -2866,19 +2720,12 @@ function viewProgress(projectId) {
         if (data.links && data.links.length > 0) {
             content += `<div class="links-grid">`;
             data.links.forEach((link, index) => {
-                // Tentukan icon berdasarkan URL
                 let iconClass = 'fas fa-external-link-alt';
                 let iconBg = 'linear-gradient(135deg, #3b82f6, #2563eb)';
                 
                 if (link.url.includes('drive.google.com')) {
                     iconClass = 'fab fa-google-drive';
                     iconBg = 'linear-gradient(135deg, #10b981, #059669)';
-                } else if (link.url.includes('figma.com')) {
-                    iconClass = 'fab fa-figma';
-                    iconBg = 'linear-gradient(135deg, #8b5cf6, #7c3aed)';
-                } else if (link.url.includes('github.com')) {
-                    iconClass = 'fab fa-github';
-                    iconBg = 'linear-gradient(135deg, #6b7280, #4b5563)';
                 }
 
                 content += `
@@ -2903,14 +2750,9 @@ function viewProgress(projectId) {
         } else {
             content += `
                 <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-inbox"></i>
-                    </div>
+                    <div class="empty-icon"><i class="fas fa-inbox"></i></div>
                     <h4 class="empty-title">Belum ada Progress Links</h4>
-                    <p class="empty-description">
-                        Freelancer belum mengupload link progress untuk project ini. 
-                        Silakan hubungi freelancer untuk update terbaru.
-                    </p>
+                    <p class="empty-description">Freelancer belum mengupload link progress.</p>
                 </div>
             `;
         }
@@ -2920,12 +2762,10 @@ function viewProgress(projectId) {
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('progressModal')">
-                    <i class="fas fa-times"></i>
-                    Tutup
+                    <i class="fas fa-times"></i> Tutup
                 </button>
                 <a href="${data.chat_url || '/chat'}" class="btn btn-primary">
-                    <i class="fas fa-comments"></i>
-                    Chat Freelancer
+                    <i class="fas fa-comments"></i> Chat Freelancer
                 </a>
             </div>
         `;
@@ -2940,7 +2780,6 @@ function viewProgress(projectId) {
                         <i class="fas fa-exclamation-triangle"></i>
                         Error Loading Progress
                     </h2>
-                    <p class="modal-subtitle">Terjadi kesalahan saat memuat data</p>
                 </div>
                 <span class="close" onclick="closeModal('progressModal')">×</span>
             </div>
@@ -2949,421 +2788,653 @@ function viewProgress(projectId) {
                     <div class="empty-icon" style="color: #ef4444;">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <h4 class="empty-title">Error Loading Progress</h4>
+                    <h4 class="empty-title">Error</h4>
                     <p class="empty-description">${error.message}</p>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('progressModal')">
-                    <i class="fas fa-times"></i>
-                    Tutup
-                </button>
+        `;
+        showNotification('Gagal memuat progress', 'error');
+    });
+}
+
+// ============================================
+// REVIEW SUBMISSION MODAL
+// ============================================
+function reviewSubmission(submissionId, projectId) {
+    console.log('📝 reviewSubmission called:', { submissionId, projectId });
+    
+    currentSubmissionId = submissionId;
+    currentProjectId = projectId;
+    const reviewContent = document.getElementById('reviewSubmissionContent');
+
+    reviewContent.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i>
+            <p>Loading submission details...</p>
+        </div>
+    `;
+    openModal('reviewSubmissionModal');
+
+    Promise.all([
+        fetch(`/submit-projects/status/${projectId}`, {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        }),
+        fetch(`/submit-projects/${submissionId}`, {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        })
+    ])
+    .then(responses => Promise.all(responses.map(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+    })))
+    .then(([progressData, submissionData]) => {
+        let content = `
+            <div class="submission-info">
+                <h4><i class="fas fa-info-circle"></i> Informasi Submission</h4>
+                <p><strong>Deskripsi:</strong> ${submissionData.description || 'Tidak ada deskripsi'}</p>
+                ${submissionData.notes ? `<p><strong>Catatan:</strong> ${submissionData.notes}</p>` : ''}
+            </div>
+
+            <div class="links-section">
+                <h4><i class="fas fa-tasks"></i> Progress Links (${progressData.total_links || 0})</h4>
+        `;
+        
+        if (progressData.links && progressData.links.length > 0) {
+            content += `<div class="links-grid">`;
+            progressData.links.forEach((link, index) => {
+                content += `
+                    <a href="${link.url}" class="link-item-grid" target="_blank">
+                        <i class="fas fa-link"></i> Progress Link #${index + 1}
+                    </a>
+                `;
+            });
+            content += `</div>`;
+        } else {
+            content += `<p style="color: var(--gray-500); text-align: center; padding: 20px;">Tidak ada progress links</p>`;
+        }
+        content += `</div>`;
+
+        content += `<div class="links-section">`;
+        content += `<h4><i class="fas fa-upload"></i> Submission Links (${submissionData.links ? submissionData.links.length : 0})</h4>`;
+        
+        if (submissionData.links && submissionData.links.length > 0) {
+            content += `<div class="links-grid">`;
+            submissionData.links.forEach((link, index) => {
+                content += `
+                    <a href="${link}" class="link-item-grid" target="_blank">
+                        <i class="fas fa-file"></i> Submission Link #${index + 1}
+                    </a>
+                `;
+            });
+            content += `</div>`;
+        } else {
+            content += `<p style="color: var(--gray-500); text-align: center; padding: 20px;">Tidak ada submission links</p>`;
+        }
+        content += `</div>`;
+
+        content += `
+            <div class="status-options">
+                <div class="status-option status-accept" onclick="handleSelesaiClick(${submissionId})">
+                    <h3><i class="fas fa-check"></i> Selesai</h3>
+                    <p>Terima submission dan tandai project selesai</p>
+                </div>
+                <div class="status-option status-revision" onclick="showRevisionForm()">
+                    <h3><i class="fas fa-edit"></i> Revisi</h3>
+                    <p>Minta perbaikan dengan catatan</p>
+                </div>
+            </div>
+
+            <div id="revisionNotesSection" class="revision-notes-section">
+                <form id="revisionForm">
+                    <div class="form-group">
+                        <label class="form-label" for="revisionNotes">Catatan Revisi (min. 10 karakter)</label>
+                        <textarea id="revisionNotes" class="form-textarea" name="notes" rows="5" required></textarea>
+                        <div class="char-counter">Karakter: <span id="charCount">0</span>/1000</div>
+                    </div>
+                    <button type="submit" class="submit-button">Kirim Revisi</button>
+                </form>
             </div>
         `;
-        showNotification('Gagal memuat progress: ' + error.message, 'error');
+
+        reviewContent.innerHTML = content;
+        setupRevisionForm();
+    })
+    .catch(error => {
+        reviewContent.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--red-600);">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
+                <h4>Error Loading Submission</h4>
+                <p>${error.message}</p>
+            </div>
+        `;
+        showNotification('Gagal memuat submission', 'error');
     });
-}   
+}
 
-        // Review Submission - Fixed to use correct routes with enhanced "Selesai" button
-        function reviewSubmission(submissionId, projectId) {
-            currentSubmissionId = submissionId;
-            currentProjectId = projectId;
-            const reviewContent = document.getElementById('reviewSubmissionContent');
+function showRevisionForm() {
+    const section = document.getElementById('revisionNotesSection');
+    section.classList.add('active');
+    document.getElementById('revisionNotes').focus();
+}
 
-            reviewContent.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: var(--gray-500);">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px;"></i>
-                    <p>Loading submission details...</p>
-                </div>
-            `;
-            openModal('reviewSubmissionModal');
+function setupRevisionForm() {
+    const form = document.getElementById('revisionForm');
+    const textarea = document.getElementById('revisionNotes');
+    const charCount = document.getElementById('charCount');
 
-            // Fetch both progress status and submission data using correct routes
-            Promise.all([
-                fetch(`/submit-projects/status/${projectId}`, {
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    }
-                }),
-                fetch(`/submit-projects/${submissionId}`, {
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    }
-                })
-            ])
-            .then(responses => Promise.all(responses.map(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-                return r.json();
-            })))
-            .then(([progressData, submissionData]) => {
-                let content = `
-                    <div class="submission-info">
-                        <h4><i class="fas fa-info-circle"></i> Informasi Submission</h4>
-                        <p><strong>Deskripsi:</strong> ${submissionData.description || 'Tidak ada deskripsi'}</p>
-                        ${submissionData.notes ? `<p><strong>Catatan:</strong> ${submissionData.notes}</p>` : ''}
-                    </div>
-                `;
+    if (textarea && charCount) {
+        textarea.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = count;
+            this.style.borderColor = (count < 10 || count > 1000) 
+                ? 'var(--red-600)' 
+                : 'var(--gray-200)';
+        });
+    }
 
-                // Show Progress Links
-                content += `<div class="links-section">`;
-                content += `<h4><i class="fas fa-tasks"></i> Progress Links (${progressData.total_links || 0})</h4>`;
-                
-                if (progressData.links && progressData.links.length > 0) {
-                    content += `<div class="links-grid">`;
-                    progressData.links.forEach((link, index) => {
-                        content += `
-                            <a href="${link.url}" class="link-item-grid" target="_blank">
-                                <i class="fas fa-link"></i> Progress Link #${index + 1}
-                            </a>
-                        `;
-                    });
-                    content += `</div>`;
-                } else {
-                    content += `<p style="color: var(--gray-500); text-align: center; padding: 20px;">Tidak ada progress links</p>`;
-                }
-                content += `</div>`;
-
-                // Show Submission Links
-                content += `<div class="links-section">`;
-                content += `<h4><i class="fas fa-upload"></i> Submission Links (${submissionData.links ? submissionData.links.length : 0})</h4>`;
-                
-                if (submissionData.links && submissionData.links.length > 0) {
-                    content += `<div class="links-grid">`;
-                    submissionData.links.forEach((link, index) => {
-                        content += `
-                            <a href="${link}" class="link-item-grid" target="_blank">
-                                <i class="fas fa-file"></i> Submission Link #${index + 1}
-                            </a>
-                        `;
-                    });
-                    content += `</div>`;
-                } else {
-                    content += `<p style="color: var(--gray-500); text-align: center; padding: 20px;">Tidak ada submission links</p>`;
-                }
-                content += `</div>`;
-
-                // Status Options with enhanced Selesai button
-                content += `
-                    <div class="status-options">
-                        <div class="status-option status-accept status-option-enhanced" id="selesaiOption" onclick="handleSelesaiClick(${submissionId})">
-                            <div class="enhancement-preview">Rating Diperlukan</div>
-                            <h3><i class="fas fa-check"></i> Selesai</h3>
-                            <p>Terima submission dan tandai project selesai</p>
-                        </div>
-                        <div class="status-option status-revision" onclick="showRevisionForm()">
-                            <h3><i class="fas fa-edit"></i> Revisi</h3>
-                            <p>Minta perbaikan dengan catatan</p>
-                        </div>
-                    </div>
-
-                    <div id="revisionNotesSection" class="revision-notes-section">
-                        <form id="revisionForm">
-                            <input type="hidden" id="submissionId" name="submission_id" value="${submissionId}">
-                            <div class="form-group">
-                                <label class="form-label" for="revisionNotes">Catatan Revisi (min. 10 karakter)</label>
-                                <textarea id="revisionNotes" class="form-textarea" name="notes" rows="5" required></textarea>
-                                <div class="char-counter">Karakter: <span id="charCount">0</span>/1000</div>
-                            </div>
-                            <button type="submit" class="submit-button">Kirim Revisi</button>
-                        </form>
-                    </div>
-                `;
-
-                reviewContent.innerHTML = content;
-
-                // Setup revision form handlers
-                setupRevisionForm();
-            })
-            .catch(error => {
-                reviewContent.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: var(--red-600);">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px;"></i>
-                        <h4>Error Loading Submission</h4>
-                        <p>${error.message}</p>
-                        <button class="btn btn-view" onclick="closeModal('reviewSubmissionModal')" style="margin-top: 15px; background: var(--gray-600); color: white; padding: 8px 16px; border-radius: 4px;">
-                            Tutup
-                        </button>
-                    </div>
-                `;
-                showNotification('Gagal memuat submission: ' + error.message, 'error');
-            });
-        }
-
-        // Enhanced Selesai button handler
-        function handleSelesaiClick(submissionId) {
-            // First open the rating modal for the current project
-            openRatingModal(currentProjectId, 0);
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const notes = textarea.value.trim();
             
-            // Store the submission ID for later use
-            window.pendingSubmissionId = submissionId;
+            if (notes.length < 10) {
+                showNotification('Catatan revisi minimal 10 karakter!', 'error');
+                return;
+            }
+            if (notes.length > 1000) {
+                showNotification('Catatan revisi maksimal 1000 karakter!', 'error');
+                return;
+            }
             
-            // Enhance the rating modal's submit function to handle completion
-            const originalSubmitRating = window.submitRating;
-            window.submitRating = function() {
-                if (selectedRating === 0) {
-                    showNotification('Silakan pilih rating terlebih dahulu!', 'error');
-                    return;
-                }
+            updateStatus(currentSubmissionId, 'revisi', notes);
+        });
+    }
+}
 
-                // Update the rating display in the table
-                const projectRow = document.querySelector(`tr[data-project-id="${currentRatingProjectId}"]`);
-                if (projectRow) {
-                    const ratingCell = projectRow.querySelector('.rating-display');
-                    if (ratingCell) {
-                        const stars = ratingCell.querySelectorAll('.fa-star');
-                        stars.forEach((star, index) => {
-                            if (index < selectedRating) {
-                                star.style.color = 'var(--yellow-600)';
-                            } else {
-                                star.style.color = 'var(--gray-300)';
-                            }
-                        });
-                        
-                        const ratingSpan = ratingCell.querySelector('span');
-                        if (ratingSpan) {
-                            ratingSpan.textContent = `(${selectedRating}.0)`;
-                        }
-                    }
-                }
-
-                // Create rating summary message
-                let assessmentSummary = '';
-                if (Object.keys(selectedAssessments).length > 0) {
-                    const assessmentText = [];
-                    if (selectedAssessments.timeliness) {
-                        assessmentText.push(`Ketepatan Waktu: ${selectedAssessments.timeliness}`);
-                    }
-                    if (selectedAssessments.quality) {
-                        assessmentText.push(`Kualitas: ${selectedAssessments.quality}`);
-                    }
-                    if (assessmentText.length > 0) {
-                        assessmentSummary = ` dengan penilaian ${assessmentText.join(', ')}`;
-                    }
-                }
-
-                // Close rating modal and proceed with completion
-                closeModal('ratingModal');
-                
-                // Now update the project status to completed
-                updateStatus(window.pendingSubmissionId, 'selesai');
-                
-                showNotification(`Project selesai dengan rating ${selectedRating} bintang${assessmentSummary}!`, 'success');
-                
-                // Restore original submit function
-                window.submitRating = originalSubmitRating;
-                delete window.pendingSubmissionId;
-            };
-        }
-
-        // Show revision form
-        function showRevisionForm() {
-            const revisionNotesSection = document.getElementById('revisionNotesSection');
-            revisionNotesSection.classList.add('active');
-            document.getElementById('revisionNotes').focus();
-        }
-
-        // Setup revision form handlers
-        function setupRevisionForm() {
-            const revisionForm = document.getElementById('revisionForm');
-            const revisionNotes = document.getElementById('revisionNotes');
-            const charCount = document.getElementById('charCount');
-
-            if (revisionForm) {
-                revisionForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const notes = revisionNotes.value.trim();
-                    if (notes.length < 10) {
-                        showNotification('Catatan revisi minimal 10 karakter!', 'error');
-                        return;
-                    }
-                    if (notes.length > 1000) {
-                        showNotification('Catatan revisi maksimal 1000 karakter!', 'error');
-                        return;
-                    }
-                    updateStatus(currentSubmissionId, 'revisi', notes);
-                });
-            }
-
-            if (revisionNotes && charCount) {
-                revisionNotes.addEventListener('input', function() {
-                    const count = this.value.length;
-                    charCount.textContent = count;
-                    if (count < 10 || count > 1000) {
-                        this.style.borderColor = 'var(--red-600)';
-                    } else {
-                        this.style.borderColor = 'var(--gray-200)';
-                    }
-                });
-            }
-        }
-
-        // Edit Notes Modal - Fixed to use correct routes
-        function editNotes(submissionId) {
-            currentSubmissionId = submissionId;
-            
-            // Fetch current notes using correct route
-            fetch(`/submit-projects/${submissionId}`, {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('editSubmissionId').value = submissionId;
-                document.getElementById('editRevisionNotes').value = data.notes || '';
-                document.getElementById('editCharCount').textContent = (data.notes || '').length;
-                openModal('editNotesModal');
-            })
-            .catch(error => {
-                showNotification('Gagal memuat notes: ' + error.message, 'error');
-            });
-        }
-
-        // Update status - Fixed to use correct routes and HTTP methods
-        function updateStatus(submissionId, status, notes = null) {
-            const data = {
-                status: status,
-                _token: document.querySelector('meta[name="csrf-token"]').content,
-                _method: 'PATCH'
-            };
-            if (status === 'revisi' && notes) data.notes = notes;
-
-            // Use correct route for updating status
-            fetch(`/submit-projects/${submissionId}/status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    closeModal('reviewSubmissionModal');
-                    closeModal('editNotesModal');
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showNotification(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                showNotification('Error: ' + error.message, 'error');
-            });
-        }
-
-        // Edit notes form submission
-        document.addEventListener('DOMContentLoaded', function() {
-            const editNotesForm = document.getElementById('editNotesForm');
-            if (editNotesForm) {
-                editNotesForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const notes = document.getElementById('editRevisionNotes').value.trim();
-                    if (notes.length < 10) {
-                        showNotification('Catatan revisi minimal 10 karakter!', 'error');
-                        return;
-                    }
-                    if (notes.length > 1000) {
-                        showNotification('Catatan revisi maksimal 1000 karakter!', 'error');
-                        return;
-                    }
-                    updateStatus(currentSubmissionId, 'revisi', notes);
-                });
-            }
-
-            // Character counter for edit notes
-            const editRevisionNotes = document.getElementById('editRevisionNotes');
-            if (editRevisionNotes) {
-                editRevisionNotes.addEventListener('input', function() {
-                    const count = this.value.length;
-                    document.getElementById('editCharCount').textContent = count;
-                    if (count < 10 || count > 1000) {
-                        this.style.borderColor = 'var(--red-600)';
-                    } else {
-                        this.style.borderColor = 'var(--gray-200)';
-                    }
-                });
-            }
-
-            // Global variable to store current project data and files for cancellation
-            let currentCancelProject = null;
-            let cancelEvidenceFiles = [];
-
-            window.openCancelModal = function(projectId, projectTitle, hasFreelancer = false) {
-                console.log('🔴 CANCEL MODAL TRIGGERED:', {
-                    projectId,
-                    projectTitle, 
-                    hasFreelancer,
-                    modalToOpen: hasFreelancer ? 'WORKING' : 'OPEN'
-                });
-                
-                if (hasFreelancer) {
-                    console.log('🟡 Opening WORKING cancel modal');
-                    openCancelWorkingModal(projectId, projectTitle);
-                } else {
-                    console.log('🟢 Opening OPEN cancel modal');
-                    openCancelOpenModal(projectId, projectTitle);
-                }
-            };
-
-
-
-// Function khusus untuk cancel open (tanpa freelancer)
-function openCancelOpenModal(projectId, projectTitle) {
-    currentCancelProject = {
-        id: projectId,
-        title: projectTitle
+// ============================================
+// UPDATE STATUS - CORE FUNCTION
+// ============================================
+function updateStatus(submissionId, status, notes = null) {
+    console.log('🚀 updateStatus:', { submissionId, status, hasNotes: !!notes });
+    
+    if (!submissionId || isNaN(submissionId)) {
+        console.error('❌ Invalid submissionId:', submissionId);
+        showNotification('Error: Invalid submission ID', 'error');
+        return;
+    }
+    
+    const data = {
+        status: status,
+        _token: document.querySelector('meta[name="csrf-token"]').content
     };
     
-    // Reset form cancel open
-    document.getElementById('cancelProjectId').value = projectId;
-    document.getElementById('cancelProjectTitle').textContent = projectTitle;
-    document.getElementById('cancelProjectInfoTitle').textContent = projectTitle;
+    if (status === 'revisi' && notes) {
+        data.notes = notes;
+    }
+
+    const loadingMsg = status === 'selesai' 
+        ? 'Memproses penyelesaian project...' 
+        : 'Mengirim permintaan revisi...';
+    showNotification(loadingMsg, 'info');
+
+    fetch(`/submit-projects/${submissionId}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        console.log('📥 Response:', response.status, response.statusText);
+        
+        return response.text().then(text => {
+            console.log('📄 Raw response:', text.substring(0, 200));
+            
+            try {
+                const json = JSON.parse(text);
+                return { ok: response.ok, status: response.status, data: json };
+            } catch (e) {
+                console.error('❌ JSON parse error:', e);
+                throw new Error(`Invalid JSON response (Status: ${response.status})`);
+            }
+        });
+    })
+    .then(result => {
+        console.log('✅ Result:', result);
+        
+        if (result.ok && result.data.success) {
+            showNotification(result.data.message, 'success');
+            closeModal('reviewSubmissionModal');
+            closeModal('editNotesModal');
+            
+            setTimeout(() => {
+                console.log('🔄 Reloading page...');
+                location.reload();
+            }, 1500);
+        } else {
+            console.error('❌ Server error:', result.data);
+            showNotification(result.data.message || 'Gagal mengupdate status', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('💥 Error:', error);
+        showNotification('Terjadi kesalahan: ' + error.message, 'error');
+    });
+}
+
+// ============================================
+// SELESAI BUTTON WITH RATING
+// ============================================
+function handleSelesaiClick(submissionId) {
+    console.log('🟢 handleSelesaiClick:', submissionId);
+    
+    if (!submissionId || isNaN(submissionId)) {
+        console.error('❌ Invalid submissionId');
+        showNotification('Error: Invalid submission ID', 'error');
+        return;
+    }
+    
+    window.pendingSubmissionId = submissionId;
+    console.log('✅ Stored pendingSubmissionId:', window.pendingSubmissionId);
+    
+    closeModal('reviewSubmissionModal');
+    
+    setTimeout(() => {
+        openRatingModal(currentProjectId, 0);
+        
+        const originalSubmitRating = window.submitRating;
+        
+        window.submitRating = function() {
+            console.log('⭐ submitRating called:', {
+                selectedRating,
+                pendingSubmissionId: window.pendingSubmissionId
+            });
+            
+            if (selectedRating === 0) {
+                showNotification('Silakan pilih rating terlebih dahulu!', 'error');
+                return;
+            }
+
+            // Update rating display
+            const projectRow = document.querySelector(`tr[data-project-id="${currentRatingProjectId}"]`);
+            if (projectRow) {
+                const ratingCell = projectRow.querySelector('.rating-display');
+                if (ratingCell) {
+                    const stars = ratingCell.querySelectorAll('.fa-star');
+                    stars.forEach((star, index) => {
+                        star.style.color = index < selectedRating 
+                            ? 'var(--yellow-600)' 
+                            : 'var(--gray-300)';
+                    });
+                    
+                    const ratingSpan = ratingCell.querySelector('span');
+                    if (ratingSpan) {
+                        ratingSpan.textContent = `(${selectedRating}.0)`;
+                    }
+                }
+            }
+
+            // Create summary
+            let summary = '';
+            if (Object.keys(selectedAssessments).length > 0) {
+                const text = [];
+                if (selectedAssessments.timeliness) {
+                    text.push(`Ketepatan Waktu: ${selectedAssessments.timeliness}`);
+                }
+                if (selectedAssessments.quality) {
+                    text.push(`Kualitas: ${selectedAssessments.quality}`);
+                }
+                if (text.length > 0) {
+                    summary = ` dengan penilaian ${text.join(', ')}`;
+                }
+            }
+
+            closeModal('ratingModal');
+            
+            console.log('📤 Calling updateStatus with:', window.pendingSubmissionId);
+            updateStatus(window.pendingSubmissionId, 'selesai');
+            
+            showNotification(`Project selesai dengan rating ${selectedRating} bintang${summary}!`, 'success');
+            
+            window.submitRating = originalSubmitRating;
+            delete window.pendingSubmissionId;
+        };
+    }, 300);
+}
+
+// ============================================
+// RATING MODAL
+// ============================================
+function openRatingModal(projectId, currentRating) {
+    currentRatingProjectId = projectId;
+    selectedRating = Math.floor(currentRating);
+    selectedAssessments = {};
+    
+    document.getElementById('reviewText').value = '';
+    updateStarDisplay(selectedRating);
+    updateRatingText(selectedRating);
+    resetAssessmentSelections();
+    
+    openModal('ratingModal');
+}
+
+function updateStarDisplay(rating) {
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+        } else {
+            star.classList.remove('active');
+        }
+    });
+}
+
+function updateRatingText(rating) {
+    const texts = {
+        0: 'Pilih rating',
+        1: 'Sangat buruk',
+        2: 'Buruk', 
+        3: 'Cukup',
+        4: 'Bagus',
+        5: 'Sangat bagus'
+    };
+    document.getElementById('ratingText').textContent = texts[rating] || 'Pilih rating';
+}
+
+function resetAssessmentSelections() {
+    selectedAssessments = {};
+    document.querySelectorAll('.assessment-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+}
+
+function submitRating() {
+    if (selectedRating === 0) {
+        showNotification('Silakan pilih rating terlebih dahulu!', 'error');
+        return;
+    }
+
+    const reviewText = document.getElementById('reviewText').value.trim();
+    
+    const projectRow = document.querySelector(`tr[data-project-id="${currentRatingProjectId}"]`);
+    if (projectRow) {
+        const ratingCell = projectRow.querySelector('.rating-display');
+        if (ratingCell) {
+            const stars = ratingCell.querySelectorAll('.fa-star');
+            stars.forEach((star, index) => {
+                star.style.color = index < selectedRating 
+                    ? 'var(--yellow-600)' 
+                    : 'var(--gray-300)';
+            });
+            
+            const ratingSpan = ratingCell.querySelector('span');
+            if (ratingSpan) {
+                ratingSpan.textContent = `(${selectedRating}.0)`;
+            }
+        }
+    }
+
+    let summary = '';
+    if (Object.keys(selectedAssessments).length > 0) {
+        const text = [];
+        if (selectedAssessments.timeliness) {
+            text.push(`Ketepatan Waktu: ${selectedAssessments.timeliness}`);
+        }
+        if (selectedAssessments.quality) {
+            text.push(`Kualitas: ${selectedAssessments.quality}`);
+        }
+        if (text.length > 0) {
+            summary = ` dengan penilaian ${text.join(', ')}`;
+        }
+    }
+
+    showNotification(`Rating ${selectedRating} bintang berhasil diberikan${summary}!`, 'success');
+    closeModal('ratingModal');
+}
+
+// Star rating handlers
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.rating);
+            updateStarDisplay(selectedRating);
+            updateRatingText(selectedRating);
+        });
+
+        star.addEventListener('mouseenter', function() {
+            updateStarDisplay(parseInt(this.dataset.rating));
+        });
+    });
+
+    document.getElementById('starRating').addEventListener('mouseleave', function() {
+        updateStarDisplay(selectedRating);
+    });
+
+    // Assessment handlers
+    document.querySelectorAll('.assessment-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const group = this.closest('.assessment-options');
+            const type = group.dataset.assessment;
+            const value = this.dataset.value;
+            
+            group.querySelectorAll('.assessment-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            this.classList.add('selected');
+            selectedAssessments[type] = value;
+        });
+    });
+});
+
+// ============================================
+// EDIT NOTES
+// ============================================
+function editNotes(submissionId) {
+    currentSubmissionId = submissionId;
+    
+    fetch(`/submit-projects/${submissionId}`, {
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('editSubmissionId').value = submissionId;
+        document.getElementById('editRevisionNotes').value = data.notes || '';
+        document.getElementById('editCharCount').textContent = (data.notes || '').length;
+        openModal('editNotesModal');
+    })
+    .catch(error => {
+        showNotification('Gagal memuat notes', 'error');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const editForm = document.getElementById('editNotesForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const notes = document.getElementById('editRevisionNotes').value.trim();
+            
+            if (notes.length < 10) {
+                showNotification('Catatan minimal 10 karakter!', 'error');
+                return;
+            }
+            if (notes.length > 1000) {
+                showNotification('Catatan maksimal 1000 karakter!', 'error');
+                return;
+            }
+            
+            updateStatus(currentSubmissionId, 'revisi', notes);
+        });
+    }
+
+    const editTextarea = document.getElementById('editRevisionNotes');
+    if (editTextarea) {
+        editTextarea.addEventListener('input', function() {
+            const count = this.value.length;
+            document.getElementById('editCharCount').textContent = count;
+            this.style.borderColor = (count < 10 || count > 1000) 
+                ? 'var(--red-600)' 
+                : 'var(--gray-200)';
+        });
+    }
+});
+
+// ============================================
+// TUTORIAL MODAL
+// ============================================
+function openTutorialModal() {
+    openModal('tutorialModal');
+}
+
+// ============================================
+// DELETE PROJECT
+// ============================================
+function confirmDeleteProject(projectId, projectTitle) {
+    if (confirm(`Apakah Anda yakin ingin menghapus project "${projectTitle}"?`)) {
+        deleteProject(projectId);
+    }
+}
+
+function deleteProject(projectId) {
+    fetch(`/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Project berhasil dihapus!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification(data.message || 'Gagal menghapus project', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error: ' + error.message, 'error');
+    });
+}
+
+// ============================================
+// CANCEL PROJECT FUNCTIONS
+// ============================================
+window.openCancelModal = function(projectId, projectTitle, hasFreelancer = false) {
+    console.log('🔴 openCancelModal:', { projectId, projectTitle, hasFreelancer });
+    
+    if (hasFreelancer) {
+        openCancelWorkingModal(projectId, projectTitle);
+    } else {
+        openCancelOpenModal(projectId, projectTitle);
+    }
+};
+
+function openCancelOpenModal(projectId, projectTitle) {
+    currentCancelProject = { id: projectId, title: projectTitle };
+    
+    document.getElementById('cancelOpenProjectId').value = projectId;
     document.getElementById('cancelOpenReason').value = '';
-    document.getElementById('cancelOpenCharCount').textContent = '0';
-    document.getElementById('bankSelect').value = '';
-    document.getElementById('accountNumber').value = '';
-    document.getElementById('cancelEvidenceFiles').value = '';
-    document.getElementById('cancelFileList').innerHTML = '';
+    document.getElementById('cancelOpenReasonCount').textContent = '0';
+    document.getElementById('cancelOpenBankName').value = '';
+    document.getElementById('cancelOpenAccountNumber').value = '';
+    document.getElementById('cancelOpenEvidence').value = '';
+    document.getElementById('cancelOpenFileList').innerHTML = '';
     
     cancelEvidenceFiles = [];
-    
-    const submitBtn = document.getElementById('submitCancelBtn');
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<i class="fas fa-trash"></i> Ya, Cancel Projek';
     
     openModal('cancelOpenModal');
 }
 
+function openCancelWorkingModal(projectId, projectTitle) {
+    console.log('🟡 openCancelWorkingModal:', projectId);
+    
+    document.getElementById('cancelWorkingProjectId').value = projectId;
+    document.getElementById('cancelWorkingReason').value = '';
+    document.getElementById('cancelWorkingCharCount').textContent = '0';
+    document.getElementById('bankSelectWorking').value = '';
+    document.getElementById('accountNumberWorking').value = '';
+    document.getElementById('cancelEvidenceFilesWorking').value = '';
+    document.getElementById('cancelFileListWorking').innerHTML = '';
+    
+    cancelEvidenceFiles = [];
+    
+    // Extract project info from table
+    const projectRow = Array.from(document.querySelectorAll('tr')).find(row => {
+        const buttons = row.querySelectorAll('button');
+        return Array.from(buttons).some(btn => 
+            btn.getAttribute('onclick')?.includes(`openCancelModal(${projectId}`)
+        );
+    });
+    
+    if (projectRow) {
+        const cells = projectRow.querySelectorAll('td');
+        
+        let freelancerName = '-';
+        for (let cell of cells) {
+            if (cell.textContent.length > 3 && 
+                !cell.textContent.includes('Rp') && 
+                !cell.textContent.includes('%')) {
+                freelancerName = cell.textContent.trim();
+                break;
+            }
+        }
+        
+        let progress = '0%';
+        const progressBar = projectRow.querySelector('.progress-bar');
+        if (progressBar) {
+            progress = progressBar.style.width || '0%';
+        }
+        
+        let status = '-';
+        const statusBadge = projectRow.querySelector('.status-badge');
+        if (statusBadge) {
+            status = statusBadge.textContent.trim();
+        }
+        
+        let deadline = '-';
+        const deadlineBadge = projectRow.querySelector('.deadline-badge');
+        if (deadlineBadge) {
+            deadline = deadlineBadge.textContent.trim();
+        }
+        
+        document.getElementById('cancelWorkingFreelancer').textContent = freelancerName;
+        document.getElementById('cancelWorkingProgress').textContent = progress;
+        document.getElementById('cancelWorkingStatus').textContent = status;
+        document.getElementById('cancelWorkingDeadline').textContent = deadline;
+    }
+    
+    openModal('cancelWorkingModal');
+}
 
-
-            // ============================================
-// FUNCTION: Submit Cancellation - UPDATED WITH REDIRECT LOGIC
+// ============================================
+// SUBMIT CANCEL OPEN PROJECT
 // ============================================
 window.submitOpenCancel = function() {
-    // Get values
     const reason = document.getElementById('cancelOpenReason')?.value.trim();
-    const bankName = document.getElementById('bankSelect')?.value;
-    const accountNumber = document.getElementById('accountNumber')?.value.trim();
-    const projectId = document.getElementById('cancelProjectId')?.value;
+    const bankName = document.getElementById('cancelOpenBankName')?.value;
+    const accountNumber = document.getElementById('cancelOpenAccountNumber')?.value.trim();
+    const projectId = document.getElementById('cancelOpenProjectId')?.value;
     
-    // ✅ Ambil status checkbox untuk redirect logic
     const repostCheckbox = document.getElementById('repostProject');
     const shouldRepost = (repostCheckbox && repostCheckbox.checked);
     
     // Validation
-    if (!reason) {
-        showNotification('Alasan harus diisi!', 'error');
-        return false;
-    }
-    
-    if (reason.length < 10) {
+    if (!reason || reason.length < 10) {
         showNotification('Alasan minimal 10 karakter!', 'error');
         return false;
     }
@@ -3378,17 +3449,11 @@ window.submitOpenCancel = function() {
         return false;
     }
     
-    if (!accountNumber) {
-        showNotification('Nomor rekening harus diisi!', 'error');
+    if (!accountNumber || !/^\d+$/.test(accountNumber)) {
+        showNotification('Nomor rekening harus diisi (hanya angka)!', 'error');
         return false;
     }
     
-    if (!/^\d+$/.test(accountNumber)) {
-        showNotification('Nomor rekening hanya boleh angka!', 'error');
-        return false;
-    }
-    
-    // Prepare FormData
     const formData = new FormData();
     formData.append('reason', reason);
     formData.append('bank_name', bankName);
@@ -3402,21 +3467,13 @@ window.submitOpenCancel = function() {
     }
     formData.append('_token', csrfToken);
     
-    // Add files
     cancelEvidenceFiles.forEach((file, index) => {
         formData.append(`evidence_files[${index}]`, file);
     });
     
-    // Update button to loading state
-    const submitBtn = document.getElementById('submitCancelBtn');
-    const originalHTML = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    showNotification('Memproses pengajuan pembatalan...', 'info');
     
-    // Send request
-    const url = `/projects/${projectId}/cancel-open`;
-    
-    fetch(url, {
+    fetch(`/projects/${projectId}/cancel-open`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
@@ -3426,26 +3483,23 @@ window.submitOpenCancel = function() {
         body: formData
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
     })
     .then(data => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalHTML;
-        
         if (data.success) {
-            showNotification(data.message || 'Project berhasil dibatalkan!', 'success');
+            let successMsg = data.message;
+            if (shouldRepost) {
+                successMsg += '<br><small style="color: #059669;">Proyek akan otomatis di-posting ulang setelah disetujui</small>';
+            }
+            
+            showNotification(successMsg, 'success');
             closeModal('cancelOpenModal');
             
-            // ✅ REDIRECT LOGIC BERDASARKAN CHECKBOX
             setTimeout(() => {
                 if (shouldRepost) {
-                    // Jika checkbox tercentang, redirect ke halaman edit
                     window.location.href = `/projects/${projectId}/edit`;
                 } else {
-                    // Jika tidak, reload jobboard seperti biasa
                     location.reload();
                 }
             }, 1500);
@@ -3455,10 +3509,6 @@ window.submitOpenCancel = function() {
     })
     .catch(error => {
         console.error('Error:', error);
-        
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalHTML;
-        
         showNotification('Terjadi kesalahan: ' + error.message, 'error');
     });
     
@@ -3466,29 +3516,16 @@ window.submitOpenCancel = function() {
 };
 
 // ============================================
-// FUNCTION: Submit Working Cancel - UPDATED WITH REDIRECT LOGIC
+// SUBMIT CANCEL WORKING PROJECT
 // ============================================
 window.submitWorkingCancel = function() {
-    console.log('🟡 submitWorkingCancel DIPANGGIL!');
-    
     const reason = document.getElementById('cancelWorkingReason')?.value.trim();
     const bankName = document.getElementById('bankSelectWorking')?.value;
     const accountNumber = document.getElementById('accountNumberWorking')?.value.trim();
     const projectId = document.getElementById('cancelWorkingProjectId')?.value;
     
-    // ✅ Ambil status checkbox untuk redirect logic
     const repostCheckbox = document.getElementById('repostProjectWorking');
     const shouldRepost = (repostCheckbox && repostCheckbox.checked);
-    const repostValue = shouldRepost ? '1' : '0';
-    
-    console.log('📋 DATA WORKING:', { 
-        reason: reason?.length, 
-        bankName: bankName,
-        accountNumber: accountNumber,
-        projectId,
-        repost_project: repostValue,
-        shouldRepost: shouldRepost
-    });
     
     // Validation
     if (!reason || reason.length < 10) {
@@ -3510,7 +3547,7 @@ window.submitWorkingCancel = function() {
     formData.append('reason', reason);
     formData.append('bank_name', bankName);
     formData.append('account_number', accountNumber);
-    formData.append('repost_project', repostValue);
+    formData.append('repost_project', shouldRepost ? '1' : '0');
     
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     if (!csrfToken) {
@@ -3519,28 +3556,16 @@ window.submitWorkingCancel = function() {
     }
     formData.append('_token', csrfToken);
     
-    // Handle file uploads
     const fileInput = document.getElementById('cancelEvidenceFilesWorking');
     if (fileInput && fileInput.files) {
-        console.log('📁 Files found:', fileInput.files.length);
-        Array.from(fileInput.files).forEach((file, index) => {
-            console.log(`📎 File ${index}:`, file.name, file.size, file.type);
+        Array.from(fileInput.files).forEach(file => {
             formData.append('evidence_files[]', file);
         });
-    } else {
-        console.log('📁 No files selected');
     }
     
-    // Update button state
-    const submitBtn = document.querySelector('#cancelWorkingModal button[onclick*="submitWorkingCancel"]');
-    const originalHTML = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    showNotification('Memproses pembatalan project...', 'info');
     
-    const url = `/projects/${projectId}/cancel-working`;
-    console.log('🌐 Mengirim POST WORKING ke:', url);
-    
-    fetch(url, {
+    fetch(`/projects/${projectId}/cancel-working`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
@@ -3550,221 +3575,186 @@ window.submitWorkingCancel = function() {
         body: formData
     })
     .then(response => {
-        console.log('📥 Response status:', response.status, response.statusText);
-        
         return response.text().then(text => {
-            console.log('📄 Raw response text:', text);
-            
             try {
                 const json = JSON.parse(text);
-                return { 
-                    ok: response.ok, 
-                    status: response.status, 
-                    data: json 
-                };
+                return { ok: response.ok, status: response.status, data: json };
             } catch (e) {
-                console.error('❌ JSON parse error:', e);
-                console.error('Raw text that failed to parse:', text);
-                throw new Error(`Server returned invalid JSON: ${text.substring(0, 200)}`);
+                throw new Error(`Invalid JSON response (Status: ${response.status})`);
             }
         });
     })
     .then(result => {
-        console.log('📊 Processing result:', result);
-        
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalHTML;
-        
         if (result.ok && result.data.success) {
-            let successMessage = result.data.message;
+            let successMsg = result.data.message;
             if (shouldRepost) {
-                successMessage += '<br><br><small style="color: #059669;"><i class="fas fa-check-circle"></i> Proyek akan otomatis di-posting ulang setelah disetujui</small>';
+                successMsg += '<br><small style="color: #059669;">Proyek akan otomatis di-posting ulang setelah disetujui</small>';
             }
             
-            showNotification(successMessage, 'success');
+            showNotification(successMsg, 'success');
             closeModal('cancelWorkingModal');
             
-            // ✅ REDIRECT LOGIC BERDASARKAN CHECKBOX
             setTimeout(() => {
                 if (shouldRepost) {
-                    // Jika checkbox tercentang, redirect ke halaman edit
                     window.location.href = `/projects/${projectId}/edit`;
                 } else {
-                    // Jika tidak, reload jobboard seperti biasa
                     location.reload();
                 }
             }, 1500);
         } else {
-            console.error('❌ Server returned error:', result.data);
             showNotification(result.data.message || 'Gagal membatalkan project', 'error');
         }
     })
     .catch(error => {
-        console.error('💥 FETCH ERROR:', error);
-        console.error('Error stack:', error.stack);
-        
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalHTML;
-        
-        let errorMessage = 'Terjadi kesalahan: ' + error.message;
-        if (error.message.includes('500')) {
-            errorMessage = 'Terjadi kesalahan server (500). Silakan cek log server atau hubungi admin.';
-        } else if (error.message.includes('Network Error')) {
-            errorMessage = 'Koneksi jaringan bermasalah. Periksa koneksi internet Anda.';
-        }
-        
-        showNotification(errorMessage, 'error');
+        console.error('Error:', error);
+        showNotification('Terjadi kesalahan: ' + error.message, 'error');
     });
     
     return false;
 };
 
-            // File upload handling
-            function handleFileUpload() {
-                const fileInput = document.getElementById('cancelEvidenceFiles');
-                const fileList = document.getElementById('cancelFileList');
-                
-                if (fileInput) {
-                    fileInput.addEventListener('change', function(e) {
-                        const files = Array.from(e.target.files);
-                        
-                        files.forEach(file => {
-                            // Validate file size (5MB limit)
-                            if (file.size > 5 * 1024 * 1024) {
-                                showNotification(`File ${file.name} terlalu besar! Maksimal 5MB`, 'error');
-                                return;
-                            }
-                            
-                            // Add to files array
-                            cancelEvidenceFiles.push(file);
-                        });
-                        
-                        updateFileList();
-                        fileInput.value = ''; // Reset input
-                    });
-                }
+// ============================================
+// FILE UPLOAD HANDLERS
+// ============================================
+function handleFileUpload() {
+    const fileInput = document.getElementById('cancelEvidenceFiles');
+    if (!fileInput) return;
+    
+    fileInput.addEventListener('change', function(e) {
+        Array.from(e.target.files).forEach(file => {
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification(`${file.name} terlalu besar! Max 5MB`, 'error');
+                return;
             }
-
-            function updateFileList() {
-                const fileList = document.getElementById('cancelFileList');
-                
-                if (fileList) {
-                    fileList.innerHTML = cancelEvidenceFiles.map((file, index) => {
-                        const fileSize = (file.size / 1024).toFixed(1) + ' KB';
-                        const fileExtension = file.name.split('.').pop().toLowerCase();
-                        
-                        let iconClass = 'fas fa-file';
-                        let iconColor = 'var(--gray-500)';
-                        
-                        if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
-                            iconClass = 'fas fa-image';
-                            iconColor = 'var(--green-600)';
-                        } else if (fileExtension === 'pdf') {
-                            iconClass = 'fas fa-file-pdf';
-                            iconColor = 'var(--red-600)';
-                        } else if (['doc', 'docx'].includes(fileExtension)) {
-                            iconClass = 'fas fa-file-word';
-                            iconColor = 'var(--blue-600)';
-                        }
-                        
-                        return `
-                            <div class="file-item">
-                                <div class="file-info">
-                                    <i class="${iconClass} file-icon" style="color: ${iconColor};"></i>
-                                    <span class="file-name" title="${file.name}">${file.name}</span>
-                                    <span class="file-size">(${fileSize})</span>
-                                </div>
-                                <button type="button" class="file-remove" onclick="removeFile(${index})">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        `;
-                    }).join('');
-                }
+            
+            const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+                           'application/pdf', 'application/msword',
+                           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                           'text/plain'];
+            
+            if (!allowed.includes(file.type)) {
+                showNotification(`Format ${file.name} tidak didukung!`, 'error');
+                return;
             }
-
-            window.removeFile = function(index) {
-                cancelEvidenceFiles.splice(index, 1);
-                updateFileList();
-            }
-
-            // Character counter for cancel open modal
-            function setupCancelModalEventListeners() {
-                const cancelOpenTextarea = document.getElementById('cancelOpenReason');
-                const cancelOpenCharCounter = document.getElementById('cancelOpenCharCount');
-                
-                if (cancelOpenTextarea && cancelOpenCharCounter) {
-                    cancelOpenTextarea.addEventListener('input', function() {
-                        const count = this.value.length;
-                        cancelOpenCharCounter.textContent = count;
-                        
-                        // Update styling based on character count
-                        if (count < 10) {
-                            this.style.borderColor = 'var(--red-600)';
-                            cancelOpenCharCounter.style.color = 'var(--red-600)';
-                        } else if (count > 500) {
-                            this.style.borderColor = 'var(--red-600)';
-                            cancelOpenCharCounter.style.color = 'var(--red-600)';
-                        } else {
-                            this.style.borderColor = 'var(--green-600)';
-                            cancelOpenCharCounter.style.color = 'var(--green-600)';
-                        }
-                    });
-                }
-                
-                // Setup file upload
-                handleFileUpload();
-                
-                // Setup drag and drop
-                const uploadArea = document.querySelector('#cancelOpenModal .form-group > div');
-                if (uploadArea) {
-                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                        uploadArea.addEventListener(eventName, preventDefaults, false);
-                    });
-                    
-                    ['dragenter', 'dragover'].forEach(eventName => {
-                        uploadArea.addEventListener(eventName, highlight, false);
-                    });
-                    
-                    ['dragleave', 'drop'].forEach(eventName => {
-                        uploadArea.addEventListener(eventName, unhighlight, false);
-                    });
-                    
-                    uploadArea.addEventListener('drop', handleDrop, false);
-                }
-            }
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            function highlight(e) {
-                e.currentTarget.classList.add('drag-over');
-            }
-
-            function unhighlight(e) {
-                e.currentTarget.classList.remove('drag-over');
-            }
-
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = Array.from(dt.files);
-                
-                files.forEach(file => {
-                    if (file.size > 5 * 1024 * 1024) {
-                        showNotification(`File ${file.name} terlalu besar! Maksimal 5MB`, 'error');
-                        return;
-                    }
-                    cancelEvidenceFiles.push(file);
-                });
-                
-                updateFileList();
-            }
-
-            // Initialize when DOM is ready
-            setupCancelModalEventListeners();
+            
+            cancelEvidenceFiles.push(file);
         });
+        
+        updateFileList();
+        fileInput.value = '';
+    });
+}
+
+function updateFileList() {
+    const fileList = document.getElementById('cancelOpenFileList');
+    if (!fileList) return;
+    
+    fileList.innerHTML = cancelEvidenceFiles.map((file, index) => {
+        const size = (file.size / 1024).toFixed(1) + ' KB';
+        const ext = file.name.split('.').pop().toLowerCase();
+        
+        let icon = 'fas fa-file';
+        let color = '#6b7280';
+        
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+            icon = 'fas fa-image';
+            color = '#059669';
+        } else if (ext === 'pdf') {
+            icon = 'fas fa-file-pdf';
+            color = '#dc2626';
+        }
+        
+        return `
+            <div class="file-item">
+                <div class="file-info">
+                    <i class="${icon}" style="color: ${color};"></i>
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">(${size})</span>
+                </div>
+                <button type="button" class="file-remove" onclick="removeFile(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+window.removeFile = function(index) {
+    cancelEvidenceFiles.splice(index, 1);
+    updateFileList();
+};
+
+// ============================================
+// CHARACTER COUNTERS
+// ============================================
+function setupCharCounters() {
+    // Cancel Open Reason
+    const cancelOpenTextarea = document.getElementById('cancelOpenReason');
+    const cancelOpenCounter = document.getElementById('cancelOpenReasonCount');
+    
+    if (cancelOpenTextarea && cancelOpenCounter) {
+        cancelOpenTextarea.addEventListener('input', function() {
+            const count = this.value.length;
+            cancelOpenCounter.textContent = count;
+            
+            if (count < 10 || count > 500) {
+                this.style.borderColor = '#dc2626';
+                cancelOpenCounter.style.color = '#dc2626';
+            } else {
+                this.style.borderColor = '#059669';
+                cancelOpenCounter.style.color = '#059669';
+            }
+        });
+    }
+    
+    // Cancel Working Reason
+    const cancelWorkingTextarea = document.getElementById('cancelWorkingReason');
+    const cancelWorkingCounter = document.getElementById('cancelWorkingCharCount');
+    
+    if (cancelWorkingTextarea && cancelWorkingCounter) {
+        cancelWorkingTextarea.addEventListener('input', function() {
+            const count = this.value.length;
+            cancelWorkingCounter.textContent = count;
+            
+            if (count < 10 || count > 500) {
+                this.style.borderColor = '#dc2626';
+                cancelWorkingCounter.style.color = '#dc2626';
+            } else {
+                this.style.borderColor = '#059669';
+                cancelWorkingCounter.style.color = '#059669';
+            }
+        });
+    }
+}
+
+// ============================================
+// INITIALIZE ALL EVENT LISTENERS
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Jobboard JavaScript initialized');
+    
+    handleFileUpload();
+    setupCharCounters();
+    
+    // File input for working cancel
+    const workingFileInput = document.getElementById('cancelEvidenceFilesWorking');
+    if (workingFileInput) {
+        workingFileInput.addEventListener('change', function(e) {
+            Array.from(e.target.files).forEach(file => {
+                if (file.size > 5 * 1024 * 1024) {
+                    showNotification(`${file.name} terlalu besar! Max 5MB`, 'error');
+                    return;
+                }
+                cancelEvidenceFiles.push(file);
+            });
+        });
+    }
+});
+
+// ============================================
+// CONSOLE LOG FOR DEBUGGING
+// ============================================
+console.log('✅ Jobboard Client JavaScript Loaded Successfully');
 
     </script>
     <script>

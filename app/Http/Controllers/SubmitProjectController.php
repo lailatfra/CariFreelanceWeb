@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Progress;
 use App\Models\Payment;
 use App\Models\Wallet;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,8 @@ class SubmitProjectController extends Controller
                 ->first();
 
             if ($existing) {
-                $submission = $existing->update([
+                $submission = $existing;
+                $existing->update([
                     'links'       => $links,
                     'description' => $request->description,
                     'notes'       => $request->notes,
@@ -57,11 +59,13 @@ class SubmitProjectController extends Controller
                 ]);
             }
 
+            NotificationService::projectSubmitted($submission);
+
             Log::info('Submission completed successfully:', ['project_id' => $request->project_id]);
 
             return response()->json([
                 'success' => true,
-                'message' => $existing ? 'Resubmission berhasil disimpan!' : 'Submission berhasil disimpan!',
+                'message' => $existing ? 'Resubmission berhasil disimpan! Client akan menerima notifikasi.' : 'Submission berhasil disimpan! Client akan menerima notifikasi.',
                 'data' => $submission
             ], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -109,53 +113,31 @@ class SubmitProjectController extends Controller
         return response()->json($submitProject);
     }
 
-    public function completed()
-    {
-        $userId = auth()->id();
-
-        $completedSubmissions = SubmitProject::with(['project.client', 'project.proposalls'])
-            ->where('user_id', $userId)
-            ->where('status', 'selesai')
-            ->get();
-
-        $completed = $completedSubmissions->map(function ($submission) {
-            $projectId = $submission->project_id;
-
-            $finalLinks = $submission->links ?? [];
-
-            $progressLinks = [];
-            $progressUploads = Progress::where('project_id', $projectId)
-                ->where('user_id', auth()->id())
-                ->get();
-
-            foreach ($progressUploads as $progress) {
-                if ($progress->link_url) {
-                    $progressLinks[] = $progress->link_url;
-                }
-            }
-
-            $allLinks = array_unique(array_merge($finalLinks, $progressLinks));
-
-            $submission->all_links = $allLinks;
-            $submission->total_links_count = count($allLinks);
-
-            return $submission;
-        });
-
-        return view('dashboard.completed', compact('completed'));
-    }
-
-    // ✅ METHOD YANG SUDAH DIMODIFIKASI
-    public function updateStatus(Request $request, SubmitProject $submitProject)
+    public function updateStatus(Request $request, $id)
     {
         try {
-            $request->validate([
-                'status' => 'required|in:pending,revisi,selesai',
-                'notes'  => 'nullable|string|min:3|max:2000',
+            $submitProject = SubmitProject::with(['project', 'user'])->findOrFail($id);
+            
+            Log::info('🔵 updateStatus START', [
+                'submission_id' => $submitProject->id,
+                'project_id' => $submitProject->project_id,
+                'current_status' => $submitProject->status,
+                'requested_status' => $request->status,
+                'client_id' => auth()->id(),
+                'freelancer_id' => $submitProject->user_id
             ]);
 
-            $user = auth()->user();
-            if ($submitProject->project && $submitProject->project->user_id !== $user->id) {
+            $request->validate([
+                'status' => 'required|in:pending,revisi,selesai',
+                'notes' => $request->status === 'revisi' ? 'required|string|min:10|max:2000' : 'nullable|string|max:2000',
+            ]);
+
+            if ($submitProject->project->user_id !== auth()->id()) {
+                Log::warning('❌ Unauthorized access attempt', [
+                    'submission_id' => $submitProject->id,
+                    'project_owner' => $submitProject->project->user_id,
+                    'requesting_user' => auth()->id()
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthorized access'
@@ -169,60 +151,111 @@ class SubmitProjectController extends Controller
 
             if ($request->filled('notes')) {
                 $updateData['notes'] = $request->input('notes');
-            } elseif ($request->input('status') === 'revisi' && !$request->filled('notes')) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Notes wajib diisi jika mengirim revisi.'
-                ], 422);
             }
 
             $submitProject->update($updateData);
 
-            // ✅ LOGIC BARU: Release dana ke freelancer TANPA kurangi Admin Wallet
+            Log::info('✅ Status updated in DB', [
+                'submission_id' => $submitProject->id,
+                'old_status' => $oldStatus,
+                'new_status' => $submitProject->status
+            ]);
+
             if ($request->input('status') === 'selesai' && $oldStatus !== 'selesai') {
-                $this->releasePaymentToFreelancer($submitProject);
+                Log::info('🟢 Processing project completion...');
                 
-                Log::info('Project completed and payment released:', [
+                // ✅ PERBAIKAN: Release payment ke freelancer dengan BALANCE (bukan pending_balance)
+                $paymentReleased = $this->releasePaymentToFreelancer($submitProject);
+                
+                // Update project status
+                $submitProject->project->update(['status' => 'completed']);
+                
+                Log::info('✅ Project status updated to completed', [
+                    'project_id' => $submitProject->project_id
+                ]);
+                
+                // Trigger notification
+                NotificationService::projectApproved($submitProject);
+                
+                Log::info('🎉 PROJECT COMPLETION SUMMARY', [
                     'submission_id' => $submitProject->id,
                     'project_id' => $submitProject->project_id,
-                    'user_id' => $submitProject->user_id
+                    'freelancer_id' => $submitProject->user_id,
+                    'payment_released' => $paymentReleased ? 'YES' : 'NO',
+                    'amount_released' => $paymentReleased['amount'] ?? 0,
+                    'notification_sent' => true,
+                    'project_status' => 'completed'
+                ]);
+                
+            } elseif ($request->input('status') === 'revisi') {
+                Log::info('🟡 Processing revision request...');
+                NotificationService::projectRevision($submitProject, $request->input('notes'));
+                
+                Log::info('✅ Revision notification sent', [
+                    'submission_id' => $submitProject->id,
+                    'notes_length' => strlen($request->input('notes'))
                 ]);
             }
 
             DB::commit();
 
+            $message = match($request->input('status')) {
+                'selesai' => 'Project berhasil diselesaikan! Pembayaran Rp ' . 
+                            number_format($paymentReleased['amount'] ?? 0, 0, ',', '.') . 
+                            ' telah ditambahkan ke saldo freelancer.',
+                'revisi' => 'Permintaan revisi berhasil dikirim ke freelancer.',
+                default => 'Status berhasil diperbarui!'
+            };
+
             return response()->json([
                 'success' => true,
-                'message' => 'Status berhasil diperbarui!',
-                'data' => $submitProject->fresh()
+                'message' => $message,
+                'data' => [
+                    'submission' => $submitProject->fresh(),
+                    'payment_info' => $paymentReleased ?? null
+                ]
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
+            Log::error('❌ Validation error:', [
+                'errors' => $e->errors(),
+                'submission_id' => $id
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal',
                 'errors' => $e->errors()
             ], 422);
+            
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('UpdateStatus Error:', [
-                'submission_id' => $submitProject->id ?? null,
+            Log::error('💥 UpdateStatus Error:', [
+                'submission_id' => $id,
                 'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengupdate status'
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    // ✅ METHOD BARU: Release payment TANPA kurangi Admin Wallet
+    /**
+     * ✅ FIXED: Release payment ke BALANCE (bukan pending_balance)
+     */
     private function releasePaymentToFreelancer(SubmitProject $submitProject)
     {
         try {
+            Log::info('💰 Starting payment release process...', [
+                'project_id' => $submitProject->project_id,
+                'freelancer_id' => $submitProject->user_id
+            ]);
+
+            // Cari payment yang sudah success tapi belum dirilis
             $payment = Payment::where('project_id', $submitProject->project_id)
                 ->where('freelancer_id', $submitProject->user_id)
                 ->where('status', 'success')
@@ -230,60 +263,152 @@ class SubmitProjectController extends Controller
                 ->first();
 
             if (!$payment) {
-                Log::warning('No payment found to release', [
+                Log::warning('⚠️ No payment found to release', [
                     'project_id' => $submitProject->project_id,
                     'freelancer_id' => $submitProject->user_id
                 ]);
-                return;
+                
+                $alreadyReleased = Payment::where('project_id', $submitProject->project_id)
+                    ->where('freelancer_id', $submitProject->user_id)
+                    ->where('is_released_to_freelancer', true)
+                    ->exists();
+                
+                if ($alreadyReleased) {
+                    Log::info('ℹ️ Payment already released previously');
+                    return [
+                        'status' => 'already_released',
+                        'message' => 'Payment sudah dirilis sebelumnya'
+                    ];
+                }
+                
+                return null;
             }
 
-            // Get atau create wallet freelancer
+            Log::info('📦 Payment found', [
+                'payment_id' => $payment->payment_id,
+                'order_id' => $payment->order_id,
+                'amount' => $payment->amount,
+                'service_amount' => $payment->service_amount,
+                'admin_fee' => $payment->admin_fee
+            ]);
+
+            // ✅ PERBAIKAN: Gunakan service_amount (bukan admin_fee)
+            $amountToRelease = $payment->service_amount;
+            
+            if (!$amountToRelease || $amountToRelease <= 0) {
+                Log::error('❌ Invalid service_amount', [
+                    'payment_id' => $payment->payment_id,
+                    'service_amount' => $payment->service_amount
+                ]);
+                throw new \Exception('Invalid service amount');
+            }
+
+            Log::info('💵 Amount calculation', [
+                'total_amount' => $payment->amount,
+                'admin_fee' => $payment->admin_fee,
+                'service_amount' => $amountToRelease
+            ]);
+
+            // Get atau create wallet
             $wallet = Wallet::firstOrCreate(
                 ['user_id' => $payment->freelancer_id],
-                ['balance' => 0, 'pending_balance' => 0]
+                [
+                    'balance' => 0,
+                    'pending_balance' => 0
+                ]
             );
 
-            // ✅ PENTING: Tambah pending_balance (bukan balance langsung)
-            // Karena saldo baru bisa ditarik setelah withdrawal approved
-            $balanceBefore = $wallet->pending_balance;
-            $wallet->pending_balance += $payment->service_amount;
+            Log::info('👛 Wallet before release', [
+                'wallet_id' => $wallet->id,
+                'user_id' => $wallet->user_id,
+                'balance' => $wallet->balance,
+                'pending_balance' => $wallet->pending_balance
+            ]);
+
+            // ✅ PERBAIKAN: Tambahkan ke BALANCE (bukan pending_balance)
+            $balanceBefore = $wallet->balance;
+            $wallet->balance += $amountToRelease; // ⬅️ INI YANG BENAR!
             $wallet->save();
 
+            Log::info('✅ Wallet updated', [
+                'wallet_id' => $wallet->id,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $wallet->balance,
+                'amount_added' => $amountToRelease,
+                'pending_balance' => $wallet->pending_balance
+            ]);
+
             // Create transaction record
-            $wallet->transactions()->create([
+            $transaction = $wallet->transactions()->create([
                 'payment_id' => $payment->id,
                 'type' => 'credit',
                 'status' => 'completed',
-                'amount' => $payment->service_amount,
-                'description' => "Pembayaran released dari Project #{$submitProject->project_id} - {$submitProject->project->title}",
+                'amount' => $amountToRelease,
+                'description' => sprintf(
+                    "Pembayaran dari project #%d - %s",
+                    $submitProject->project_id,
+                    $submitProject->project->title
+                ),
                 'balance_before' => $balanceBefore,
-                'balance_after' => $wallet->pending_balance
+                'balance_after' => $wallet->balance
             ]);
 
-            // Update payment status
+            Log::info('📝 Transaction created', [
+                'transaction_id' => $transaction->id,
+                'type' => 'credit',
+                'amount' => $amountToRelease
+            ]);
+
+            // Update payment record
             $payment->update([
                 'is_released_to_freelancer' => true,
                 'released_at' => now(),
-                'release_notes' => 'Funds released to freelancer pending_balance after project completion approval by client'
+                'release_notes' => sprintf(
+                    'Funds released to freelancer balance. Amount: Rp %s',
+                    number_format($amountToRelease, 0, ',', '.')
+                )
             ]);
 
-            Log::info('Payment released to freelancer (pending_balance)', [
+            Log::info('✅ Payment record updated', [
                 'payment_id' => $payment->payment_id,
-                'project_id' => $submitProject->project_id,
-                'freelancer_id' => $payment->freelancer_id,
-                'amount' => $payment->service_amount,
-                'freelancer_pending_balance' => $wallet->pending_balance,
-                'admin_wallet_status' => 'NOT DEDUCTED (will be deducted on withdrawal completion)'
+                'is_released' => true,
+                'released_at' => $payment->released_at
             ]);
+
+            // Trigger notification
+            NotificationService::paymentReceived($payment);
+
+            $releaseInfo = [
+                'status' => 'success',
+                'payment_id' => $payment->payment_id,
+                'amount' => $amountToRelease,
+                'formatted_amount' => 'Rp ' . number_format($amountToRelease, 0, ',', '.'),
+                'freelancer_id' => $payment->freelancer_id,
+                'wallet_balance' => $wallet->balance,
+                'wallet_pending' => $wallet->pending_balance,
+                'transaction_id' => $transaction->id,
+                'released_at' => now()->toDateTimeString()
+            ];
+
+            Log::info('🎉 PAYMENT RELEASE SUCCESS', $releaseInfo);
+
+            return $releaseInfo;
 
         } catch (\Exception $e) {
-            Log::error('Failed to release payment to freelancer:', [
+            Log::error('💥 Failed to release payment:', [
                 'error' => $e->getMessage(),
                 'submission_id' => $submitProject->id,
                 'project_id' => $submitProject->project_id,
+                'freelancer_id' => $submitProject->user_id,
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
                 'trace' => $e->getTraceAsString()
             ]);
-            throw $e;
+            
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ];
         }
     }
 
@@ -316,7 +441,7 @@ class SubmitProjectController extends Controller
                 ->first()
         )->user->name ?? '-';
 
-        $progress = \App\Models\Progress::where('project_id', $projectId)->get();
+        $progress = Progress::where('project_id', $projectId)->get();
 
         $totalFiles = \App\Models\Timeline::where('project_id', $projectId)
                         ->where('status', 'selesai')
@@ -335,6 +460,7 @@ class SubmitProjectController extends Controller
             'links'           => $progress->map(fn($p) => [
                 'url' => $p->link_url,
             ]),
+            'chat_url' => route('chat')
         ]);
     }
 

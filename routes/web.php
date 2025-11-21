@@ -54,6 +54,67 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
         Route::get('/wallet', [AdminWalletController::class, 'index'])
     ->name('wallet.index');
 });
+
+Route::middleware(['auth'])->group(function () {
+    
+    // Halaman notifikasi (untuk client dan freelancer)
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])
+        ->name('notifications.index');
+    
+    // Get unread count (untuk badge di navbar)
+    Route::get('/notifications/unread-count', [App\Http\Controllers\NotificationController::class, 'getUnreadCount'])
+        ->name('notifications.unread-count');
+    
+    // Get latest notifications (untuk dropdown)
+    Route::get('/notifications/latest', [App\Http\Controllers\NotificationController::class, 'getLatest'])
+        ->name('notifications.latest');
+    
+    // Mark single notification as read
+    Route::post('/notifications/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])
+        ->name('notifications.mark-read');
+    
+    // Mark all as read
+    Route::post('/notifications/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.mark-all-read');
+    
+    // Delete single notification
+    Route::delete('/notifications/{id}', [App\Http\Controllers\NotificationController::class, 'destroy'])
+        ->name('notifications.destroy');
+    
+    // Delete selected notifications
+    Route::post('/notifications/delete-selected', [App\Http\Controllers\NotificationController::class, 'destroySelected'])
+        ->name('notifications.destroy-selected');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notification', [App\Http\Controllers\NotificationController::class, 'index'])
+        ->name('notification');
+    
+    Route::get('/notification/freelancer', [App\Http\Controllers\NotificationController::class, 'index'])
+        ->name('notification.freelancer');
+});
+
+Route::middleware(['auth'])->group(function () {
+    // ✅ Route spesifik HARUS di atas route dengan parameter
+    Route::get('/submit-projects/status/{projectId}', [SubmitProjectController::class, 'getProjectStatus'])
+        ->name('submit-projects.status');
+    
+    Route::get('/submit-projects/revision-notes/{projectId}', [SubmitProjectController::class, 'getRevisionNotes'])
+        ->name('submit-projects.revision-notes');
+    
+    // ✅ Route update status - HARUS pakai ID integer sebagai parameter
+    Route::post('/submit-projects/{id}/status', [SubmitProjectController::class, 'updateStatus'])
+        ->name('submit-projects.update-status')
+        ->where('id', '[0-9]+'); // Pastikan hanya menerima angka
+    
+    // Route dengan model binding di bawah
+    Route::post('/submit-projects', [SubmitProjectController::class, 'store'])
+        ->name('submit-projects.store');
+    
+    Route::get('/submit-projects/{submitProject}', [SubmitProjectController::class, 'show'])
+        ->name('submit-projects.show')
+        ->where('submitProject', '[0-9]+');
+});
 // guest
 Route::get('/', fn() => view('pages.landing'))->name('home');
 Route::get('/tentang/penjelasan', fn() => view('pages.tentang-penjelasan'))->name('tentang.penjelasan');
@@ -147,7 +208,7 @@ Route::get('/freelancer/proposal/{proposal}', [ProposalController::class, 'showP
 Route::get('/web/job', fn() => view('client.popular.job.job1'))->name('job');
 Route::get('/logo', fn() => view('client.grafis.logo-desain'))->name('logo');
 Route::get('/copy', fn() => view('client.penulisan.copy-writing'))->name('copy');
-Route::get('/notification', fn() => view('client.notification'))->name('notification');
+
 Route::get('/client/profile/{id}', [ClientProfileController::class, 'show'])->name('client.profile.show');
 Route::get('/project/{id}/progress', [ProjectController::class, 'progress'])->name('projects.progress');
 
@@ -250,13 +311,14 @@ Route::prefix('projects/{project}')->middleware('auth')->group(function () {
 //progress
 Route::post('/progress/store', [ProgressController::class, 'store'])->name('progress.store');
 
-Route::middleware(['auth'])->group(function () {
-    Route::post('/submit-projects', [SubmitProjectController::class, 'store'])->name('submit-projects.store');
-    Route::get('/submit-projects/{submitProject}', [SubmitProjectController::class, 'show'])->name('submit-projects.show');
-    Route::get('/submit-projects/status/{projectId}', [SubmitProjectController::class, 'getProjectStatus'])->name('submit-projects.status');
-    Route::patch('/submit-projects/{submitProject}/status', [SubmitProjectController::class, 'updateStatus'])->name('submit-projects.update-status');
-    Route::get('/submit-projects/revision-notes/{projectId}', [SubmitProjectController::class, 'getRevisionNotes'])->name('submit-projects.revision-notes');
-});
+// Route::middleware(['auth'])->group(function () {
+//     Route::post('/submit-projects', [SubmitProjectController::class, 'store'])->name('submit-projects.store');
+//     Route::get('/submit-projects/{submitProject}', [SubmitProjectController::class, 'show'])->name('submit-projects.show');
+//     Route::get('/submit-projects/status/{projectId}', [SubmitProjectController::class, 'getProjectStatus'])->name('submit-projects.status');
+//     Route::post('/submit-projects/{submitProject}/status', [SubmitProjectController::class, 'updateStatus'])
+//         ->name('submit-projects.update-status');
+//     Route::get('/submit-projects/revision-notes/{projectId}', [SubmitProjectController::class, 'getRevisionNotes'])->name('submit-projects.revision-notes');
+// });
 
 // Client routes
 Route::middleware(['auth', 'role:client'])->group(function () {
@@ -315,7 +377,7 @@ Route::get('/freelancer/web', fn() => view('freelancer.popular.web-development')
 Route::get('/freelancer/web/job', fn() => view('freelancer.popular.job.job1'))->name('job');
 Route::get('/freelancer/proposal', fn() => view('freelancer.proposall'))->name('proposal');
 
-Route::get('/notification/freelancer', fn() => view('freelancer.notification'))->name('notification');
+
 Route::get('/saldo/freelancer', fn() => view('freelancer.tarik-saldo'))->name('saldo');
 
 // Tambahkan di bagian route client yang sudah ada middleware auth
