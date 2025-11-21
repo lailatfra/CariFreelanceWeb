@@ -16,29 +16,30 @@ class Payment extends Model
         'client_id',
         'freelancer_id',
         'project_id',
-        'service_amount',
-        'admin_fee',
+        'service_amount',           // ⬅️ PASTIKAN ADA
+        'admin_fee',                // ⬅️ PASTIKAN ADA
         'amount',
         'status',
         'midtrans_transaction_id',
         'midtrans_transaction_status',
         'midtrans_response',
         'paid_at',
-        'is_released_to_freelancer',  // ⬅️ BARU
-        'released_at',                 // ⬅️ BARU
-        'release_notes'                // ⬅️ BARU
+        'is_released_to_freelancer', // ⬅️ PASTIKAN ADA
+        'released_at',               // ⬅️ PASTIKAN ADA
+        'release_notes'              // ⬅️ PASTIKAN ADA
     ];
 
     protected $casts = [
         'service_amount' => 'decimal:2',
         'admin_fee' => 'decimal:2',
+        'amount' => 'decimal:2',
         'midtrans_response' => 'array',
         'paid_at' => 'datetime',
-        'released_at' => 'datetime',  // ⬅️ BARU
-        'amount' => 'decimal:2',
-        'is_released_to_freelancer' => 'boolean'  // ⬅️ BARU
+        'released_at' => 'datetime',
+        'is_released_to_freelancer' => 'boolean'
     ];
 
+    // Relationships
     public function proposal()
     {
         return $this->belongsTo(Proposal::class);
@@ -59,7 +60,7 @@ class Payment extends Model
         return $this->belongsTo(Project::class);
     }
 
-    // ⬅️ TAMBAHKAN HELPER METHODS BARU
+    // Helper methods
     public function isReleasedToFreelancer()
     {
         return $this->is_released_to_freelancer === true;
@@ -90,6 +91,7 @@ class Payment extends Model
         return 'PAY-' . date('Ymd') . '-' . strtoupper(uniqid());
     }
 
+    // Format helpers
     public function getFormattedServiceAmountAttribute()
     {
         return 'Rp ' . number_format($this->service_amount, 0, ',', '.');

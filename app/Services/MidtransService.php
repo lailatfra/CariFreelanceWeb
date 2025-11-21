@@ -7,12 +7,16 @@ use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Transaction;
 use App\Models\Payment;
+use App\Models\Proposal;
+use App\Models\AdminWallet;
+use App\Models\Conversation;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MidtransService
 {
     public function __construct()
     {
-        // Set your Midtrans credentials
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
         Config::$isSanitized = config('midtrans.is_sanitized');
@@ -90,27 +94,13 @@ class MidtransService
                             'midtrans_response' => $notif
                         ]);
                     } else {
-                        $payment->update([
-                            'status' => 'success',
-                            'midtrans_transaction_status' => $transaction,
-                            'midtrans_response' => $notif,
-                            'paid_at' => now()
-                        ]);
-
-                        // Accept the proposal
-                        $this->acceptProposal($payment);
+                        // ✅ SUCCESS: Credit Admin Wallet
+                        $this->processSuccessPayment($payment, $transaction, $notif);
                     }
                 }
             } else if ($transaction == 'settlement') {
-                $payment->update([
-                    'status' => 'success',
-                    'midtrans_transaction_status' => $transaction,
-                    'midtrans_response' => $notif,
-                    'paid_at' => now()
-                ]);
-
-                // Accept the proposal
-                $this->acceptProposal($payment);
+                // ✅ SUCCESS: Credit Admin Wallet
+                $this->processSuccessPayment($payment, $transaction, $notif);
 
             } else if ($transaction == 'pending') {
                 $payment->update([
@@ -145,14 +135,100 @@ class MidtransService
         }
     }
 
+    // ✅ PRIVATE METHOD BARU: Process Success Payment
+    private function processSuccessPayment($payment, $transaction, $notif)
+    {
+        DB::beginTransaction();
+        try {
+            // 1. Update payment status
+            $payment->update([
+                'status' => 'success',
+                'midtrans_transaction_status' => $transaction,
+                'midtrans_response' => $notif,
+                'paid_at' => now()
+            ]);
+
+            // 2. ✅ CREDIT ADMIN WALLET
+            $this->creditAdminWallet($payment);
+
+            // 3. Accept proposal
+            $this->acceptProposal($payment);
+
+            // 4. Create conversation
+            $this->createConversation($payment);
+
+            DB::commit();
+
+            Log::info('Payment success processed', [
+                'payment_id' => $payment->payment_id,
+                'admin_wallet_credited' => true
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to process success payment: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // ✅ CREDIT ADMIN WALLET (ESCROW)
+    private function creditAdminWallet($payment)
+    {
+        try {
+            $adminWallet = AdminWallet::getWallet();
+
+            // Tambah saldo service (untuk freelancer nanti)
+            $adminWallet->creditService(
+                $payment->service_amount,
+                "Pembayaran masuk dari Project #{$payment->project_id} - Service Fee (Escrow)",
+                $payment->id
+            );
+
+            // Tambah saldo admin fee (keuntungan platform)
+            $adminWallet->creditAdminFee(
+                $payment->admin_fee,
+                "Pembayaran masuk dari Project #{$payment->project_id} - Admin Fee (2.5%)",
+                $payment->id
+            );
+
+            Log::info('Admin wallet credited', [
+                'payment_id' => $payment->payment_id,
+                'service_amount' => $payment->service_amount,
+                'admin_fee' => $payment->admin_fee
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to credit admin wallet: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
     private function acceptProposal(Payment $payment)
     {
-        // Set proposal status to accepted
         $payment->proposal->update(['status' => 'accepted']);
 
-        // Reject other proposals for the same project
-        \App\Models\Proposal::where('project_id', $payment->project_id)
+        Proposal::where('project_id', $payment->project_id)
             ->where('id', '!=', $payment->proposal_id)
             ->update(['status' => 'rejected']);
+    }
+
+    private function createConversation($payment)
+    {
+        $existing = Conversation::where('project_id', $payment->project_id)
+            ->where('client_id', $payment->client_id)
+            ->where('freelancer_id', $payment->freelancer_id)
+            ->first();
+        
+        if ($existing) {
+            return $existing;
+        }
+        
+        return Conversation::create([
+            'project_id' => $payment->project_id,
+            'client_id' => $payment->client_id,
+            'freelancer_id' => $payment->freelancer_id,
+            'proposal_id' => $payment->proposal_id,
+            'last_message_at' => now(),
+        ]);
     }
 }

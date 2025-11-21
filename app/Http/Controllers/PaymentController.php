@@ -25,23 +25,18 @@ class PaymentController extends Controller
         $this->midtransService = $midtransService;
     }
 
-    // ⬅️ ✅ TAMBAHKAN METHOD INI (yang hilang)
     public function show(Proposal $proposal)
     {
-        // Check authorization
         if ($proposal->project->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Check proposal status
         if ($proposal->status !== 'pending') {
             return redirect()->route('projek')->with('error', 'Proposal ini sudah tidak dapat diproses.');
         }
 
-        // Load relations
         $proposal->load(['user.freelancerProfile', 'project']);
 
-        // Calculate amounts
         $serviceAmount = $proposal->proposal_price;
         $adminFee = $serviceAmount * (self::ADMIN_FEE_PERCENTAGE / 100);
         $totalAmount = $serviceAmount + $adminFee;
@@ -72,17 +67,17 @@ class PaymentController extends Controller
             $adminFee = $serviceAmount * (self::ADMIN_FEE_PERCENTAGE / 100);
             $totalAmount = $serviceAmount + $adminFee;
 
-            $payment = new Payment();
-            $payment->payment_id = $payment->generatePaymentId();
-            $payment->proposal_id = $proposal->id;
-            $payment->client_id = Auth::id();
-            $payment->freelancer_id = $proposal->user_id;
-            $payment->project_id = $proposal->project_id;
-            $payment->service_amount = $serviceAmount;
-            $payment->admin_fee = $adminFee;
-            $payment->amount = $totalAmount;
-            $payment->status = 'pending';
-            $payment->save();
+            $payment = Payment::create([
+                'payment_id' => (new Payment)->generatePaymentId(),
+                'proposal_id' => $proposal->id,
+                'client_id' => Auth::id(),
+                'freelancer_id' => $proposal->user_id,
+                'project_id' => $proposal->project_id,
+                'service_amount' => $serviceAmount,
+                'admin_fee' => $adminFee,
+                'amount' => $totalAmount,
+                'status' => 'pending'
+            ]);
 
             $snapToken = $this->midtransService->createTransaction($payment);
 
@@ -209,6 +204,7 @@ class PaymentController extends Controller
         }
     }
 
+    // ✅ PANGGIL METHOD INI SAAT PAYMENT SUCCESS
     private function createConversation($payment)
     {
         $existingConversation = Conversation::where('project_id', $payment->project_id)
@@ -229,7 +225,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    // ✅ Credit ke admin wallet (escrow)
+    // ✅ CREDIT KE ADMIN WALLET (ESCROW)
     private function creditAdminWallet($payment)
     {
         try {
@@ -264,6 +260,7 @@ class PaymentController extends Controller
         }
     }
 
+    // ✅ UPDATE PAYMENT STATUS + CREDIT ADMIN WALLET
     private function updatePaymentStatusFromMidtrans($payment, $midtransStatus)
     {
         $transactionStatus = $midtransStatus->transaction_status;
@@ -271,40 +268,38 @@ class PaymentController extends Controller
         if (in_array($transactionStatus, ['settlement', 'capture'])) {
             DB::beginTransaction();
             try {
+                // 1. Update payment status
                 $payment->update([
                     'status' => 'success',
                     'midtrans_transaction_status' => $transactionStatus,
                     'midtrans_response' => $midtransStatus,
-                    'paid_at' => now(),
-                    'is_released_to_freelancer' => false
+                    'paid_at' => now()
                 ]);
 
-                // Accept proposal
+                // 2. ✅ CREDIT ADMIN WALLET (INI YANG HILANG!)
+                $this->creditAdminWallet($payment);
+
+                // 3. Accept proposal
                 $payment->proposal->update(['status' => 'accepted']);
                 
-                // Reject other proposals
+                // 4. Reject other proposals
                 Proposal::where('project_id', $payment->project_id)
                     ->where('id', '!=', $payment->proposal_id)
                     ->update(['status' => 'rejected']);
-                
-                // Create conversation
-                $this->createConversation($payment);
 
-                // Credit ke admin wallet (escrow) - Dana TIDAK masuk ke freelancer dulu
-                $this->creditAdminWallet($payment);
+                // 5. Create conversation
+                $this->createConversation($payment);
 
                 DB::commit();
 
-                Log::info('Payment successful - funds in escrow', [
+                Log::info('Payment success processed completely', [
                     'payment_id' => $payment->payment_id,
-                    'service_amount' => $payment->service_amount,
-                    'freelancer_id' => $payment->freelancer_id,
-                    'status' => 'Funds held in escrow until project completion'
+                    'admin_wallet_credited' => true
                 ]);
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                Log::error('Error updating payment status: ' . $e->getMessage());
+                Log::error('Failed to process payment success: ' . $e->getMessage());
                 throw $e;
             }
 

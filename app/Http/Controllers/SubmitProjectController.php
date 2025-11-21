@@ -1,15 +1,16 @@
 <?php
+// app/Http/Controllers/SubmitProjectController.php
 
 namespace App\Http\Controllers;
 
 use App\Models\SubmitProject;
 use App\Models\Project;
 use App\Models\Progress;
-use App\Models\Payment;      // ⬅️ TAMBAH
-use App\Models\Wallet;       // ⬅️ TAMBAH
+use App\Models\Payment;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;  // ⬅️ TAMBAH
+use Illuminate\Support\Facades\DB;
 
 class SubmitProjectController extends Controller
 {
@@ -33,13 +34,11 @@ class SubmitProjectController extends Controller
                 $links = array_filter(preg_split("/\r\n|\n|\r/", $request->links));
             }
 
-            // Cek apakah sudah ada submission untuk project ini
             $existing = SubmitProject::where('project_id', $request->project_id)
                 ->where('user_id', auth()->id())
                 ->first();
 
             if ($existing) {
-                // Update existing submission (untuk resubmit setelah revisi)
                 $submission = $existing->update([
                     'links'       => $links,
                     'description' => $request->description,
@@ -47,7 +46,6 @@ class SubmitProjectController extends Controller
                     'status'      => 'pending',
                 ]);
             } else {
-                // Create new submission
                 $submission = SubmitProject::create([
                     'user_id'     => auth()->id(),
                     'project_id'  => $request->project_id,
@@ -115,20 +113,16 @@ class SubmitProjectController extends Controller
     {
         $userId = auth()->id();
 
-        // Ambil semua submit_project dengan status selesai
         $completedSubmissions = SubmitProject::with(['project.client', 'project.proposalls'])
             ->where('user_id', $userId)
             ->where('status', 'selesai')
             ->get();
 
-        // Untuk setiap submission selesai, ambil semua links dari progress_uploads dan submit_project
         $completed = $completedSubmissions->map(function ($submission) {
             $projectId = $submission->project_id;
 
-            // Ambil links dari submit_project (final submission)
             $finalLinks = $submission->links ?? [];
 
-            // Ambil links dari progress_uploads untuk project ini
             $progressLinks = [];
             $progressUploads = Progress::where('project_id', $projectId)
                 ->where('user_id', auth()->id())
@@ -140,10 +134,8 @@ class SubmitProjectController extends Controller
                 }
             }
 
-            // Gabungkan semua links
             $allLinks = array_unique(array_merge($finalLinks, $progressLinks));
 
-            // Update submission dengan semua links
             $submission->all_links = $allLinks;
             $submission->total_links_count = count($allLinks);
 
@@ -153,7 +145,7 @@ class SubmitProjectController extends Controller
         return view('dashboard.completed', compact('completed'));
     }
 
-    // ⬅️ ✅ METHOD YANG SUDAH DIMODIFIKASI
+    // ✅ METHOD YANG SUDAH DIMODIFIKASI
     public function updateStatus(Request $request, SubmitProject $submitProject)
     {
         try {
@@ -162,7 +154,6 @@ class SubmitProjectController extends Controller
                 'notes'  => 'nullable|string|min:3|max:2000',
             ]);
 
-            // Authorization check
             $user = auth()->user();
             if ($submitProject->project && $submitProject->project->user_id !== $user->id) {
                 return response()->json([
@@ -176,7 +167,6 @@ class SubmitProjectController extends Controller
             $oldStatus = $submitProject->status;
             $updateData = ['status' => $request->input('status')];
 
-            // Handle notes
             if ($request->filled('notes')) {
                 $updateData['notes'] = $request->input('notes');
             } elseif ($request->input('status') === 'revisi' && !$request->filled('notes')) {
@@ -189,7 +179,7 @@ class SubmitProjectController extends Controller
 
             $submitProject->update($updateData);
 
-            // ⬅️ ✅ LOGIC BARU: Release dana ke freelancer saat status = selesai
+            // ✅ LOGIC BARU: Release dana ke freelancer TANPA kurangi Admin Wallet
             if ($request->input('status') === 'selesai' && $oldStatus !== 'selesai') {
                 $this->releasePaymentToFreelancer($submitProject);
                 
@@ -229,11 +219,10 @@ class SubmitProjectController extends Controller
         }
     }
 
-    // ⬅️ ✅ METHOD BARU: Release payment dari escrow ke freelancer wallet
+    // ✅ METHOD BARU: Release payment TANPA kurangi Admin Wallet
     private function releasePaymentToFreelancer(SubmitProject $submitProject)
     {
         try {
-            // Cari payment yang terkait dengan project ini
             $payment = Payment::where('project_id', $submitProject->project_id)
                 ->where('freelancer_id', $submitProject->user_id)
                 ->where('status', 'success')
@@ -254,27 +243,37 @@ class SubmitProjectController extends Controller
                 ['balance' => 0, 'pending_balance' => 0]
             );
 
-            // Credit balance freelancer (Admin wallet TIDAK dikurangi)
-            $wallet->credit(
-                $payment->service_amount,
-                "Pembayaran released dari Project #{$submitProject->project_id} - {$submitProject->project->title}",
-                $payment->id
-            );
+            // ✅ PENTING: Tambah pending_balance (bukan balance langsung)
+            // Karena saldo baru bisa ditarik setelah withdrawal approved
+            $balanceBefore = $wallet->pending_balance;
+            $wallet->pending_balance += $payment->service_amount;
+            $wallet->save();
+
+            // Create transaction record
+            $wallet->transactions()->create([
+                'payment_id' => $payment->id,
+                'type' => 'credit',
+                'status' => 'completed',
+                'amount' => $payment->service_amount,
+                'description' => "Pembayaran released dari Project #{$submitProject->project_id} - {$submitProject->project->title}",
+                'balance_before' => $balanceBefore,
+                'balance_after' => $wallet->pending_balance
+            ]);
 
             // Update payment status
             $payment->update([
                 'is_released_to_freelancer' => true,
                 'released_at' => now(),
-                'release_notes' => 'Funds released after project completion approval by client'
+                'release_notes' => 'Funds released to freelancer pending_balance after project completion approval by client'
             ]);
 
-            Log::info('Payment released to freelancer', [
+            Log::info('Payment released to freelancer (pending_balance)', [
                 'payment_id' => $payment->payment_id,
                 'project_id' => $submitProject->project_id,
                 'freelancer_id' => $payment->freelancer_id,
                 'amount' => $payment->service_amount,
-                'freelancer_balance' => $wallet->balance,
-                'admin_wallet_status' => 'Not deducted (will be deducted on withdrawal)'
+                'freelancer_pending_balance' => $wallet->pending_balance,
+                'admin_wallet_status' => 'NOT DEDUCTED (will be deducted on withdrawal completion)'
             ]);
 
         } catch (\Exception $e) {
@@ -299,7 +298,6 @@ class SubmitProjectController extends Controller
             ], 404);
         }
 
-        // ambil submission (kalau memang masih dipakai)
         $submission = SubmitProject::where('project_id', $projectId)
             ->where('user_id', auth()->id())
             ->first();
@@ -311,7 +309,6 @@ class SubmitProjectController extends Controller
             default   => 'Dalam Proses'
         } : 'Dalam Proses';
 
-        // ambil freelancer
         $freelancerName = optional(
             $project->proposalls()
                 ->where('status', 'accepted')
@@ -319,10 +316,8 @@ class SubmitProjectController extends Controller
                 ->first()
         )->user->name ?? '-';
 
-        // ambil progress link
         $progress = \App\Models\Progress::where('project_id', $projectId)->get();
 
-        // hitung total milestone selesai
         $totalFiles = \App\Models\Timeline::where('project_id', $projectId)
                         ->where('status', 'selesai')
                         ->count();
@@ -335,8 +330,6 @@ class SubmitProjectController extends Controller
             'status'  => $submission->status ?? 'dalam_proses',
             'display' => $displayStatus,
             'notes'   => $submission->notes ?? null,
-
-            // tambahkan field yang frontend butuh:
             'freelancer_name' => $freelancerName,
             'total_links'     => $totalFiles,
             'links'           => $progress->map(fn($p) => [
