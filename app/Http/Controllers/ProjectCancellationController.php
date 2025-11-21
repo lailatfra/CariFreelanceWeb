@@ -104,15 +104,16 @@ class ProjectCancellationController extends Controller
         }
     }
 
+
 /**
- * Approve cancellation request - NO WALLET DEDUCTION
+ * Approve cancellation request - WITH TRANSFER PROOF & AUTO DEDUCT WALLET
  */
 public function approveCancellation(Request $request, $id)
 {
-    \Log::info('=== APPROVE CANCELLATION START (NO WALLET) ===', ['id' => $id]);
+    \Log::info('=== APPROVE CANCELLATION START ===', ['id' => $id]);
     
     try {
-        // VALIDASI FILE
+        // ✅ VALIDASI FILE BUKTI TRANSFER
         $validated = $request->validate([
             'transfer_proof' => 'required|image|mimes:jpeg,jpg,png,pdf|max:5120'
         ]);
@@ -127,34 +128,75 @@ public function approveCancellation(Request $request, $id)
                 'message' => 'Data pembatalan tidak ditemukan'
             ], 404);
         }
+        
+        \Log::info('Cancellation found', [
+            'id' => $cancellation->id,
+            'current_refund_status' => $cancellation->refund_status,
+            'repost_project' => $cancellation->repost_project
+        ]);
 
-        // AMBIL ACCEPTED PROPOSAL
+        // ✅ GET ACCEPTED PROPOSAL & GET EXACT PROPOSAL PRICE
         $acceptedProposal = $cancellation->project->proposalls()
             ->where('status', 'accepted')
             ->first();
 
         if (!$acceptedProposal) {
             DB::rollBack();
+            \Log::error('No accepted proposal found', ['project_id' => $cancellation->project_id]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Tidak ada proposal yang diterima untuk project ini'
             ], 400);
         }
 
-        // HITUNG REFUND (TANPA DEBET WALLET)
-        $proposalPrice = $acceptedProposal->proposal_price;
-        $adminFee = $proposalPrice * 0.02;
-        $refundAmount = $proposalPrice - $adminFee;
+        // ✅ AMBIL PROPOSAL PRICE TANPA PENGURANGAN (EXACT AMOUNT)
+        $refundAmount = $acceptedProposal->proposal_price;
 
-        // UPLOAD BUKTI TRANSFER
+        \Log::info('Refund amount (exact proposal price)', [
+            'proposal_price' => $refundAmount,
+            'project_id' => $cancellation->project_id
+        ]);
+
+        // ✅ UPLOAD FILE BUKTI TRANSFER
         $transferProofPath = null;
         if ($request->hasFile('transfer_proof')) {
             $file = $request->file('transfer_proof');
             $filename = 'transfer_proof_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
             $transferProofPath = $file->storeAs('transfer_proofs', $filename, 'public');
+            \Log::info('Transfer proof uploaded', ['path' => $transferProofPath]);
         }
 
-        // UPDATE CANCELLATION STATUS
+        // ✅ GET ADMIN WALLET
+        $adminWallet = \App\Models\AdminWallet::getWallet();
+
+        // ✅ CEK APAKAH SALDO MENCUKUPI
+        if ($adminWallet->service_balance < $refundAmount) {
+            DB::rollBack();
+            \Log::error('Insufficient admin wallet balance', [
+                'required' => $refundAmount,
+                'available' => $adminWallet->service_balance
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Saldo service admin tidak mencukupi untuk refund. Saldo: Rp ' . number_format($adminWallet->service_balance, 0, ',', '.') . ', Dibutuhkan: Rp ' . number_format($refundAmount, 0, ',', '.')
+            ], 400);
+        }
+
+        // ✅ KURANGI SALDO ADMIN WALLET (EXACT PROPOSAL PRICE)
+        $adminWallet->debitService(
+            $refundAmount,
+            "Refund pembatalan project: {$cancellation->project->title} - Client: {$cancellation->user->name}",
+            null
+        );
+
+        \Log::info('Admin wallet debited', [
+            'amount' => $refundAmount,
+            'new_service_balance' => $adminWallet->fresh()->service_balance
+        ]);
+
+        // ✅ UPDATE CANCELLATION
         $cancellation->update([
             'refund_status' => 'processed',
             'refund_amount' => $refundAmount,
@@ -162,51 +204,73 @@ public function approveCancellation(Request $request, $id)
             'processed_at' => now(),
             'updated_at' => now()
         ]);
+        
+        \Log::info('Cancellation approved with transfer proof and wallet deducted', [
+            'transfer_proof' => $transferProofPath,
+            'refund_amount' => $refundAmount
+        ]);
 
-        // CEK REPOST
+        // ✅ CEK APAKAH USER INGIN POSTING ULANG PROJECT
         $shouldRepost = (bool) $cancellation->repost_project;
+        
+        \Log::info('Checking repost status', [
+            'repost_project' => $cancellation->repost_project,
+            'shouldRepost' => $shouldRepost
+        ]);
 
         if ($shouldRepost) {
-            // RESET PROPOSALS KE PENDING
+            // ✅ RESET SEMUA PROPOSALS MENJADI PENDING (KOSONGKAN FREELANCER)
             \App\Models\Proposal::where('project_id', $cancellation->project_id)
                 ->update(['status' => 'pending']);
+            
+            \Log::info('All proposals reset to pending', [
+                'project_id' => $cancellation->project_id
+            ]);
 
-            // UPDATE PROJECT JADI OPEN KEMBALI
+            // ✅ UPDATE PROJECT STATUS - POSTING ULANG
             $cancellation->project->update([
                 'cancellation_status' => null,
                 'status' => 'open',
                 'rejection_reason' => null,
                 'updated_at' => now()
             ]);
+            
+            \Log::info('Project reposted successfully', [
+                'project_id' => $cancellation->project_id,
+                'new_status' => 'open'
+            ]);
 
-            $successMessage = 
-                'Pembatalan proyek disetujui! Proyek otomatis di-posting ulang, semua freelancer bisa mengirim proposal kembali.';
+            $successMessage = 'Pembatalan proyek berhasil disetujui dengan bukti transfer! Proyek telah otomatis di-posting ulang dan semua freelancer dapat mengajukan proposal kembali. Saldo admin telah dikurangi sebesar Rp ' . number_format($refundAmount, 0, ',', '.');
         } else {
-            // PROJECT DIPERMANEN BATAL
+            // ✅ JIKA TIDAK POSTING ULANG - TANDAI SEBAGAI CANCELLED
             $cancellation->project->update([
                 'cancellation_status' => 'approved',
                 'status' => 'cancelled',
                 'updated_at' => now()
             ]);
+            
+            \Log::info('Project cancelled permanently (not reposted)');
 
-            $successMessage = 
-                'Pembatalan proyek disetujui tanpa posting ulang.';
+            $successMessage = 'Pembatalan proyek berhasil disetujui dengan bukti transfer! Saldo admin telah dikurangi sebesar Rp ' . number_format($refundAmount, 0, ',', '.');
         }
 
         DB::commit();
-
+        \Log::info('=== APPROVE CANCELLATION SUCCESS ===');
+        
         return response()->json([
             'success' => true,
             'message' => $successMessage,
             'data' => [
                 'refund_amount' => $refundAmount,
-                'admin_fee_deducted' => $adminFee,
+                'wallet_balance_after' => $adminWallet->fresh()->service_balance,
                 'project_reposted' => $shouldRepost
             ]
         ], 200);
 
     } catch (\Illuminate\Validation\ValidationException $e) {
         DB::rollBack();
+        \Log::error('Validation error', ['errors' => $e->errors()]);
+        
         return response()->json([
             'success' => false,
             'message' => 'Validasi gagal',
@@ -215,207 +279,19 @@ public function approveCancellation(Request $request, $id)
 
     } catch (\Exception $e) {
         DB::rollBack();
-        \Log::error('ERROR APPROVE CANCELLATION', [
+        \Log::error('=== APPROVE CANCELLATION FAILED ===', [
             'error' => $e->getMessage(),
             'line' => $e->getLine(),
-            'file' => $e->getFile()
+            'file' => $e->getFile(),
+            'trace' => $e->getTraceAsString()
         ]);
-
+        
         return response()->json([
             'success' => false,
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
         ], 500);
     }
 }
-
-
-/**
- * Approve cancellation request - WITH TRANSFER PROOF & AUTO DEDUCT WALLET
- */
-// public function approveCancellation(Request $request, $id)
-// {
-//     \Log::info('=== APPROVE CANCELLATION START ===', ['id' => $id]);
-    
-//     try {
-//         // ✅ VALIDASI FILE BUKTI TRANSFER
-//         $validated = $request->validate([
-//             'transfer_proof' => 'required|image|mimes:jpeg,jpg,png,pdf|max:5120'
-//         ]);
-
-//         DB::beginTransaction();
-
-//         $cancellation = ProjectCancellation::with(['project.proposalls'])->find($id);
-        
-//         if (!$cancellation) {
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Data pembatalan tidak ditemukan'
-//             ], 404);
-//         }
-        
-//         \Log::info('Cancellation found', [
-//             'id' => $cancellation->id,
-//             'current_refund_status' => $cancellation->refund_status,
-//             'repost_project' => $cancellation->repost_project
-//         ]);
-
-//         // ✅ GET ACCEPTED PROPOSAL & GET EXACT PROPOSAL PRICE
-//         $acceptedProposal = $cancellation->project->proposalls()
-//             ->where('status', 'accepted')
-//             ->first();
-
-//         if (!$acceptedProposal) {
-//             DB::rollBack();
-//             \Log::error('No accepted proposal found', ['project_id' => $cancellation->project_id]);
-            
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Tidak ada proposal yang diterima untuk project ini'
-//             ], 400);
-//         }
-
-//         // ✅ AMBIL PROPOSAL PRICE TANPA PENGURANGAN (EXACT AMOUNT)
-//         $refundAmount = $acceptedProposal->proposal_price;
-
-//         \Log::info('Refund amount (exact proposal price)', [
-//             'proposal_price' => $refundAmount,
-//             'project_id' => $cancellation->project_id
-//         ]);
-
-//         // ✅ UPLOAD FILE BUKTI TRANSFER
-//         $transferProofPath = null;
-//         if ($request->hasFile('transfer_proof')) {
-//             $file = $request->file('transfer_proof');
-//             $filename = 'transfer_proof_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
-//             $transferProofPath = $file->storeAs('transfer_proofs', $filename, 'public');
-//             \Log::info('Transfer proof uploaded', ['path' => $transferProofPath]);
-//         }
-
-//         // ✅ GET ADMIN WALLET
-//         $adminWallet = \App\Models\AdminWallet::getWallet();
-
-//         // ✅ CEK APAKAH SALDO MENCUKUPI
-//         if ($adminWallet->service_balance < $refundAmount) {
-//             DB::rollBack();
-//             \Log::error('Insufficient admin wallet balance', [
-//                 'required' => $refundAmount,
-//                 'available' => $adminWallet->service_balance
-//             ]);
-            
-//             return response()->json([
-//                 'success' => false,
-//                 'message' => 'Saldo service admin tidak mencukupi untuk refund. Saldo: Rp ' . number_format($adminWallet->service_balance, 0, ',', '.') . ', Dibutuhkan: Rp ' . number_format($refundAmount, 0, ',', '.')
-//             ], 400);
-//         }
-
-//         // ✅ KURANGI SALDO ADMIN WALLET (EXACT PROPOSAL PRICE)
-//         $adminWallet->debitService(
-//             $refundAmount,
-//             "Refund pembatalan project: {$cancellation->project->title} - Client: {$cancellation->user->name}",
-//             null
-//         );
-
-//         \Log::info('Admin wallet debited', [
-//             'amount' => $refundAmount,
-//             'new_service_balance' => $adminWallet->fresh()->service_balance
-//         ]);
-
-//         // ✅ UPDATE CANCELLATION
-//         $cancellation->update([
-//             'refund_status' => 'processed',
-//             'refund_amount' => $refundAmount,
-//             'transfer_proof' => $transferProofPath,
-//             'processed_at' => now(),
-//             'updated_at' => now()
-//         ]);
-        
-//         \Log::info('Cancellation approved with transfer proof and wallet deducted', [
-//             'transfer_proof' => $transferProofPath,
-//             'refund_amount' => $refundAmount
-//         ]);
-
-//         // ✅ CEK APAKAH USER INGIN POSTING ULANG PROJECT
-//         $shouldRepost = (bool) $cancellation->repost_project;
-        
-//         \Log::info('Checking repost status', [
-//             'repost_project' => $cancellation->repost_project,
-//             'shouldRepost' => $shouldRepost
-//         ]);
-
-//         if ($shouldRepost) {
-//             // ✅ RESET SEMUA PROPOSALS MENJADI PENDING (KOSONGKAN FREELANCER)
-//             \App\Models\Proposal::where('project_id', $cancellation->project_id)
-//                 ->update(['status' => 'pending']);
-            
-//             \Log::info('All proposals reset to pending', [
-//                 'project_id' => $cancellation->project_id
-//             ]);
-
-//             // ✅ UPDATE PROJECT STATUS - POSTING ULANG
-//             $cancellation->project->update([
-//                 'cancellation_status' => null,
-//                 'status' => 'open',
-//                 'rejection_reason' => null,
-//                 'updated_at' => now()
-//             ]);
-            
-//             \Log::info('Project reposted successfully', [
-//                 'project_id' => $cancellation->project_id,
-//                 'new_status' => 'open'
-//             ]);
-
-//             $successMessage = 'Pembatalan proyek berhasil disetujui dengan bukti transfer! Proyek telah otomatis di-posting ulang dan semua freelancer dapat mengajukan proposal kembali. Saldo admin telah dikurangi sebesar Rp ' . number_format($refundAmount, 0, ',', '.');
-//         } else {
-//             // ✅ JIKA TIDAK POSTING ULANG - TANDAI SEBAGAI CANCELLED
-//             $cancellation->project->update([
-//                 'cancellation_status' => 'approved',
-//                 'status' => 'cancelled',
-//                 'updated_at' => now()
-//             ]);
-            
-//             \Log::info('Project cancelled permanently (not reposted)');
-
-//             $successMessage = 'Pembatalan proyek berhasil disetujui dengan bukti transfer! Saldo admin telah dikurangi sebesar Rp ' . number_format($refundAmount, 0, ',', '.');
-//         }
-
-//         DB::commit();
-//         \Log::info('=== APPROVE CANCELLATION SUCCESS ===');
-        
-//         return response()->json([
-//             'success' => true,
-//             'message' => $successMessage,
-//             'data' => [
-//                 'refund_amount' => $refundAmount,
-//                 'wallet_balance_after' => $adminWallet->fresh()->service_balance,
-//                 'project_reposted' => $shouldRepost
-//             ]
-//         ], 200);
-
-//     } catch (\Illuminate\Validation\ValidationException $e) {
-//         DB::rollBack();
-//         \Log::error('Validation error', ['errors' => $e->errors()]);
-        
-//         return response()->json([
-//             'success' => false,
-//             'message' => 'Validasi gagal',
-//             'errors' => $e->errors()
-//         ], 422);
-
-//     } catch (\Exception $e) {
-//         DB::rollBack();
-//         \Log::error('=== APPROVE CANCELLATION FAILED ===', [
-//             'error' => $e->getMessage(),
-//             'line' => $e->getLine(),
-//             'file' => $e->getFile(),
-//             'trace' => $e->getTraceAsString()
-//         ]);
-        
-//         return response()->json([
-//             'success' => false,
-//             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-//         ], 500);
-//     }
-// }
 
 /**
  * Reject cancellation request - WITH REJECTION REASON

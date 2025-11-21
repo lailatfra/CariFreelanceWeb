@@ -165,8 +165,35 @@
 
     .loading-spinner {
         text-align: center;
-        padding: 40px;
+        padding: 60px 20px;
         color: #64748b;
+    }
+    
+    .loading-spinner i {
+        color: #1DA1F2;
+        margin-bottom: 15px;
+    }
+    
+    .loading-spinner p {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+    
+    .empty-state .btn {
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        background: #1DA1F2;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .empty-state .btn:hover {
+        background: #0d7ac9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(29, 161, 242, 0.3);
     }
 
     .search-info {
@@ -198,9 +225,6 @@
 </style>
 
 <div class="container-fluid mt-4">
-
-    
-
     <div class="row mt-4">
 
         {{-- SIDEBAR --}}
@@ -208,17 +232,13 @@
             <div class="bg-white rounded p-3 shadow-sm">
                 <h6 class="mb-3">Filter Pencarian</h6>
 
-                <a href="javascript:void(0)"
-                    onclick="changeCategories('project')"
-                    class="sidebar-link {{ $category == 'project' ? 'active' : '' }}"
-                    id="tab-project">
+                <a href="javascript:void(0)" onclick="changeCategories('project')"
+                   class="sidebar-link {{ $category == 'project' ? 'active' : '' }}" id="tab-project">
                     <i class="fas fa-briefcase me-2"></i> Proyek
                 </a>
 
-                <a href="javascript:void(0)"
-                    onclick="changeCategories('kategori')"
-                    class="sidebar-link {{ $category == 'kategori' ? 'active' : '' }}"
-                    id="tab-kategori">
+                <a href="javascript:void(0)" onclick="changeCategories('kategori')"
+                   class="sidebar-link {{ $category == 'kategori' ? 'active' : '' }}" id="tab-kategori">
                     <i class="fas fa-tags me-2"></i> Kategori
                 </a>
             </div>
@@ -226,107 +246,22 @@
 
         {{-- KANAN / OUTPUT SEARCH --}}
         <div class="col-md-9">
-            <div id="loading-spinner" class="loading-spinner" style="display: none;">
+            <div id="loading-spinner" class="loading-spinner" style="display:none;">
                 <i class="fas fa-spinner fa-spin fa-2x"></i>
                 <p>Mencari proyek...</p>
             </div>
 
+            {{-- SEMUA HASIL (proyek atau kategori) akan di-render ke sini oleh JavaScript --}}
             <div id="result-area">
-                @if($category === 'project')
-                <div class="job-grid" id="job-grid">
-                    @forelse($projects as $project)
-                    <article class="job-card">
-                        <div class="job-card-content">
-                            <a href="{{ url('/projects/'.$project->id) }}" style="text-decoration: none; color: inherit;">
-                                <div class="freelancer-info">
-                                    <img src="{{ $project->user->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($project->user->name ?? 'User').'&background=random' }}"
-                                        alt="{{ $project->user->name ?? 'User' }}" class="freelancer-avatar">
-                                    <div>
-                                        <div class="freelancer-name">
-                                            {{ $project->user->name ?? 'Anonim' }}
-                                        </div>
-                                        <div class="response-time">
-                                            {{ $project->posted_at ? $project->posted_at->diffForHumans() : 'Belum diposting' }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Enhanced media display --}}
-                                @if(!empty($project->attachments))
-                                @php
-                                $mainAttachment = $project->main_attachment;
-                                @endphp
-
-                                @if($mainAttachment)
-                                @if($mainAttachment['file_type'] === 'image')
-                                <img src="{{ $mainAttachment['url'] }}" alt="{{ $project->title }}" class="job-image" onerror="this.style.display='none'">
-                                @elseif($mainAttachment['file_type'] === 'video')
-                                <div style="position: relative; width: 100%; height: 140px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; background: #f8f9fa;">
-                                    <video class="job-image" style="width: 100%; height: 100%; object-fit: cover;" muted>
-                                        <source src="{{ $mainAttachment['url'] }}" type="{{ $mainAttachment['mime_type'] ?? 'video/mp4' }}">
-                                    </video>
-                                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white;">
-                                        <i class="fas fa-play" style="font-size: 14px; margin-left: 2px;"></i>
-                                    </div>
-                                </div>
-                                @elseif($mainAttachment['file_type'] === 'document')
-                                <div style="position: relative; width: 100%; height: 140px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #e1e8ed;">
-                                    <i class="fas fa-file" style="font-size: 32px; color: #6c757d; margin-bottom: 8px;"></i>
-                                    <div style="font-size: 11px; color: #6c757d; font-weight: 600;">
-                                        {{ strtoupper($mainAttachment['extension'] ?? 'FILE') }} DOCUMENT
-                                    </div>
-                                </div>
-                                @endif
-                                @endif
-                                @elseif($project->hasImage())
-                                <img src="{{ $project->image_url }}" alt="{{ $project->title }}" class="job-image" onerror="this.style.display='none'">
-                                @endif
-
-                                <h3 class="job-title">{{ Str::limit($project->title, 60) }}</h3>
-
-                                <p class="job-stats">
-                                    <i class="fas fa-star rating"></i>
-                                    {{ $project->budget_type === 'fixed' ? 'Budget Tersedia' : 'Budget Fleksibel' }}
-                                    {{ ucfirst($project->experience_level ?? 'Entry') }}
-                                </p>
-
-                                <div class="job-badges">
-                                    @if($project->urgency === 'urgent')
-                                    <span class="badge badge-urgent">Segera</span>
-                                    @elseif($project->urgency === 'asap')
-                                    <span class="badge badge-urgent">Sangat Mendesak</span>
-                                    @endif
-
-                                    <span class="badge badge-flexible">
-                                        {{ $project->budget_type === 'fixed' ? 'Fixed Budget' : 
-                                                   ($project->budget_type === 'hourly' ? 'Per Jam' : 'Budget Range') }}
-                                    </span>
-
-                                    @if($project->project_type === 'ongoing')
-                                    <span class="badge badge-rehire">Berkelanjutan</span>
-                                    @endif
-                                </div>
-
-                                <p class="job-price">
-                                    Mulai<br>{{ $project->formatted_budget }}
-                                </p>
-                            </a>
-                        </div>
-                    </article>
-                    @empty
-                    <div class="empty-state" style="grid-column: 1 / -1;">
-                        <i class="fas fa-search"></i>
-                        <h3>Tidak ada proyek ditemukan</h3>
-                        <p>Coba gunakan kata kunci lain</p>
-                    </div>
-                    @endforelse
-                </div>
-                @else
-<div id="categories-search-results">
-    <!-- Hasil search kategori akan ditampilkan di sini via JavaScript -->
-</div>
-@endif
+                <!-- Konten awal akan di-render oleh JS pada DOMContentLoaded -->
             </div>
+
+            <script>
+                window.initialProjects = @json($projects ?? collect());
+                window.initialCategory  = '{{ $category }}';
+                window.allProjects = []; // Menyimpan semua project untuk filter client-side
+            </script>
+
         </div>
 
     </div>
@@ -538,6 +473,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize based on current category
     if (currentCategory === 'kategori') {
         renderAllCategories();
+    } else {
+        // Load initial projects for 'project' category
+        const urlParams = new URLSearchParams(window.location.search);
+        const keyword = urlParams.get('q') || '';
+        
+        // SELALU gunakan AJAX search untuk memastikan data konsisten
+        if (keyword) {
+            // Jika ada keyword, lakukan pencarian
+            performLiveSearch(keyword);
+        } else {
+            // Jika tidak ada keyword, load semua project via AJAX
+            performLiveSearch('');
+        }
     }
     
     // Setup header search - HANYA LIVE SEARCH, TIDAK REDIRECT
@@ -638,7 +586,8 @@ function performLiveSearch(keyword) {
     updateURL(keyword);
     
     if (currentCategory === 'project') {
-        // Search projects via AJAX - LIVE SEARCH
+        // Search projects via AJAX - LIVE SEARCH (baik dengan keyword maupun kosong)
+        showLoadingSpinner();
         fetch(`{{ route('searchbar-ajax') }}?q=${encodeURIComponent(keyword)}&category=${currentCategory}`)
             .then(response => {
                 if (!response.ok) {
@@ -647,10 +596,15 @@ function performLiveSearch(keyword) {
                 return response.json();
             })
             .then(data => {
+                hideLoadingSpinner();
                 renderProjects(data.projects);
                 updateSearchInfo(data.count);
+                
+                // Simpan project untuk filter client-side nanti
+                window.allProjects = data.projects || [];
             })
             .catch(error => {
+                hideLoadingSpinner();
                 console.error('Error:', error);
                 showError();
             });
@@ -665,6 +619,29 @@ function performLiveSearch(keyword) {
             updateSearchInfo(filteredCount);
         }
     }
+}
+
+function loadAllProjects() {
+    showLoadingSpinner();
+    // Gunakan endpoint yang sama dengan search, tapi dengan parameter kosong
+    fetch(`{{ route('searchbar-ajax') }}?q=&category=project`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            hideLoadingSpinner();
+            window.allProjects = data.projects || [];
+            renderProjects(window.allProjects);
+            updateSearchInfo(data.count);
+        })
+        .catch(error => {
+            hideLoadingSpinner();
+            console.error('Error:', error);
+            showError();
+        });
 }
 
 function filterCategories(keyword = '') {
@@ -697,7 +674,6 @@ function renderAllCategories() {
     const resultArea = document.getElementById('result-area');
     
     let html = `
-    
         <div class="categories-content-area">
             <div class="categories-content-header">
                 <h2 class="categories-content-title">Semua Kategori</h2>
@@ -821,6 +797,7 @@ function renderProjects(projects) {
 function renderProjectCard(project) {
     let mediaHtml = '';
     
+    // Cek main_attachment terlebih dahulu - SAMA PERSIS dengan output search
     if (project.main_attachment) {
         const att = project.main_attachment;
         if (att.file_type === 'image') {
@@ -844,21 +821,54 @@ function renderProjectCard(project) {
                     </div>
                 </div>`;
         }
-    } else if (project.has_image && project.image_url) {
+    } else if (project.image_url) {
+        // Gunakan image_url jika ada - SAMA dengan output search
         mediaHtml = `<img src="${project.image_url}" alt="${project.title}" class="job-image" onerror="this.style.display='none'">`;
+    } else {
+        // Default image jika tidak ada media - SAMA dengan output search
+        mediaHtml = `
+            <div style="width: 100%; height: 140px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                <i class="fas fa-image" style="font-size: 32px;"></i>
+            </div>`;
     }
     
     let badgesHtml = '';
+    
+    // Badge urgency - SAMA PERSIS dengan output search
     if (project.urgency === 'urgent' || project.urgency === 'asap') {
         badgesHtml += `<span class="badge badge-urgent">${project.urgency === 'asap' ? 'Sangat Mendesak' : 'Segera'}</span>`;
     }
     
+    // Badge budget type - SAMA PERSIS dengan output search
     const budgetLabel = project.budget_type === 'fixed' ? 'Fixed Budget' : 
                        (project.budget_type === 'hourly' ? 'Per Jam' : 'Budget Range');
     badgesHtml += `<span class="badge badge-flexible">${budgetLabel}</span>`;
     
+    // Badge project type - SAMA PERSIS dengan output search
     if (project.project_type === 'ongoing') {
         badgesHtml += `<span class="badge badge-rehire">Berkelanjutan</span>`;
+    }
+    
+    // Pastikan semua field ada default value - SAMA PERSIS dengan output search
+    const userName = project.user?.name || project.user_name || 'Anonim';
+    const userAvatar = project.user?.avatar || project.user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=random`;
+    const postedAt = project.posted_at || project.created_at || 'Baru saja';
+    const experienceLevel = project.experience_level || 'entry';
+    
+    // Format budget - SAMA PERSIS dengan output search
+    let formattedBudget = 'Rp 0';
+    if (project.formatted_budget) {
+        formattedBudget = project.formatted_budget;
+    } else if (project.budget) {
+        formattedBudget = `Rp ${Number(project.budget).toLocaleString('id-ID')}`;
+    }
+    
+    // Rating info - SAMA PERSIS dengan output search
+    let ratingHtml = '';
+    if (project.rating) {
+        ratingHtml = `<i class="fas fa-star rating"></i> ${project.rating}`;
+    } else {
+        ratingHtml = `<i class="fas fa-star rating"></i> Baru`;
     }
     
     return `
@@ -866,10 +876,10 @@ function renderProjectCard(project) {
             <div class="job-card-content">
                 <a href="/projects/${project.id}" style="text-decoration: none; color: inherit;">
                     <div class="freelancer-info">
-                        <img src="${project.user_avatar}" alt="${project.user_name}" class="freelancer-avatar">
+                        <img src="${userAvatar}" alt="${userName}" class="freelancer-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Anonim&background=random'">
                         <div>
-                            <div class="freelancer-name">${project.user_name}</div>
-                            <div class="response-time">${project.posted_at}</div>
+                            <div class="freelancer-name">${userName}</div>
+                            <div class="response-time">${postedAt}</div>
                         </div>
                     </div>
                     
@@ -878,9 +888,9 @@ function renderProjectCard(project) {
                     <h3 class="job-title">${project.title.length > 60 ? project.title.substring(0, 60) + '...' : project.title}</h3>
                     
                     <p class="job-stats">
-                        <i class="fas fa-star rating"></i>
-                        ${project.budget_type === 'fixed' ? 'Budget Tersedia' : 'Budget Fleksibel'}
-                        ${project.experience_level.charAt(0).toUpperCase() + project.experience_level.slice(1)}
+                        ${ratingHtml}
+                        • ${project.budget_type === 'fixed' ? 'Budget Tersedia' : 'Budget Fleksibel'}
+                        • ${experienceLevel.charAt(0).toUpperCase() + experienceLevel.slice(1)}
                     </p>
                     
                     <div class="job-badges">
@@ -888,7 +898,7 @@ function renderProjectCard(project) {
                     </div>
                     
                     <p class="job-price">
-                        Mulai<br>${project.formatted_budget}
+                        Mulai<br>${formattedBudget}
                     </p>
                 </a>
             </div>
@@ -919,11 +929,8 @@ function changeCategories(category) {
             updateSearchInfo(filteredCount);
         }
     } else {
-        if (headerSearch) {
-            performLiveSearch(currentKeyword);
-        } else {
-            performLiveSearch('');
-        }
+        // SELALU gunakan AJAX search untuk project category
+        performLiveSearch(currentKeyword || '');
     }
 }
 
@@ -942,7 +949,16 @@ function updateURL(keyword = '') {
 }
 
 function updateSearchInfo(count) {
-    document.getElementById('result-count').textContent = count;
+    // Anda bisa menambahkan elemen untuk menampilkan jumlah hasil jika diperlukan
+    console.log(`Jumlah hasil: ${count}`);
+}
+
+function showLoadingSpinner() {
+    document.getElementById('loading-spinner').style.display = 'block';
+}
+
+function hideLoadingSpinner() {
+    document.getElementById('loading-spinner').style.display = 'none';
 }
 
 function showError() {

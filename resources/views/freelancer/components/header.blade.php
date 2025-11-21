@@ -147,6 +147,10 @@
             border-color: #3b82f6;
         }
 
+        /* Tambahkan di bagian CSS */
+        .profile-container .dropdown-menu {
+            z-index: 1060 !important; /* Lebih tinggi dari balance dropdown */
+        }
         /* Header Actions */
         .header-actions {
             display: flex;
@@ -738,6 +742,79 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Enhanced dropdown behavior untuk freelancer
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap dropdown
+    const dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+    const dropdownList = dropdownElementList.map(function(dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl);
+    });
+
+    const dropdownToggle = document.querySelector('.profile-btn');
+    const dropdownMenu = document.querySelector('.profile-container .dropdown-menu');
+    const balanceDropdown = document.getElementById('balanceDropdown');
+    const balanceDisplay = document.getElementById('balanceDisplay');
+
+    if (dropdownToggle && dropdownMenu) {
+        // Manual dropdown toggle sebagai backup
+        dropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Close balance dropdown terlebih dahulu
+            if (balanceDropdown) {
+                balanceDropdown.classList.remove('show');
+                balanceDisplay.classList.remove('active');
+            }
+
+            // Toggle dropdown secara manual jika Bootstrap tidak bekerja
+            const isOpen = dropdownMenu.classList.contains('show');
+
+            // Close semua dropdown lainnya terlebih dahulu
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                if (menu !== dropdownMenu) {
+                    menu.classList.remove('show');
+                }
+            });
+
+            // Toggle current dropdown
+            if (isOpen) {
+                dropdownMenu.classList.remove('show');
+                dropdownToggle.classList.remove('show');
+            } else {
+                dropdownMenu.classList.add('show');
+                dropdownToggle.classList.add('show');
+            }
+        });
+
+        // Close dropdowns ketika klik di luar
+        document.addEventListener('click', function(e) {
+            const balanceContainer = document.querySelector('.balance-container');
+
+            if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+                dropdownToggle.classList.remove('show');
+            }
+
+            if (balanceContainer && !balanceContainer.contains(e.target)) {
+                balanceDropdown.classList.remove('show');
+                balanceDisplay.classList.remove('active');
+            }
+        });
+
+        // Close dropdowns ketika tekan Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                dropdownMenu.classList.remove('show');
+                dropdownToggle.classList.remove('show');
+                if (balanceDropdown) {
+                    balanceDropdown.classList.remove('show');
+                    balanceDisplay.classList.remove('active');
+                }
+            }
+        });
+    }
+});
     // Smooth scroll
     document.documentElement.style.scrollBehavior = 'smooth';
 </script>
