@@ -1,684 +1,1295 @@
 @extends('client.layout.client-layout') 
-@section('title', 'Proyek Saya - CariFreelance') 
-@section('content') 
+@section('title', 'Notifikasi - CariFreelance') 
+@section('content')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<style>
-    .nav-container {
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 0;
-        margin-bottom: 2rem;
-    }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
 
-    .nav {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1rem;
-    }
+        .notification-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
 
-    .nav-list {
-        display: flex;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        overflow-x: auto;
-    }
-
-    .nav-item {
-        white-space: nowrap;
-    }
-
-    .nav-link {
-        display: block;
-        padding: 1rem 1.5rem;
-        color: #64748b;
-        text-decoration: none;
-        border-bottom: 3px solid transparent;
-        transition: all 0.3s ease;
-    }
-
-    .nav-link:hover {
-        color: #3b82f6;
-        border-bottom-color: #3b82f6;
-    }
-
-    .main-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1rem;
-    }
-
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-
-    .page-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-    }
-
-    .page-subtitle {
-        color: #64748b;
-        font-size: 1rem;
-        margin-top: 0.5rem;
-    }
-
-    .header-actions {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 500;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-        border: none;
-        font-size: 0.875rem;
-        transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background: linear-gradient(90deg, #2563eb, #1e40af);
-        transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-        background: #f1f5f9;
-        color: #64748b;
-        border: 1px solid #e2e8f0;
-    }
-
-    .btn-secondary:hover {
-        background: #e2e8f0;
-        color: #475569;
-    }
-
-    .btn-sm {
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-    }
-
-    /* Filter & Stats */
-    .stats-filters {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .stat-card {
-        text-align: center;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .stat-number {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        display: block;
-    }
-
-    .stat-label {
-        font-size: 0.75rem;
-        color: #64748b;
-        margin-top: 0.25rem;
-    }
-
-    .filters {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .filter-select {
-        padding: 0.5rem 1rem;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        background: white;
-    }
-
-    /* Projects Grid */
-    .projects-grid {
-        display: grid;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .project-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-        border: 1px solid #e2e8f0;
-    }
-
-    .project-card:hover {
-        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
-    }
-
-    .project-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .project-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #1e293b;
-        margin: 0 0 0.5rem 0;
-        line-height: 1.4;
-    }
-
-    .project-meta {
-        display: flex;
-        gap: 1rem;
-        font-size: 0.75rem;
-        color: #64748b;
-        margin-bottom: 1rem;
-    }
-
-    .project-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        margin-left: auto;
-    }
-
-    .status-draft {
-        background: #f3f4f6;
-        color: #6b7280;
-    }
-
-    .status-open {
-        background: #dcfce7;
-        color: #16a34a;
-    }
-
-    .status-in_progress {
-        background: #dbeafe;
-        color: #2563eb;
-    }
-
-    .status-completed {
-        background: #f0f9ff;
-        color: #0284c7;
-    }
-
-    .status-cancelled {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-    .project-description {
-        color: #4b5563;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        margin-bottom: 1rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .project-details {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .detail-item {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .detail-label {
-        font-size: 0.75rem;
-        color: #6b7280;
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-    }
-
-    .detail-value {
-        font-size: 0.875rem;
-        color: #374151;
-        font-weight: 600;
-    }
-
-    .project-skills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .skill-tag {
-        background: #eff6ff;
-        color: #2563eb;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .project-actions {
-        display: flex;
-        gap: 0.75rem;
-        align-items: center;
-        padding-top: 1rem;
-        border-top: 1px solid #f3f4f6;
-    }
-
-    .btn-edit {
-        background: #3b82f6;
-        color: white;
-    }
-
-    .btn-edit:hover {
-        background: #2563eb;
-    }
-
-    .btn-delete {
-        background: #ef4444;
-        color: white;
-    }
-
-    .btn-delete:hover {
-        background: #dc2626;
-    }
-
-    .btn-view {
-        background: #f1f5f9;
-        color: #64748b;
-        border: 1px solid #e2e8f0;
-    }
-
-    .btn-view:hover {
-        background: #e2e8f0;
-        color: #475569;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .empty-icon {
-        font-size: 4rem;
-        color: #d1d5db;
-        margin-bottom: 1rem;
-    }
-
-    .empty-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.5rem;
-    }
-
-    .empty-text {
-        color: #6b7280;
-        margin-bottom: 2rem;
-        line-height: 1.6;
-    }
-
-    /* Success/Error Messages */
-    .alert {
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        font-size: 0.875rem;
-    }
-
-    .alert-success {
-        background: #dcfce7;
-        border: 1px solid #bbf7d0;
-        color: #15803d;
-    }
-
-    .alert-error {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #dc2626;
-    }
-
-    /* Pagination */
-    .pagination-wrapper {
-        display: flex;
-        justify-content: center;
-        margin-top: 2rem;
-    }
-
-    @media (max-width: 768px) {
+        /* Header Section */
         .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px 35px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        .header-actions {
-            width: 100%;
-            justify-content: stretch;
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
-        .filters {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 0.5rem;
+        .header-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
         }
 
-        .project-details {
-            grid-template-columns: 1fr;
+        .header-content p {
+            color: #64748b;
+            font-size: 15px;
         }
 
-        .project-actions {
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Search and Filter Bar */
+        .filter-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            gap: 15px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
         }
-    }
-</style>
 
-<!-- Category Navigation -->
-<div class="nav-container">
-    <nav class="nav">
-        <ul class="nav-list">
-            <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
-            <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-            <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
-            <li class="nav-item"><a href="#" class="nav-link">Web & App</a></li>
-            <li class="nav-item"><a href="#" class="nav-link">Video Editing</a></li>
-            <li class="nav-item"><a href="#" class="nav-link">Animasi & Motion Graphic</a></li>
-            <li class="nav-item"><a href="#" class="nav-link">Data & Analisis</a></li>
-        </ul>
-    </nav>
-</div>
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
 
-<!-- Main Content -->
-<div class="main-container">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div>
-            <h1 class="page-title">Proyek Saya</h1>
-            <p class="page-subtitle">Kelola semua proyek yang sudah Anda posting</p>
-        </div>
-        <div class="header-actions">
-            <a href="{{ route('posting.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Posting Proyek Baru
-            </a>
-        </div>
-    </div>
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
 
-    <!-- Success/Error Messages -->
-    @if(session('success'))
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i> {{ session('success') }}
-        </div>
-    @endif
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
 
-    @if(session('error'))
-        <div class="alert alert-error">
-            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-        </div>
-    @endif
+        .clear-search {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            display: none;
+        }
 
-    <!-- Stats & Filters -->
-    <div class="stats-filters">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-number">{{ $projects->where('status', 'open')->count() }}</span>
-                <span class="stat-label">Proyek Aktif</span>
+        .search-box input:not(:placeholder-shown) ~ .clear-search {
+            display: block;
+        }
+
+        .filter-dropdown {
+            position: relative;
+        }
+
+        .filter-btn {
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            color: #475569;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .sort-select {
+            padding: 12px 40px 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: white;
+            border-radius: 16px;
+            padding: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab .badge {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .tab.active .badge {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-text {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .info-text strong {
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Notification List */
+        .notification-list {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .notification {
+            padding: 24px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .notification:hover {
+            background: #fafbfc;
+            transform: translateX(4px);
+        }
+
+        .notification:last-child {
+            border-bottom: none;
+        }
+
+        .notification.unread {
+            background: linear-gradient(90deg, #eff6ff 0%, #fff 100%);
+        }
+
+        .notification.unread::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .notification.selected {
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+        }
+
+        .notif-content {
+            display: flex;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .notif-checkbox {
+            margin-top: 4px;
+        }
+
+        .notif-checkbox input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .notif-icon-wrapper {
+            position: relative;
+        }
+
+        .notif-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 20px;
+            position: relative;
+        }
+
+        .notif-icon.proposal { 
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1d4ed8; 
+        }
+        .notif-icon.success { 
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #059669; 
+        }
+        .notif-icon.warning { 
+            background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+            color: #d97706; 
+        }
+        .notif-icon.info { 
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #4f46e5; 
+        }
+
+        .notif-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .priority-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+        }
+
+        .notif-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .notif-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .notif-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .notif-message {
+            font-size: 14px;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .notif-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .meta-item i {
+            color: #94a3b8;
+        }
+
+        .notif-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notif-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .notification:hover .notif-actions {
+            opacity: 1;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-action.secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-action.secondary:hover {
+            background: #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-action.danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-action.danger:hover {
+            background: #fecaca;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-icon i {
+            font-size: 48px;
+            color: #cbd5e0;
+        }
+
+        .empty-state h3 {
+            font-size: 22px;
+            color: #475569;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            color: #94a3b8;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Bulk Actions Bar */
+        .bulk-actions-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .bulk-actions-bar.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .bulk-info {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bulk-actions button {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .bulk-actions button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Pagination */
+        .pagination-wrapper {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .notification-container {
+                padding: 0 12px;
+            }
+
+            .page-header {
+                padding: 20px;
+            }
+
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+
+            .header-content h1 {
+                font-size: 24px;
+            }
+
+            .header-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .stat-card {
+                flex: 1;
+                min-width: auto;
+                padding: 12px 16px;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .tabs-container {
+                padding: 6px;
+            }
+
+            .tab {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .action-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .notification {
+                padding: 16px;
+            }
+
+            .notif-content {
+                gap: 12px;
+            }
+
+            .notif-checkbox {
+                display: none;
+            }
+
+            .notif-footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .notif-actions {
+                opacity: 1;
+                width: 100%;
+            }
+
+            .btn-action {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .bulk-actions-bar {
+                left: 12px;
+                right: 12px;
+                transform: translateX(0) translateY(100px);
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .bulk-actions-bar.show {
+                transform: translateX(0) translateY(0);
+            }
+
+            .bulk-actions {
+                width: 100%;
+            }
+
+            .bulk-actions button {
+                flex: 1;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .loading-skeleton {
+            animation: shimmer 2s infinite;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 1000px 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="notification-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-top">
+                <div class="header-content">
+                    <h1><i class="fas fa-bell"></i> Notifikasi</h1>
+                    <p>Pantau semua aktivitas dan update proyek Anda secara real-time</p>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-card">
+                        <span class="stat-number">{{ $stats['unread'] }}</span>
+                        <span class="stat-label">Belum Dibaca</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">{{ $stats['total'] }}</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <span class="stat-number">{{ $projects->where('status', 'draft')->count() }}</span>
-                <span class="stat-label">Draft</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number">{{ $projects->where('status', 'completed')->count() }}</span>
-                <span class="stat-label">Selesai</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number">{{ $projects->total() }}</span>
-                <span class="stat-label">Total Proyek</span>
-            </div>
         </div>
 
-        <div class="filters">
-            <label style="font-size: 0.875rem; color: #374151; font-weight: 500;">Filter:</label>
-            <select class="filter-select" onchange="filterProjects(this.value)">
-                <option value="all">Semua Proyek</option>
-                <option value="draft">Draft</option>
-                <option value="open">Terbuka</option>
-                <option value="in_progress">Sedang Berlangsung</option>
-                <option value="completed">Selesai</option>
-                <option value="cancelled">Dibatalkan</option>
-            </select>
-            <select class="filter-select" onchange="sortProjects(this.value)">
+        <!-- Search and Filter Bar -->
+        <div class="filter-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Cari notifikasi...">
+                <button class="clear-search" id="clearSearch">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <select class="sort-select" id="sortSelect">
                 <option value="newest">Terbaru</option>
                 <option value="oldest">Terlama</option>
-                <option value="title">Judul (A-Z)</option>
-                <option value="budget">Budget</option>
+                <option value="unread">Belum Dibaca</option>
+                <option value="priority">Prioritas</option>
             </select>
-        </div>
-    </div>
 
-    <!-- Projects Grid -->
-    @if($projects->count() > 0)
-        <div class="projects-grid">
-            @foreach($projects as $project)
-                <div class="project-card" data-status="{{ $project->status }}">
-                    <div class="project-header">
-                        <div>
-                            <h3 class="project-title">{{ $project->title }}</h3>
-                            <div class="project-meta">
-                                <span><i class="fas fa-calendar-alt"></i> {{ $project->created_at->diffForHumans() }}</span>
-                                <span><i class="fas fa-folder"></i> {{ ucfirst(str_replace('-', ' ', $project->category)) }}</span>
-                                @if($project->deadline)
-                                    <span><i class="fas fa-clock"></i> Deadline: {{ $project->deadline->format('d M Y') }}</span>
-                                @endif
+            <button class="filter-btn" id="filterToggle">
+                <i class="fas fa-filter"></i>
+                <span>Filter</span>
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <a href="{{ route('notifications.index') }}" class="tab {{ $filter === 'all' ? 'active' : '' }}">
+                <i class="fas fa-inbox"></i> 
+                <span>Semua</span>
+                @if($stats['total'] > 0)
+                <span class="badge">{{ $stats['total'] }}</span>
+                @endif
+            </a>
+            <a href="{{ route('notifications.index', ['filter' => 'unread']) }}" class="tab {{ $filter === 'unread' ? 'active' : '' }}">
+                <i class="fas fa-envelope"></i> 
+                <span>Belum Dibaca</span>
+                @if($stats['unread'] > 0)
+                <span class="badge">{{ $stats['unread'] }}</span>
+                @endif
+            </a>
+            <a href="{{ route('notifications.index', ['filter' => 'proposals']) }}" class="tab {{ $filter === 'proposals' ? 'active' : '' }}">
+                <i class="fas fa-briefcase"></i> 
+                <span>Proposal</span>
+            </a>
+            <a href="{{ route('notifications.index', ['filter' => 'projects']) }}" class="tab {{ $filter === 'projects' ? 'active' : '' }}">
+                <i class="fas fa-folder"></i> 
+                <span>Proyek</span>
+            </a>
+            <a href="{{ route('notifications.index', ['filter' => 'messages']) }}" class="tab {{ $filter === 'messages' ? 'active' : '' }}">
+                <i class="fas fa-comments"></i> 
+                <span>Pesan</span>
+            </a>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="info-text">
+                <strong>{{ $stats['unread'] }}</strong> belum dibaca dari <strong>{{ $stats['total'] }}</strong> total notifikasi
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="selectAll">
+                    <i class="fas fa-check-square"></i>
+                    <span>Pilih Semua</span>
+                </button>
+                <button class="btn btn-primary mark-all-read">
+                    <i class="fas fa-check-double"></i>
+                    <span>Tandai Semua Dibaca</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Notification List -->
+        <div class="notification-list" id="notificationList">
+            @forelse($notifications as $notification)
+            <div class="notification {{ !$notification->is_read ? 'unread' : '' }}" data-id="{{ $notification->id }}" data-type="{{ $notification->type }}">
+                <div class="notif-content">
+                    <div class="notif-checkbox">
+                        <input type="checkbox" class="notification-select">
+                    </div>
+
+                    <div class="notif-icon-wrapper">
+                        @if($notification->type === 'proposal_received')
+                            @php
+                                $user = \App\Models\User::find($notification->data['freelancer_id'] ?? null);
+                                $avatar = $user && $user->freelancerProfile && $user->freelancerProfile->profile_picture 
+                                    ? asset('storage/' . $user->freelancerProfile->profile_picture)
+                                    : 'https://ui-avatars.com/api/?name=' . urlencode($user->name ?? 'User') . '&background=667eea&color=fff';
+                            @endphp
+                            <img src="{{ $avatar }}" alt="Avatar" class="notif-avatar">
+                        @elseif($notification->type === 'project_submitted')
+                            <div class="notif-icon proposal">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                        @elseif($notification->type === 'message_received')
+                            <div class="notif-icon info">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                        @else
+                            <div class="notif-icon {{ $notification->icon_wrapper_class ?? 'info' }}">
+                                <i class="fas {{ $notification->icon ?? 'fa-bell' }}"></i>
+                            </div>
+                        @endif
+                        @if(!$notification->is_read)
+                        <div class="priority-badge">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                        @endif
+                    </div>
+                    
+                    <div class="notif-body">
+                        <div class="notif-header">
+                            <div>
+                                <div class="notif-title">{{ $notification->title }}</div>
+                                <span class="notif-category">{{ ucfirst(str_replace('_', ' ', $notification->type)) }}</span>
                             </div>
                         </div>
-                        <div class="project-status status-{{ $project->status }}">
-                            @switch($project->status)
-                                @case('draft')
-                                    <i class="fas fa-file-alt"></i> Draft
-                                    @break
-                                @case('open')
-                                    <i class="fas fa-eye"></i> Terbuka
-                                    @break
-                                @case('in_progress')
-                                    <i class="fas fa-spinner"></i> Berlangsung
-                                    @break
-                                @case('completed')
-                                    <i class="fas fa-check-circle"></i> Selesai
-                                    @break
-                                @case('cancelled')
-                                    <i class="fas fa-times-circle"></i> Dibatalkan
-                                    @break
-                                @default
-                                    {{ $project->status }}
-                            @endswitch
-                        </div>
-                    </div>
 
-                    <p class="project-description">{{ $project->description }}</p>
+                        <div class="notif-message">{{ $notification->message }}</div>
 
-                    <div class="project-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Budget</span>
-                            <span class="detail-value">{{ $project->formatted_budget }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Timeline</span>
-                            <span class="detail-value">{{ $project->timeline_text }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Level</span>
-                            <span class="detail-value">{{ ucfirst($project->experience_level) }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Urgensi</span>
-                            <span class="detail-value">{{ $project->urgency_text }}</span>
-                        </div>
-                    </div>
-
-                    @if($project->skills_required && count($project->skills_required) > 0)
-                        <div class="project-skills">
-                            @foreach(array_slice($project->skills_required, 0, 5) as $skill)
-                                <span class="skill-tag">{{ $skill }}</span>
-                            @endforeach
-                            @if(count($project->skills_required) > 5)
-                                <span class="skill-tag">+{{ count($project->skills_required) - 5 }} lainnya</span>
+                        <div class="notif-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ $notification->time_ago }}</span>
+                            </div>
+                            @if(isset($notification->data['project_title']))
+                            <div class="meta-item">
+                                <i class="fas fa-folder"></i>
+                                <span>{{ $notification->data['project_title'] }}</span>
+                            </div>
                             @endif
                         </div>
-                    @endif
 
-                    <div class="project-actions">
-                        <a href="{{ route('projects.edit', $project) }}" class="btn btn-sm btn-edit">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        
-                        <form method="POST" action="{{ route('projects.destroy', $project) }}" 
-                              style="display: inline;" 
-                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus proyek {{ $project->title }}? Tindakan ini tidak dapat dibatalkan.')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-delete">
-                                <i class="fas fa-trash"></i> Hapus
-                            </button>
-                        </form>
-
-                        @if($project->status !== 'draft')
-                            <a href="#" class="btn btn-sm btn-view">
-                                <i class="fas fa-eye"></i> Lihat Proposal
-                            </a>
-                        @endif
-
-                        <div style="margin-left: auto; font-size: 0.75rem; color: #6b7280;">
-                            @if($project->status === 'draft')
-                                <i class="fas fa-edit"></i> Belum dipublish
-                            @else
-                                <i class="fas fa-calendar"></i> Dipublish {{ $project->posted_at->diffForHumans() }}
-                            @endif
+                        <div class="notif-footer">
+                            <div class="notif-actions">
+                                @if($notification->action_url !== '#')
+                                <a href="{{ $notification->action_url }}" class="btn-action">
+                                    <i class="fas fa-arrow-right"></i>
+                                    {{ $notification->type === 'message_received' ? 'Balas Pesan' : 'Lihat Detail' }}
+                                </a>
+                                @endif
+                                @if(!$notification->is_read)
+                                <button class="btn-action secondary mark-read" data-id="{{ $notification->id }}">
+                                    <i class="fas fa-check"></i>
+                                    Tandai Dibaca
+                                </button>
+                                @endif
+                                <button class="btn-action danger delete-notif" data-id="{{ $notification->id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            @endforeach
+            </div>
+            @empty
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <h3>Belum Ada Notifikasi</h3>
+                <p>Notifikasi akan muncul di sini saat ada aktivitas baru dari proyek atau proposal Anda</p>
+            </div>
+            @endforelse
         </div>
 
         <!-- Pagination -->
+        @if($notifications->hasPages())
         <div class="pagination-wrapper">
-            {{ $projects->links() }}
+            {{ $notifications->links() }}
         </div>
-    @else
-        <!-- Empty State -->
-        <div class="empty-state">
-            <div class="empty-icon">
-                <i class="fas fa-folder-open"></i>
+        @endif
+
+        <!-- Bulk Actions Bar -->
+        <div class="bulk-actions-bar" id="bulkActionsBar">
+            <div class="bulk-info">
+                <span id="selectedCount">0</span> notifikasi dipilih
             </div>
-            <h3 class="empty-title">Belum Ada Proyek</h3>
-            <p class="empty-text">
-                Anda belum memposting proyek apapun. Mulai posting proyek pertama Anda dan temukan freelancer terbaik untuk membantu bisnis Anda.
-            </p>
-            <a href="{{ route('posting.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Posting Proyek Pertama
-            </a>
+            <div class="bulk-actions">
+                <button id="bulkMarkRead">
+                    <i class="fas fa-check"></i> Tandai Dibaca
+                </button>
+                <button id="bulkDelete">
+                    <i class="fas fa-trash"></i> Hapus
+                </button>
+                <button id="bulkCancel">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+            </div>
         </div>
-    @endif
-</div>
+    </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Filter projects by status
-    window.filterProjects = function(status) {
-        const cards = document.querySelectorAll('.project-card');
-        
-        cards.forEach(card => {
-            if (status === 'all' || card.dataset.status === status) {
-                card.style.display = 'block';
+    <script>
+        const token = '{{ csrf_token() }}';
+        let selectedNotifications = new Set();
+
+        // Search Functionality
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const notifications = document.querySelectorAll('.notification');
+            
+            notifications.forEach(notif => {
+                const title = notif.querySelector('.notif-title').textContent.toLowerCase();
+                const message = notif.querySelector('.notif-message').textContent.toLowerCase();
+                
+                if (title.includes(query) || message.includes(query)) {
+                    notif.style.display = 'block';
+                } else {
+                    notif.style.display = 'none';
+                }
+            });
+        });
+
+        clearSearch.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+        });
+
+        // Sort Functionality
+        const sortSelect = document.getElementById('sortSelect');
+        sortSelect.addEventListener('change', function() {
+            const notificationList = document.getElementById('notificationList');
+            const notifications = Array.from(document.querySelectorAll('.notification'));
+            
+            notifications.sort((a, b) => {
+                switch(this.value) {
+                    case 'newest':
+                        return b.dataset.id - a.dataset.id;
+                    case 'oldest':
+                        return a.dataset.id - b.dataset.id;
+                    case 'unread':
+                        return b.classList.contains('unread') - a.classList.contains('unread');
+                    default:
+                        return 0;
+                }
+            });
+            
+            notifications.forEach(notif => notificationList.appendChild(notif));
+        });
+
+        // Select All Functionality
+        const selectAllBtn = document.getElementById('selectAll');
+        let allSelected = false;
+
+        selectAllBtn.addEventListener('click', function() {
+            const checkboxes = document.querySelectorAll('.notification-select');
+            allSelected = !allSelected;
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = allSelected;
+                const notification = checkbox.closest('.notification');
+                if (allSelected) {
+                    notification.classList.add('selected');
+                    selectedNotifications.add(notification.dataset.id);
+                } else {
+                    notification.classList.remove('selected');
+                    selectedNotifications.clear();
+                }
+            });
+            
+            updateBulkActionsBar();
+            this.innerHTML = allSelected 
+                ? '<i class="fas fa-square"></i><span>Batal Pilih</span>' 
+                : '<i class="fas fa-check-square"></i><span>Pilih Semua</span>';
+        });
+
+        // Individual Checkbox Selection
+        document.querySelectorAll('.notification-select').forEach(checkbox => {
+            checkbox.addEventListener('change', function(e) {
+                e.stopPropagation();
+                const notification = this.closest('.notification');
+                const id = notification.dataset.id;
+                
+                if (this.checked) {
+                    notification.classList.add('selected');
+                    selectedNotifications.add(id);
+                } else {
+                    notification.classList.remove('selected');
+                    selectedNotifications.delete(id);
+                }
+                
+                updateBulkActionsBar();
+            });
+        });
+
+        // Update Bulk Actions Bar
+        function updateBulkActionsBar() {
+            const bulkBar = document.getElementById('bulkActionsBar');
+            const count = selectedNotifications.size;
+            
+            document.getElementById('selectedCount').textContent = count;
+            
+            if (count > 0) {
+                bulkBar.classList.add('show');
             } else {
-                card.style.display = 'none';
+                bulkBar.classList.remove('show');
             }
-        });
-    };
-
-    // Sort projects
-    window.sortProjects = function(sortBy) {
-        const grid = document.querySelector('.projects-grid');
-        const cards = Array.from(document.querySelectorAll('.project-card'));
-        
-        if (!grid || cards.length === 0) return;
-
-        cards.sort((a, b) => {
-            switch(sortBy) {
-                case 'newest':
-                    // Default order (newest first)
-                    return 0;
-                case 'oldest':
-                    // Reverse current order
-                    return 0;
-                case 'title':
-                    const titleA = a.querySelector('.project-title').textContent.toLowerCase();
-                    const titleB = b.querySelector('.project-title').textContent.toLowerCase();
-                    return titleA.localeCompare(titleB);
-                case 'budget':
-                    // This would require more complex logic to parse budget values
-                    return 0;
-                default:
-                    return 0;
-            }
-        });
-
-        // Re-append sorted cards
-        if (sortBy === 'title') {
-            cards.forEach(card => grid.appendChild(card));
         }
-    };
-});
-</script>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        // Bulk Mark as Read
+        document.getElementById('bulkMarkRead')?.addEventListener('click', async function() {
+            if (selectedNotifications.size === 0) return;
+            
+            for (const id of selectedNotifications) {
+                try {
+                    await fetch(`/notifications/${id}/read`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        }
+                    });
+                } catch (err) {
+                    console.error('Error marking notification as read:', err);
+                }
+            }
+            
+            location.reload();
+        });
 
+        // Bulk Delete
+        document.getElementById('bulkDelete')?.addEventListener('click', async function() {
+            if (selectedNotifications.size === 0) return;
+            
+            if (!confirm(`Hapus ${selectedNotifications.size} notifikasi yang dipilih?`)) return;
+            
+            for (const id of selectedNotifications) {
+                const notification = document.querySelector(`[data-id="${id}"]`);
+                if (notification) {
+                    notification.style.transition = 'all 0.3s';
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(-20px)';
+                    
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }
+            }
+            
+            selectedNotifications.clear();
+            updateBulkActionsBar();
+        });
+
+        // Bulk Cancel
+        document.getElementById('bulkCancel')?.addEventListener('click', function() {
+            document.querySelectorAll('.notification-select').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.notification').classList.remove('selected');
+            });
+            
+            selectedNotifications.clear();
+            updateBulkActionsBar();
+            
+            selectAllBtn.innerHTML = '<i class="fas fa-check-square"></i><span>Pilih Semua</span>';
+            allSelected = false;
+        });
+
+        // Mark All as Read
+        document.querySelector('.mark-all-read')?.addEventListener('click', async function() {
+            if (!confirm('Tandai semua notifikasi sebagai sudah dibaca?')) return;
+            
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            
+            try {
+                const res = await fetch('{{ route("notifications.mark-all-read") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    }
+                });
+                
+                if (res.ok) {
+                    location.reload();
+                } else {
+                    throw new Error('Failed to mark all as read');
+                }
+            } catch (err) {
+                alert('Gagal menandai notifikasi');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-double"></i> Tandai Semua Dibaca';
+            }
+        });
+
+        // Mark Single as Read
+        document.querySelectorAll('.mark-read').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                const id = this.dataset.id;
+                
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                try {
+                    const res = await fetch(`/notifications/${id}/read`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        }
+                    });
+                    
+                    if (res.ok) {
+                        const notif = this.closest('.notification');
+                        notif.classList.remove('unread');
+                        
+                        const priorityBadge = notif.querySelector('.priority-badge');
+                        if (priorityBadge) {
+                            priorityBadge.remove();
+                        }
+                        
+                        this.remove();
+                    } else {
+                        throw new Error('Failed to mark as read');
+                    }
+                } catch (err) {
+                    alert('Gagal menandai notifikasi');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-check"></i> Tandai Dibaca';
+                }
+            });
+        });
+
+        // Delete Single Notification
+        document.querySelectorAll('.delete-notif').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                
+                if (!confirm('Hapus notifikasi ini?')) return;
+                
+                const notification = this.closest('.notification');
+                notification.style.transition = 'all 0.3s';
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(-20px)';
+                
+                setTimeout(() => {
+                    notification.remove();
+                    
+                    // Check if list is empty
+                    const remainingNotifs = document.querySelectorAll('.notification');
+                    if (remainingNotifs.length === 0) {
+                        document.getElementById('notificationList').innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-bell-slash"></i>
+                                </div>
+                                <h3>Belum Ada Notifikasi</h3>
+                                <p>Notifikasi akan muncul di sini saat ada aktivitas baru dari proyek atau proposal Anda</p>
+                            </div>
+                        `;
+                    }
+                }, 300);
+            });
+        });
+
+        // Click Notification to View
+        document.querySelectorAll('.notification').forEach(notif => {
+            notif.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-action') || 
+                    e.target.closest('.notification-select') ||
+                    e.target.closest('.delete-notif')) {
+                    return;
+                }
+                
+                const link = this.querySelector('a.btn-action');
+                if (link) {
+                    window.location.href = link.href;
+                }
+            });
+        });
+
+        // Auto-hide bulk actions bar on scroll
+        let lastScrollTop = 0;
+        window.addEventListener('scroll', function() {
+            const st = window.pageYOffset || document.documentElement.scrollTop;
+            const bulkBar = document.getElementById('bulkActionsBar');
+            
+            if (selectedNotifications.size > 0) {
+                if (st > lastScrollTop && st > 100) {
+                    bulkBar.style.transform = 'translateX(-50%) translateY(150px)';
+                } else {
+                    bulkBar.style.transform = 'translateX(-50%) translateY(0)';
+                }
+            }
+            
+            lastScrollTop = st <= 0 ? 0 : st;
+        }, false);
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + A: Select All
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                e.preventDefault();
+                selectAllBtn.click();
+            }
+            
+            // Escape: Cancel selection
+            if (e.key === 'Escape' && selectedNotifications.size > 0) {
+                document.getElementById('bulkCancel').click();
+            }
+            
+            // Ctrl/Cmd + /: Focus search
+            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+
+        // Notification Animation on Load
+        document.addEventListener('DOMContentLoaded', function() {
+            const notifications = document.querySelectorAll('.notification');
+            notifications.forEach((notif, index) => {
+                notif.style.opacity = '0';
+                notif.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    notif.style.transition = 'all 0.4s ease';
+                    notif.style.opacity = '1';
+                    notif.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+        });
+    </script>
+</body>
+</html>
 @endsection

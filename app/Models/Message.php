@@ -1,10 +1,12 @@
 <?php
 // app/Models/Message.php
+// ✅ UPDATE: Tambahkan auto-create notification saat pesan baru
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Services\NotificationService;
 
 class Message extends Model
 {
@@ -34,7 +36,7 @@ class Message extends Model
         return $this->belongsTo(User::class, 'sender_id');
     }
 
-    // Boot method untuk auto-update conversation
+    // Boot method untuk auto-update conversation & create notification
     protected static function boot()
     {
         parent::boot();
@@ -55,6 +57,9 @@ class Message extends Model
                 : $conversation->client_id;
             
             $conversation->incrementUnreadFor($recipientId);
+
+            // ✅ BARU - Create notification untuk penerima pesan
+            NotificationService::messageReceived($message);
         });
     }
 

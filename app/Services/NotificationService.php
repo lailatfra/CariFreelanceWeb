@@ -1,6 +1,6 @@
 <?php
 // app/Services/NotificationService.php
-// ✅ FILE BARU - BUAT FILE INI
+// ✅ TAMBAHKAN method baru untuk chat notification
 
 namespace App\Services;
 
@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Proposal;
 use App\Models\SubmitProject;
 use App\Models\Payment;
+use App\Models\Message;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
@@ -242,6 +243,52 @@ class NotificationService
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to create payment received notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ✅ BARU - Notifikasi saat menerima pesan baru
+     */
+    public static function messageReceived(Message $message)
+    {
+        try {
+            $conversation = $message->conversation;
+            $sender = $message->sender;
+            $project = $conversation->project;
+            
+            // Tentukan siapa penerima notifikasi (lawan bicara)
+            $recipientId = $message->sender_id === $conversation->client_id
+                ? $conversation->freelancer_id
+                : $conversation->client_id;
+
+            // Buat preview pesan (maksimal 80 karakter)
+            $messagePreview = $message->message 
+                ? \Illuminate\Support\Str::limit($message->message, 80)
+                : '📎 Mengirim file';
+
+            Notification::createNotification(
+                $recipientId,
+                Notification::TYPE_MESSAGE_RECEIVED,
+                'Pesan Baru dari ' . $sender->name,
+                "Proyek \"{$project->title}\": {$messagePreview}",
+                [
+                    'conversation_id' => $conversation->id,
+                    'message_id' => $message->id,
+                    'sender_id' => $sender->id,
+                    'sender_name' => $sender->name,
+                    'project_id' => $project->id,
+                    'project_title' => $project->title,
+                    'has_attachments' => $message->hasAttachments(),
+                ]
+            );
+
+            Log::info('Notification created: Message received', [
+                'recipient_id' => $recipientId,
+                'message_id' => $message->id,
+                'sender_id' => $sender->id
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create message notification: ' . $e->getMessage());
         }
     }
 }

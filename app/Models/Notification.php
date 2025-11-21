@@ -1,5 +1,6 @@
 <?php
 // app/Models/Notification.php
+// ✅ TAMBAHKAN constant baru untuk chat
 
 namespace App\Models;
 
@@ -36,6 +37,9 @@ class Notification extends Model
     const TYPE_PROJECT_APPROVED = 'project_approved';
     const TYPE_PROJECT_REVISION = 'project_revision';
     const TYPE_PAYMENT_RECEIVED = 'payment_received';
+    
+    // ✅ TAMBAHAN BARU - Chat notification types
+    const TYPE_MESSAGE_RECEIVED = 'message_received';
 
     // Relationships
     public function user()
@@ -114,6 +118,7 @@ class Notification extends Model
             self::TYPE_PROJECT_APPROVED => 'fa-thumbs-up',
             self::TYPE_PROJECT_REVISION => 'fa-edit',
             self::TYPE_PAYMENT_RECEIVED => 'fa-money-bill-wave',
+            self::TYPE_MESSAGE_RECEIVED => 'fa-comment-dots', // ✅ BARU
             default => 'fa-bell',
         };
     }
@@ -129,6 +134,7 @@ class Notification extends Model
             self::TYPE_PROJECT_APPROVED => 'success',
             self::TYPE_PROJECT_REVISION => 'warning',
             self::TYPE_PAYMENT_RECEIVED => 'success',
+            self::TYPE_MESSAGE_RECEIVED => 'info', // ✅ BARU
             default => 'info',
         };
     }
@@ -139,6 +145,7 @@ class Notification extends Model
         return match($this->type) {
             self::TYPE_PROPOSAL_RECEIVED => ['text' => 'URGENT', 'class' => 'urgent'],
             self::TYPE_PROJECT_REVISION => ['text' => 'PENTING', 'class' => 'high'],
+            self::TYPE_MESSAGE_RECEIVED => ['text' => 'BARU', 'class' => 'new'], // ✅ BARU
             default => null,
         };
     }
@@ -155,6 +162,7 @@ class Notification extends Model
             self::TYPE_PROJECT_APPROVED => route('projekf'),
             self::TYPE_PROJECT_REVISION => route('submit-projects.revision-notes', $data['project_id'] ?? '#'),
             self::TYPE_PAYMENT_RECEIVED => route('freelancer.withdrawals.index'),
+            self::TYPE_MESSAGE_RECEIVED => route('chat'), // ✅ BARU - ke halaman chat
             default => '#',
         };
     }

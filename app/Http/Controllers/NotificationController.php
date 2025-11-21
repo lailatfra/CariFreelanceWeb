@@ -1,5 +1,6 @@
 <?php
 // app/Http/Controllers/NotificationController.php
+// ✅ UPDATE: Tambahkan filter 'messages' untuk notifikasi chat
 
 namespace App\Http\Controllers;
 
@@ -44,6 +45,10 @@ class NotificationController extends Controller
                 break;
             case 'payments':
                 $query->where('type', Notification::TYPE_PAYMENT_RECEIVED);
+                break;
+            // ✅ BARU - Filter untuk pesan chat
+            case 'messages':
+                $query->where('type', Notification::TYPE_MESSAGE_RECEIVED);
                 break;
         }
         
