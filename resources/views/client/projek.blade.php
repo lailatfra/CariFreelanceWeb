@@ -1874,126 +1874,130 @@ $no = 1;
 </div>
 
             <!-- Table: Completed Projects - Latest first -->
-            <div class="table-wrap tab-content hidden" id="completed">
-                <table class="completed-table">
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>Judul Pekerjaan</th>
-                            <th>Freelancer</th>
-                            <th>Total Bayar</th>
-                            <th>Tanggal Selesai</th>
-                            <th>Rating</th>
-                            <th>File Progress</th>
-                            <th>File Hasil</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $completed = $completed->sortBy('updated_at');
-                            $no = 1;
-                        @endphp
-                        @forelse($completed as $index => $submission)
-                            @php
-
-                                $acceptedProposal = $submission->project->proposalls()
-                                    ->where('status', 'accepted')
-                                    ->first();
-                                
-                                // Get progress files dari tabel progress_uploads menggunakan DB query
-                                $progressFiles = \DB::table('progress_uploads')
-                                    ->where('project_id', $submission->project->id)
-                                    ->whereNotNull('link_url')
-                                    ->where('link_url', '!=', '')
-                                    ->pluck('link_url')
-                                    ->toArray();
-                                
-                                // Get result files from submit_projects table (links column)
-                                $resultFiles = [];
-                                if (!empty($submission->links)) {
-                                    if (is_string($submission->links)) {
-                                        // Try to decode JSON first
-                                        $decodedLinks = json_decode($submission->links, true);
-                                        if (json_last_error() === JSON_ERROR_NONE && is_array($decodedLinks)) {
-                                            $resultFiles = $decodedLinks;
-                                        } else {
-                                            // If not JSON, treat as newline-separated string
-                                            $resultFiles = array_filter(array_map('trim', explode("\n", $submission->links)));
-                                        }
-                                    } elseif (is_array($submission->links)) {
-                                        $resultFiles = $submission->links;
-                                    }
-                                }
-                                
-                                // Sample ratings for demo
-                                $sampleRatings = [4.5, 5.0, 4.2, 4.8, 3.9];
-                                $currentRating = $sampleRatings[$index % count($sampleRatings)];
-                            @endphp
-                            <tr data-project-id="{{ $submission->project->id }}">
-                                <td>{{ $no++ }}</td>
-                                <td>{{ $submission->project->title ?? '-' }}</td>
-                                <td>{{ $submission->user->name ?? '-' }}</td>
-                                <td>
-                                    Rp {{ number_format($acceptedProposal->proposal_price ?? 0, 0, ',', '.') }}
-                                </td>
-                                <td>{{ $submission->updated_at->format('d/m/Y') }}</td>
-                                <td>
-                                    <div class="rating-display" onclick="openRatingModal({{ $submission->project->id }}, {{ $currentRating }})">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            <i class="fas fa-star" style="color: {{ $i <= $currentRating ? 'var(--yellow-600)' : 'var(--gray-300)' }};"></i>
-                                        @endfor
-                                        <span style="margin-left: 0.3rem; font-size: 0.75rem;">({{ $currentRating }})</span>
-                                    </div>
-                                </td>
-                                <!-- File Progress Column -->
-                                <td class="files-column">
-                                    <div class="files-list">
-                                        @if(!empty($progressFiles))
-                                            @foreach($progressFiles as $progressIndex => $progressFile)
-                                                @if(filter_var($progressFile, FILTER_VALIDATE_URL))
-                                                    <a href="{{ $progressFile }}" class="btn btn-drive" target="_blank">
-                                                        <i class="fab fa-google-drive"></i> File {{ $progressIndex + 1 }}
-                                                    </a>
-                                                @endif
-                                            @endforeach
-                                        @else
-                                            <span style="color: var(--gray-500); font-size: 0.75rem;">Tidak ada file progress</span>
-                                        @endif
-                                    </div>
-                                </td>
-                                <!-- File Hasil Column -->
-                                <td class="files-column">
-                                    @if(!empty($resultFiles))
-                                        <div class="files-list">
-                                            @foreach($resultFiles as $linkIndex => $link)
-                                                @if(filter_var($link, FILTER_VALIDATE_URL))
-                                                    <a href="{{ $link }}" class="btn btn-drive" target="_blank">
-                                                        <i class="fab fa-google-drive"></i> File {{ $linkIndex + 1 }}
-                                                    </a>
-                                                @endif
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span style="color: var(--gray-500); font-size: 0.75rem;">Tidak ada file hasil</span>
+<div class="table-wrap tab-content hidden" id="completed">
+    <table class="completed-table">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Judul Pekerjaan</th>
+                <th>Freelancer</th>
+                <th>Total Bayar</th>
+                <th>Tanggal Selesai</th>
+                <th>Rating</th>
+                <th>File Progress</th>
+                <th>File Hasil</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $completed = $completed->sortBy('updated_at');
+                $no = 1;
+            @endphp
+            @forelse($completed as $submission)
+                @php
+                    $acceptedProposal = $submission->project->proposalls()
+                        ->where('status', 'accepted')
+                        ->first();
+                    
+                    // AMBIL RATING DARI DATABASE
+                    $rating = \App\Models\Rating::where('project_id', $submission->project->id)
+                        ->where('user_id', auth()->id())
+                        ->first();
+                    
+                    $currentRating = $rating ? $rating->rating : 0;
+                    
+                    // Get progress files dari tabel progress_uploads menggunakan DB query
+                    $progressFiles = \DB::table('progress_uploads')
+                        ->where('project_id', $submission->project->id)
+                        ->whereNotNull('link_url')
+                        ->where('link_url', '!=', '')
+                        ->pluck('link_url')
+                        ->toArray();
+                    
+                    // Get result files from submit_projects table (links column)
+                    $resultFiles = [];
+                    if (!empty($submission->links)) {
+                        if (is_string($submission->links)) {
+                            // Try to decode JSON first
+                            $decodedLinks = json_decode($submission->links, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedLinks)) {
+                                $resultFiles = $decodedLinks;
+                            } else {
+                                // If not JSON, treat as newline-separated string
+                                $resultFiles = array_filter(array_map('trim', explode("\n", $submission->links)));
+                            }
+                        } elseif (is_array($submission->links)) {
+                            $resultFiles = $submission->links;
+                        }
+                    }
+                @endphp
+                <tr data-project-id="{{ $submission->project->id }}">
+                    <td>{{ $no++ }}</td>
+                    <td>{{ $submission->project->title ?? '-' }}</td>
+                    <td>{{ $submission->user->name ?? '-' }}</td>
+                    <td>
+                        Rp {{ number_format($acceptedProposal->proposal_price ?? 0, 0, ',', '.') }}
+                    </td>
+                    <td>{{ $submission->updated_at->format('d/m/Y') }}</td>
+                    <td>
+                        <div class="rating-display" onclick="openRatingModal({{ $submission->project->id }}, {{ $currentRating }})">
+                            @for($i = 1; $i <= 5; $i++)
+                                <i class="fas fa-star" style="color: {{ $i <= $currentRating ? 'var(--yellow-600)' : 'var(--gray-300)' }};"></i>
+                            @endfor
+                            <span style="margin-left: 0.3rem; font-size: 0.75rem;">
+                                ({{ $currentRating > 0 ? $currentRating . '.0' : 'Belum ada rating' }})
+                            </span>
+                        </div>
+                    </td>
+                    <!-- File Progress Column -->
+                    <td class="files-column">
+                        <div class="files-list">
+                            @if(!empty($progressFiles))
+                                @foreach($progressFiles as $progressIndex => $progressFile)
+                                    @if(filter_var($progressFile, FILTER_VALIDATE_URL))
+                                        <a href="{{ $progressFile }}" class="btn btn-drive" target="_blank">
+                                            <i class="fab fa-google-drive"></i> File {{ $progressIndex + 1 }}
+                                        </a>
                                     @endif
-                                </td>
-                                <td>
-                                    <a href="{{ route('projects.show', $submission->project->id) }}" class="btn btn-detail">
-                                        <i class="fas fa-info-circle"></i> Detail
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="10" style="text-align: center; padding: 2rem; color: var(--gray-500);">
-                                    Belum ada project yang selesai
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                                @endforeach
+                            @else
+                                <span style="color: var(--gray-500); font-size: 0.75rem;">Tidak ada file progress</span>
+                            @endif
+                        </div>
+                    </td>
+                    <!-- File Hasil Column -->
+                    <td class="files-column">
+                        @if(!empty($resultFiles))
+                            <div class="files-list">
+                                @foreach($resultFiles as $linkIndex => $link)
+                                    @if(filter_var($link, FILTER_VALIDATE_URL))
+                                        <a href="{{ $link }}" class="btn btn-drive" target="_blank">
+                                            <i class="fab fa-google-drive"></i> File {{ $linkIndex + 1 }}
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <span style="color: var(--gray-500); font-size: 0.75rem;">Tidak ada file hasil</span>
+                        @endif
+                    </td>
+                    <td>
+                        <a href="{{ route('projects.show', $submission->project->id) }}" class="btn btn-detail">
+                            <i class="fas fa-info-circle"></i> Detail
+                        </a>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                        Belum ada project yang selesai
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
 <!-- Table: Cancelled Projects -->
 <div class="table-wrap tab-content hidden" id="cancelled">
@@ -2167,28 +2171,28 @@ $no = 1;
                 <p id="ratingText" style="margin: 10px 0; font-weight: 600; color: #3b82f6;">Pilih rating</p>
                 
                 <!-- Rating Assessment Section -->
-                <div class="rating-assessment-section">
-                    <div class="assessment-group">
-                        <label class="assessment-label">Ketepatan Waktu</label>
-                        <div class="assessment-options" data-assessment="timeliness">
-                            <div class="assessment-option" data-value="excellent">Excellent</div>
-                            <div class="assessment-option" data-value="good">Good</div>
-                            <div class="assessment-option" data-value="fair">Fair</div>
-                            <div class="assessment-option" data-value="poor">Poor</div>
-                        </div>
-                    </div>
-                    
-                    <div class="assessment-group">
-                        <label class="assessment-label">Kualitas Kerja</label>
-                        <div class="assessment-options" data-assessment="quality">
-                            <div class="assessment-option" data-value="outstanding">Outstanding</div>
-                            <div class="assessment-option" data-value="excellent">Excellent</div>
-                            <div class="assessment-option" data-value="good">Good</div>
-                            <div class="assessment-option" data-value="satisfactory">Satisfactory</div>
-                            <div class="assessment-option" data-value="needs-improvement">Needs Improvement</div>
-                        </div>
-                    </div>
-                </div>
+<div class="rating-assessment-section">
+    <div class="assessment-group">
+        <label class="assessment-label">Ketepatan Waktu</label>
+        <div class="assessment-options" data-assessment="timeliness">
+            <div class="assessment-option" data-value="excellent">Excellent</div>
+            <div class="assessment-option" data-value="good">Good</div>
+            <div class="assessment-option" data-value="fair">Fair</div>
+            <div class="assessment-option" data-value="poor">Poor</div>
+        </div>
+    </div>
+    
+    <div class="assessment-group">
+        <label class="assessment-label">Kualitas Kerja</label>
+        <div class="assessment-options" data-assessment="quality">
+            <div class="assessment-option" data-value="outstanding">Outstanding</div>
+            <div class="assessment-option" data-value="excellent">Excellent</div>
+            <div class="assessment-option" data-value="good">Good</div>
+            <div class="assessment-option" data-value="satisfactory">Satisfactory</div>
+            <div class="assessment-option" data-value="needs_improvement">Needs Improvement</div> <!-- FIX: needs_improvement -->
+        </div>
+    </div>
+</div>
                 
                 <textarea id="reviewText" placeholder="Tulis review Anda di sini... (opsional)" rows="4" class="form-textarea" style="margin-top: 16px;"></textarea>
             </div>
@@ -3228,7 +3232,7 @@ function updateStatus(submissionId, status, notes = null) {
 }
 
 // ============================================
-// SELESAI BUTTON WITH RATING
+// SELESAI BUTTON WITH RATING - MODIFIED VERSION
 // ============================================
 function handleSelesaiClick(submissionId) {
     console.log('🟢 handleSelesaiClick:', submissionId);
@@ -3239,28 +3243,96 @@ function handleSelesaiClick(submissionId) {
         return;
     }
     
-    window.pendingSubmissionId = submissionId;
-    console.log('✅ Stored pendingSubmissionId:', window.pendingSubmissionId);
+    // Langsung proses completion tanpa membuka modal rating
+    console.log('📤 Calling updateStatus with:', submissionId);
     
-    closeModal('reviewSubmissionModal');
-    
-    setTimeout(() => {
-        openRatingModal(currentProjectId, 0);
+    // Tampilkan konfirmasi sederhana
+    if (confirm('Apakah Anda yakin ingin menyelesaikan project ini?')) {
+        showNotification('Memproses penyelesaian project...', 'info');
         
-        const originalSubmitRating = window.submitRating;
+        // Langsung update status ke selesai
+        updateStatus(submissionId, 'selesai');
         
-        window.submitRating = function() {
-            console.log('⭐ submitRating called:', {
-                selectedRating,
-                pendingSubmissionId: window.pendingSubmissionId
-            });
-            
-            if (selectedRating === 0) {
-                showNotification('Silakan pilih rating terlebih dahulu!', 'error');
-                return;
-            }
+        // Tampilkan pesan sukses
+        showNotification('Project berhasil diselesaikan! Anda dapat memberikan rating nanti di tab "Selesai".', 'success');
+        
+        // Tutup modal review
+        closeModal('reviewSubmissionModal');
+    }
+}
 
-            // Update rating display
+// ============================================
+// RATING MODAL - MODIFIED VERSION
+// Hanya ubah submitRating(), fungsi lain TETAP
+// ============================================
+
+function submitRating() {
+    if (selectedRating === 0) {
+        showNotification('Silakan pilih rating terlebih dahulu!', 'error');
+        return;
+    }
+
+    // Validasi assessment
+    if (!selectedAssessments.timeliness) {
+        showNotification('Silakan pilih penilaian untuk Ketepatan Waktu!', 'error');
+        return;
+    }
+
+    if (!selectedAssessments.quality) {
+        showNotification('Silakan pilih penilaian untuk Kualitas Kerja!', 'error');
+        return;
+    }
+
+    const reviewText = document.getElementById('reviewText').value.trim();
+    
+    // FIX: Convert kualitas_kerja value to match database enum
+    const kualitasKerjaValue = selectedAssessments.quality === 'needs-improvement' 
+        ? 'needs_improvement' 
+        : selectedAssessments.quality;
+    
+    // 1. SIMPAN RATING KE DATABASE TERLEBIH DAHULU
+    const ratingData = {
+        project_id: currentRatingProjectId,
+        rating: selectedRating,
+        ketepatan_waktu: selectedAssessments.timeliness,
+        kualitas_kerja: kualitasKerjaValue, // Use corrected value
+        review: reviewText,
+        _token: document.querySelector('meta[name="csrf-token"]').content
+    };
+
+    console.log('📤 Menyimpan rating ke database:', ratingData);
+
+    // Show loading state
+    const submitBtn = document.querySelector('#ratingModal .btn-primary');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+    submitBtn.disabled = true;
+
+    // Kirim rating ke database
+    fetch('/ratings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(ratingData)
+    })
+    .then(response => {
+        return response.json().then(data => {
+            if (!response.ok) {
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
+            }
+            return data;
+        });
+    })
+    .then(data => {
+        if (data.success) {
+            console.log('✅ Rating berhasil disimpan ke database');
+            
+            // 2. SETELAH RATING BERHASIL DISIMPAN, LANJUTKAN DENGAN LOGIKA YANG SUDAH ADA
+            
+            // Update tampilan rating di table (logika yang sudah ada)
             const projectRow = document.querySelector(`tr[data-project-id="${currentRatingProjectId}"]`);
             if (projectRow) {
                 const ratingCell = projectRow.querySelector('.rating-display');
@@ -3279,7 +3351,6 @@ function handleSelesaiClick(submissionId) {
                 }
             }
 
-            // Create summary
             let summary = '';
             if (Object.keys(selectedAssessments).length > 0) {
                 const text = [];
@@ -3294,22 +3365,31 @@ function handleSelesaiClick(submissionId) {
                 }
             }
 
+            showNotification(`Rating ${selectedRating} bintang berhasil diberikan${summary}!`, 'success');
             closeModal('ratingModal');
             
-            console.log('📤 Calling updateStatus with:', window.pendingSubmissionId);
-            updateStatus(window.pendingSubmissionId, 'selesai');
-            
-            showNotification(`Project selesai dengan rating ${selectedRating} bintang${summary}!`, 'success');
-            
-            window.submitRating = originalSubmitRating;
-            delete window.pendingSubmissionId;
-        };
-    }, 300);
+            // 3. JIKA ADA PENDING SUBMISSION, PROSES COMPLETION (LOGIKA YANG SUDAH ADA)
+            if (window.pendingSubmissionId) {
+                console.log('📤 Memproses completion project dengan submission:', window.pendingSubmissionId);
+                updateStatus(window.pendingSubmissionId, 'selesai');
+                delete window.pendingSubmissionId;
+            }
+        } else {
+            throw new Error(data.message || 'Gagal menyimpan rating');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error menyimpan rating:', error);
+        showNotification('Gagal menyimpan rating: ' + error.message, 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
 }
 
-// ============================================
-// RATING MODAL
-// ============================================
+// FUNGSI LAINNYA TETAP SAMA SEPERTI SEBELUMNYA
 function openRatingModal(projectId, currentRating) {
     currentRatingProjectId = projectId;
     selectedRating = Math.floor(currentRating);
@@ -3320,7 +3400,101 @@ function openRatingModal(projectId, currentRating) {
     updateRatingText(selectedRating);
     resetAssessmentSelections();
     
+    // Cek apakah sudah ada rating untuk project ini
+    checkExistingRating(projectId);
+    
     openModal('ratingModal');
+}
+
+// Function untuk cek apakah sudah ada rating
+function checkExistingRating(projectId) {
+    fetch(`/ratings/${projectId}`, {
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.rating) {
+            // Jika sudah ada rating, nonaktifkan modal
+            disableRatingModal(data.rating);
+        } else {
+            // Jika belum ada rating, aktifkan modal
+            enableRatingModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error checking existing rating:', error);
+        enableRatingModal(); // Default aktifkan modal jika error
+    });
+}
+
+function disableRatingModal(existingRating) {
+    // Nonaktifkan stars
+    document.querySelectorAll('#starRating .star').forEach(star => {
+        star.style.cursor = 'not-allowed';
+        star.style.opacity = '0.6';
+        star.onclick = null;
+        star.onmouseenter = null;
+    });
+    
+    // Nonaktifkan assessment options
+    document.querySelectorAll('.assessment-option').forEach(option => {
+        option.style.cursor = 'not-allowed';
+        option.style.opacity = '0.6';
+        option.onclick = null;
+    });
+    
+    // Nonaktifkan textarea
+    document.getElementById('reviewText').disabled = true;
+    document.getElementById('reviewText').placeholder = 'Anda sudah memberikan rating untuk project ini';
+    
+    // Ubah tombol submit
+    const submitBtn = document.querySelector('#ratingModal .btn-primary');
+    submitBtn.innerHTML = '<i class="fas fa-check"></i> Sudah Diberikan';
+    submitBtn.disabled = true;
+    submitBtn.style.background = 'var(--gray-500)';
+    submitBtn.style.cursor = 'not-allowed';
+    
+    // Update text
+    document.getElementById('ratingText').textContent = `Rating sudah diberikan: ${existingRating} bintang`;
+    document.getElementById('ratingText').style.color = 'var(--green-600)';
+    
+    // Tampilkan pesan
+    const message = document.createElement('div');
+    message.style.background = 'var(--green-100)';
+    message.style.border = '1px solid var(--green-300)';
+    message.style.borderRadius = '6px';
+    message.style.padding = '12px';
+    message.style.margin = '15px 0';
+    message.style.color = 'var(--green-800)';
+    message.innerHTML = '<i class="fas fa-info-circle"></i> Anda sudah memberikan rating untuk project ini.';
+    
+    const ratingForm = document.querySelector('.rating-form');
+    ratingForm.insertBefore(message, ratingForm.firstChild);
+}
+
+function enableRatingModal() {
+    // Aktifkan semua elemen (default state)
+    document.querySelectorAll('#starRating .star').forEach(star => {
+        star.style.cursor = 'pointer';
+        star.style.opacity = '1';
+    });
+    
+    document.querySelectorAll('.assessment-option').forEach(option => {
+        option.style.cursor = 'pointer';
+        option.style.opacity = '1';
+    });
+    
+    document.getElementById('reviewText').disabled = false;
+    document.getElementById('reviewText').placeholder = 'Tulis review Anda di sini... (opsional)';
+    
+    const submitBtn = document.querySelector('#ratingModal .btn-primary');
+    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Rating';
+    submitBtn.disabled = false;
+    submitBtn.style.background = '';
+    submitBtn.style.cursor = 'pointer';
 }
 
 function updateStarDisplay(rating) {
@@ -3353,49 +3527,41 @@ function resetAssessmentSelections() {
     });
 }
 
-function submitRating() {
-    if (selectedRating === 0) {
-        showNotification('Silakan pilih rating terlebih dahulu!', 'error');
-        return;
-    }
+// Event handlers untuk stars dan assessments TETAP SAMA
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('#starRating .star');
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.dataset.rating);
+            updateStarDisplay(selectedRating);
+            updateRatingText(selectedRating);
+        });
 
-    const reviewText = document.getElementById('reviewText').value.trim();
-    
-    const projectRow = document.querySelector(`tr[data-project-id="${currentRatingProjectId}"]`);
-    if (projectRow) {
-        const ratingCell = projectRow.querySelector('.rating-display');
-        if (ratingCell) {
-            const stars = ratingCell.querySelectorAll('.fa-star');
-            stars.forEach((star, index) => {
-                star.style.color = index < selectedRating 
-                    ? 'var(--yellow-600)' 
-                    : 'var(--gray-300)';
+        star.addEventListener('mouseenter', function() {
+            updateStarDisplay(parseInt(this.dataset.rating));
+        });
+    });
+
+    document.getElementById('starRating').addEventListener('mouseleave', function() {
+        updateStarDisplay(selectedRating);
+    });
+
+    // Assessment handlers
+    document.querySelectorAll('.assessment-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const group = this.closest('.assessment-options');
+            const type = group.dataset.assessment;
+            const value = this.dataset.value;
+            
+            group.querySelectorAll('.assessment-option').forEach(opt => {
+                opt.classList.remove('selected');
             });
             
-            const ratingSpan = ratingCell.querySelector('span');
-            if (ratingSpan) {
-                ratingSpan.textContent = `(${selectedRating}.0)`;
-            }
-        }
-    }
-
-    let summary = '';
-    if (Object.keys(selectedAssessments).length > 0) {
-        const text = [];
-        if (selectedAssessments.timeliness) {
-            text.push(`Ketepatan Waktu: ${selectedAssessments.timeliness}`);
-        }
-        if (selectedAssessments.quality) {
-            text.push(`Kualitas: ${selectedAssessments.quality}`);
-        }
-        if (text.length > 0) {
-            summary = ` dengan penilaian ${text.join(', ')}`;
-        }
-    }
-
-    showNotification(`Rating ${selectedRating} bintang berhasil diberikan${summary}!`, 'success');
-    closeModal('ratingModal');
-}
+            this.classList.add('selected');
+            selectedAssessments[type] = value;
+        });
+    });
+});
 
 // Star rating handlers
 document.addEventListener('DOMContentLoaded', function() {

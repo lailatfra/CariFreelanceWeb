@@ -39,6 +39,7 @@ use App\Http\Controllers\ProjectCancellationController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\AdminWalletController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\RatingController;
 
 // Routes untuk Admin - Kelola Freelancer
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -660,3 +661,12 @@ Route::get('/freelancer/jobboard/cancellation/{cancellationId}', [ProposalContro
 
 Route::get('/search', [SearchController::class, 'index'])->name('searchbar');
 Route::get('/search-ajax', [SearchController::class, 'ajaxSearch'])->name('searchbar-ajax');
+
+// Rating routes
+Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
+Route::get('/ratings/{project}', [RatingController::class, 'show'])->name('ratings.show');
+
+
+// Untuk freelancer cancellation detail
+Route::get('/freelancer/jobboard/cancellation/{cancellationId}', [ProposalController::class, 'showCancellationDetail'])
+    ->name('freelancer.cancellation.detail');

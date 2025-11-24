@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('ratings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->integer('rating'); // jumlah bintang (1-5)
+            $table->enum('ketepatan_waktu', ['excellent', 'good', 'fair', 'poor']);
+            $table->enum('kualitas_kerja', ['outstanding', 'excellent', 'good', 'satisfactory', 'needs_improvement']);
+            $table->text('review')->nullable();
+            $table->timestamps();
+
+            // Pastikan satu user hanya bisa memberikan satu rating per project
+            $table->unique(['user_id', 'project_id']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('ratings');
+    }
+};

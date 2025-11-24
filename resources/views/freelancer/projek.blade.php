@@ -47,6 +47,32 @@
       color: var(--gray-900);
     }
 
+    
+    ./* Fix untuk modal backdrop tidak menutupi elemen lain */
+.modal {
+  z-index: 1000;
+}
+
+.modal-backdrop {
+  z-index: 999;
+}
+
+/* Pastikan timeline select di atas modal backdrop */
+.timeline-select {
+  position: relative;
+  z-index: 10000 !important;
+}
+
+/* Pastikan table dan action buttons tidak terhalang */
+.working-table {
+  position: relative;
+  z-index: 1;
+}
+
+.action-buttons {
+  position: relative;
+  z-index: 2;
+}  
     button {
       cursor: pointer;
       background: none;
@@ -1755,6 +1781,11 @@
               $resultFiles = $submission->links;
             }
           }
+
+          // AMBIL RATING DARI DATABASE - BERDASARKAN PROJECT_ID SAJA
+          $rating = \App\Models\Rating::where('project_id', $submission->project->id)->first();
+          
+          $currentRating = $rating ? $rating->rating : 0;
         @endphp
         <tr>
           <td>{{ $no++ }}</td>
@@ -1765,13 +1796,13 @@
           </td>
           <td>{{ $submission->updated_at->format('d/m/Y') }}</td>
           <td>
-            <div style="color: var(--yellow-600); cursor: pointer;" class="rating-clickable" onclick="showRatingModal({{ $submission->id }})">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              (5.0)
+            <div style="color: var(--yellow-600); cursor: pointer;" class="rating-clickable" onclick="showRatingModal({{ $submission->project->id }}, {{ $currentRating }})">
+              @for($i = 1; $i <= 5; $i++)
+                <i class="fas fa-star" style="color: {{ $i <= $currentRating ? 'var(--yellow-600)' : 'var(--gray-300)' }};"></i>
+              @endfor
+              <span style="margin-left: 0.3rem; font-size: 0.75rem;">
+                ({{ $currentRating > 0 ? $currentRating . '.0' : 'Belum ada rating' }})
+              </span>
             </div>
           </td>
           <td class="files-column">
@@ -1821,7 +1852,7 @@
   </table>
 </div>
 
-<!-- Table: Cancelled Projects -->
+<!-- Table: Cancelled Projects - HANYA PROJECT USER YANG LOGIN -->
 <div class="table-wrap tab-content hidden" id="cancelled">
     <table class="completed-table">
         <thead>
@@ -1843,9 +1874,17 @@
             @endphp
 
             @foreach($sortedCancelled as $cancel)
-                @if($cancel->refund_status !== 'processed')
-                    @continue
-                @endif
+                @php
+                    // Pastikan user ini memiliki proposal untuk project ini
+                    $userProposal = $cancel->project->proposalls
+                        ->where('user_id', auth()->id())
+                        ->first();
+                    
+                    // Skip jika user tidak memiliki proposal untuk project ini
+                    if (!$userProposal) {
+                        continue;
+                    }
+                @endphp
 
                 <tr>
                     <td>{{ $no++ }}</td>
@@ -2570,60 +2609,214 @@ function resubmitFinalWork(projectId) {
     openModal('submitFinalModal');
 }
 
-// Show Rating Modal - FIXED
-function showRatingModal(submissionId) {
+// Show Rating Modal - FIXED VERSION
+function showRatingModal(projectId, currentRating) {
     const ratingContent = document.getElementById('ratingContent');
     
-    const ratingData = {
-        rating: 5.0,
-        review: "Pekerjaan sangat memuaskan! Freelancer sangat profesional, tepat waktu, dan hasil kerja melebihi ekspektasi. Komunikasi juga sangat baik sepanjang project berlangsung. Highly recommended!",
-        client_name: "PT Marketing Pro",
-        project_title: "Video Promosi Produk",
-        date: "28/08/2025"
-    };
-
-    const content = `
-        <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 3rem; color: #f59e0b; margin-bottom: 10px;">
-                ${generateStars(ratingData.rating)}
-            </div>
-            <div style="font-size: 1.5rem; font-weight: 600; color: #3b82f6; margin-bottom: 5px;">
-                ${ratingData.rating}/5.0
-            </div>
-            <div style="color: #64748b; font-size: 0.875rem;">
-                Project: ${ratingData.project_title}
-            </div>
-            <div style="color: #64748b; font-size: 0.75rem;">
-                ${ratingData.date}
-            </div>
-        </div>
-
-        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                <i class="fas fa-quote-left" style="color: #3b82f6; margin-right: 10px; font-size: 1.2rem;"></i>
-                <strong style="color: #374151;">Review dari ${ratingData.client_name}</strong>
-            </div>
-            <p style="line-height: 1.6; color: #374151; margin: 0; font-style: italic;">
-                "${ratingData.review}"
-            </p>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
-            <div style="text-align: center; padding: 15px; background: #f0f9ff; border-radius: 6px;">
-                <i class="fas fa-clock" style="color: #3b82f6; margin-bottom: 8px; font-size: 1.2rem;"></i>
-                <div style="font-size: 0.75rem; color: #64748b;">Ketepatan Waktu</div>
-                <div style="font-weight: 600; color: #3b82f6;">Excellent</div>
-            </div>
-            <div style="text-align: center; padding: 15px; background: #f0fdf4; border-radius: 6px;">
-                <i class="fas fa-thumbs-up" style="color: #10b981; margin-bottom: 8px; font-size: 1.2rem;"></i>
-                <div style="font-size: 0.75rem; color: #64748b;">Kualitas Kerja</div>
-                <div style="font-weight: 600; color: #10b981;">Outstanding</div>
-            </div>
+    console.log('🔄 Fetching rating for project:', projectId);
+    
+    // Tampilkan loading dulu
+    ratingContent.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6; margin-bottom: 15px;"></i>
+            <p>Memuat rating...</p>
         </div>
     `;
-
-    ratingContent.innerHTML = content;
     openModal('ratingModal');
+    
+    // Fetch rating details dari API - GUNAKAN ROUTE YANG BENAR
+    fetch(`/ratings/${projectId}`, {
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('📥 Response status:', response.status);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Rating data received:', data);
+        
+        let content = '';
+        
+        // CEK STRUKTUR RESPONSE - mungkin data.rating atau data.data.rating
+        const ratingData = data.rating || data.data;
+        
+        if (ratingData && ratingData.rating) {
+            // Jika ada rating, tampilkan detail lengkap
+            const assessmentLabels = {
+                'excellent': 'Excellent',
+                'good': 'Good', 
+                'fair': 'Fair',
+                'poor': 'Poor',
+                'outstanding': 'Outstanding',
+                'satisfactory': 'Satisfactory',
+                'needs_improvement': 'Needs Improvement'
+            };
+            
+            // Cari project title dari tabel
+            const projectRow = document.querySelector(`tr[data-project-id="${projectId}"]`);
+            const projectTitle = projectRow ? projectRow.querySelector('td:nth-child(2)').textContent : 'Project';
+            
+            content = `
+                <div class="modal-header">
+                    <div class="modal-title-section">
+                        <h2 class="modal-title">
+                            <i class="fas fa-star"></i>
+                            Detail Rating
+                        </h2>
+                        <p class="modal-subtitle">Review dari client untuk project Anda</p>
+                    </div>
+                    <span class="close" onclick="closeModal('ratingModal')">×</span>
+                </div>
+                <div class="modal-body">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="font-size: 3rem; color: #f59e0b; margin-bottom: 10px;">
+                            ${generateStars(ratingData.rating)}
+                        </div>
+                        <div style="font-size: 1.5rem; font-weight: 600; color: #3b82f6; margin-bottom: 5px;">
+                            ${ratingData.rating}/5.0
+                        </div>
+                        <div style="color: #64748b; font-size: 0.875rem;">
+                            Project: ${projectTitle}
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <i class="fas fa-quote-left" style="color: #3b82f6; margin-right: 10px; font-size: 1.2rem;"></i>
+                            <strong style="color: #374151;">Review dari Client</strong>
+                        </div>
+                        <p style="line-height: 1.6; color: #374151; margin: 0; font-style: italic;">
+                            "${ratingData.review || 'Tidak ada review tambahan'}"
+                        </p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                        <div style="text-align: center; padding: 15px; background: #f0f9ff; border-radius: 6px;">
+                            <i class="fas fa-clock" style="color: #3b82f6; margin-bottom: 8px; font-size: 1.2rem;"></i>
+                            <div style="font-size: 0.75rem; color: #64748b;">Ketepatan Waktu</div>
+                            <div style="font-weight: 600; color: #3b82f6; text-transform: capitalize;">
+                                ${assessmentLabels[ratingData.ketepatan_waktu] || ratingData.ketepatan_waktu}
+                            </div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f0fdf4; border-radius: 6px;">
+                            <i class="fas fa-thumbs-up" style="color: #10b981; margin-bottom: 8px; font-size: 1.2rem;"></i>
+                            <div style="font-size: 0.75rem; color: #64748b;">Kualitas Kerja</div>
+                            <div style="font-weight: 600; color: #10b981; text-transform: capitalize;">
+                                ${assessmentLabels[ratingData.kualitas_kerja] || ratingData.kualitas_kerja}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 6px; margin-top: 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-info-circle" style="color: #f59e0b;"></i>
+                            <strong style="color: #92400e;">Info Rating</strong>
+                        </div>
+                        <p style="color: #92400e; margin: 6px 0 0 0; font-size: 0.875rem;">
+                            Rating ini diberikan oleh client setelah project selesai.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('ratingModal')">
+                        <i class="fas fa-times"></i> Tutup
+                    </button>
+                </div>
+            `;
+        } else {
+            // Jika belum ada rating
+            content = `
+                <div class="modal-header">
+                    <div class="modal-title-section">
+                        <h2 class="modal-title">
+                            <i class="fas fa-star"></i>
+                            Rating Project
+                        </h2>
+                        <p class="modal-subtitle">Belum ada rating dari client</p>
+                    </div>
+                    <span class="close" onclick="closeModal('ratingModal')">×</span>
+                </div>
+                <div class="modal-body">
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-star" style="font-size: 3rem; color: var(--gray-300); margin-bottom: 15px;"></i>
+                        <h3 style="color: var(--gray-600); margin-bottom: 10px;">Belum Ada Rating</h3>
+                        <p style="color: var(--gray-500); margin-bottom: 20px;">
+                            Client belum memberikan rating untuk project ini.
+                        </p>
+                        <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 6px;">
+                            <p style="color: #1e40af; margin: 0; font-size: 0.875rem;">
+                                <strong>Note:</strong> Rating akan muncul setelah client memberikan review untuk project yang sudah selesai.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('ratingModal')">
+                        <i class="fas fa-times"></i> Tutup
+                    </button>
+                </div>
+            `;
+        }
+
+        ratingContent.innerHTML = content;
+    })
+    .catch(error => {
+        console.error('❌ Error fetching rating:', error);
+        // Fallback jika error
+        const content = `
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2 class="modal-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Error
+                    </h2>
+                    <p class="modal-subtitle">Gagal memuat rating</p>
+                </div>
+                <span class="close" onclick="closeModal('ratingModal')">×</span>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--red-600); margin-bottom: 15px;"></i>
+                    <h3 style="color: var(--gray-600); margin-bottom: 10px;">Error Memuat Rating</h3>
+                    <p style="color: var(--gray-500);">
+                        Terjadi kesalahan saat memuat detail rating: ${error.message}
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('ratingModal')">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
+            </div>
+        `;
+        ratingContent.innerHTML = content;
+    });
+}
+
+// Helper function to generate star display (tetap sama)
+function generateStars(rating) {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    let stars = '';
+    
+    for (let i = 0; i < fullStars; i++) {
+        stars += '<i class="fas fa-star"></i>';
+    }
+    
+    if (hasHalfStar) {
+        stars += '<i class="fas fa-star-half-alt"></i>';
+    }
+    
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    for (let i = 0; i < emptyStars; i++) {
+        stars += '<i class="far fa-star"></i>';
+    }
+    
+    return stars;
 }
 
 // Helper function to generate star display
@@ -2936,11 +3129,11 @@ function showCancellationDetailModal(cancellationId) {
     
     // Fetch data - GANTI ROUTE INI SESUAI DENGAN ROUTE FREELANCER
     fetch(`/freelancer/jobboard/cancellation/${cancellationId}`, {
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json',
-        }
-    })
+    headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json',
+    }
+})
     .then(response => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();

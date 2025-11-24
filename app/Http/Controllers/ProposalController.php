@@ -112,14 +112,18 @@ class ProposalController extends Controller
 
         return view('client.freelancer.2', compact('project', 'proposals'));
     }
-
 public function index()
 {
     $userId = auth()->id();
     
+    // ✅ PERBAIKAN: Cancelled projects - HANYA YANG DIAJUKAN/DITERIMA OLEH USER INI
     $cancelledProjects = \App\Models\ProjectCancellation::with([
-        'project.proposalls.user'
+        'project.proposalls.user',
+        'project.client'
     ])
+    ->whereHas('project.proposalls', function($query) use ($userId) {
+        $query->where('user_id', $userId); // Hanya project yang user ini lamar/kerjakan
+    })
     ->where('refund_status', 'processed')
     ->orderByDesc('cancelled_at')
     ->get();
@@ -302,4 +306,26 @@ public function index()
             ], 500);
         }
     }
+
+    // Di Controller Freelancer - tambahkan method ini
+public function showCancellationDetail($cancellationId)
+{
+    $user = auth()->user();
+    
+    $cancellation = \App\Models\ProjectCancellation::where('id', $cancellationId)
+        ->whereHas('project.proposalls', function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->with(['project.client'])
+        ->firstOrFail();
+
+    return response()->json([
+        'reason' => $cancellation->reason,
+        'evidence_files' => $cancellation->evidence_files ?? [],
+        'transfer_proof' => $cancellation->transfer_proof,
+        'cancelled_at' => $cancellation->cancelled_at,
+        'refund_amount' => $cancellation->refund_amount,
+        'refund_status' => $cancellation->refund_status,
+    ]);
+}
 }
