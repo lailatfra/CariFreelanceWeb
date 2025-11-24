@@ -690,67 +690,80 @@
             <p>Ribuan proyek menarik menunggu keahlian profesional Anda</p>
         </div>
     </section>
+
     <!-- Navigation -->
-    <div class="nav-container">
-        <nav class="nav">
-            <ul class="nav-list">
-                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
-                <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
-                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
-                <li class="nav-item"><a href="/video" class="nav-link">Video Editing</a></li>
-            </ul>
-        </nav>
-    </div>
-   <!-- Main Content -->
-    <main class="main-content1">
-        <h2 class="section-title animate-on-scroll">Kategori Terbaru</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem;" class="animate-on-scroll">Jelajahi kategori pekerjaan terpopuler dan mulai mempekerjakan freelancer terbaik.</p>
+<div class="nav-container">
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{{ route('popular') }}" class="nav-link">Pekerjaan Populer</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('grafis') }}" class="nav-link">Grafis & Desain</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('dokumen') }}" class="nav-link">Dokumen & PPT</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('web') }}" class="nav-link">Web & App</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('video') }}" class="nav-link">Video Editing</a>
+            </li>
+        </ul>
+    </nav>
+</div>
 
-        <!-- Categories Grid -->
-        <div class="categories-grid">
+<!-- Main Content -->
+<main class="main-content1">
+    <h2 class="section-title animate-on-scroll">Kategori Pekerjaan</h2>
+    <p style="text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem;" class="animate-on-scroll">
+        Jelajahi berbagai kategori pekerjaan freelance yang tersedia
+    </p>
 
-            <!-- Grafis & Desain -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('grafis-desain')">
-                <a href="/grafis" class="category-link">
+    <!-- Categories Grid -->
+    <div class="categories-grid">
+        <!-- Grafis & Desain -->
+        <div class="category-card animate-on-scroll">
+            <a href="{{ route('grafis') }}" class="category-link">
                 <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Grafis & Desain" class="category-image">
                 <h3 class="category-title">Grafis & Desain</h3>
-                </a>
-            </div>
+            </a>
+        </div>
 
-            <!-- Dokumen & PPT -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('dokumen-ppt')">
-                <a href="/dokumen" class="category-link">
+        <!-- Dokumen & PPT -->
+        <div class="category-card animate-on-scroll">
+            <a href="{{ route('dokumen') }}" class="category-link">
                 <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500&h=300&fit=crop" alt="Dokumen & PPT" class="category-image">
                 <h3 class="category-title">Dokumen & PPT</h3>
-                </a>
-            </div>
+            </a>
+        </div>
 
-            <!-- Web & App -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('web-app')">
-                <a href="/web-app" class="category-link">
+        <!-- Web & App -->
+        <div class="category-card animate-on-scroll">
+            <a href="{{ route('web') }}" class="category-link">
                 <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&h=300&fit=crop" alt="Web & App" class="category-image">
                 <h3 class="category-title">Web & App</h3>
-                </a>
-            </div>
+            </a>
+        </div>
 
-            <!-- Video Editing -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('video-editing')">
-                <a href="#" class="category-link">
+        <!-- Video Editing -->
+        <div class="category-card animate-on-scroll">
+            <a href="{{ route('video') }}" class="category-link">
                 <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=500&h=300&fit=crop" alt="Video Editing" class="category-image">
                 <h3 class="category-title">Video Editing</h3>
-                </a>
-            </div>
-
+            </a>
         </div>
-    </main>
-
+    </div>
+</main>
 
     <!-- Success Tips Section -->
     <section class="tips-section">
         <div class="container">
             <h2 class="section-title animate-on-scroll">Tips Sukses Menjadi Freelancer</h2>
-            <p class="section-description animate-on-scroll">Panduan untuk memaksimalkan peluang mendapatkan proyek dan meningkatkan penghasilan.</p>
+            <p style="text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem;" class="animate-on-scroll">
+                Panduan untuk memaksimalkan peluang mendapatkan proyek dan meningkatkan penghasilan
+            </p>
             
             <div class="tips-grid">
                 <div class="tip-card animate-on-scroll">
@@ -804,8 +817,6 @@
         </div>
     </section>
 
-</section>
-
     <script>
         // Navigation functionality
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -814,12 +825,6 @@
                 this.classList.add('active');
             });
         });
-
-        // Job category navigation function
-        function navigateToJobCategory(category) {
-            console.log(`Navigating to ${category} jobs`);
-            // window.location.href = `/jobs/category/${category}`;
-        }
 
         // Scroll animations
         const observerOptions = {
@@ -862,15 +867,6 @@
             }, 100);
         });
 
-        // Activity item click handler
-        document.querySelectorAll('.activity-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const activityTitle = this.querySelector('.activity-title').textContent;
-                console.log(`Viewing activity: ${activityTitle}`);
-                // Add navigation to activity details here
-            });
-        });
-
         // Sticky navigation scroll effect
         window.addEventListener('scroll', function() {
             const navContainer = document.querySelector('.nav-container');
@@ -880,48 +876,6 @@
                 navContainer.classList.remove('scrolled');
             }
         });
-        function openNewsDetail(newsId) {
-    console.log(`Opening news detail for: ${newsId}`);
-    // Ini akan dihubungkan dengan backend nanti
-    // window.location.href = `/news/${newsId}`;
-    
-    // Temporary animation for now
-    event.currentTarget.style.transform = 'scale(0.98)';
-    setTimeout(() => {
-        event.currentTarget.style.transform = '';
-    }, 150);
-}
-
-function loadMoreNews() {
-    console.log('Loading more news...');
-    // Ini akan dihubungkan dengan backend nanti untuk load more news
-    
-    // Temporary loading animation
-    const btn = event.currentTarget;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<iconify-icon icon="material-symbols:hourglass-empty"></iconify-icon> Memuat...';
-    btn.disabled = true;
-    
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }, 2000);
-}
-
-// Add click analytics for news items
-document.querySelectorAll('.news-item').forEach(item => {
-    item.addEventListener('click', function() {
-        const newsTitle = this.querySelector('.news-title').textContent;
-        const newsCategory = this.querySelector('.news-category').textContent;
-        
-        // Analytics tracking (akan diimplementasi dengan backend)
-        console.log('News clicked:', {
-            title: newsTitle,
-            category: newsCategory,
-            timestamp: new Date().toISOString()
-        });
-    });
-});
     </script>
 </body>
 </html>

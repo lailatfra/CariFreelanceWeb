@@ -530,40 +530,50 @@
         </div>
     </section>
 
-  <!-- Navigation -->
-    <div class="nav-container">
-        <nav class="nav">
-            <ul class="nav-list">
-                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
-                <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
-                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
-                <li class="nav-item"><a href="/video" class="nav-link">Video Editing</a></li>
-            </ul>
-        </nav>
-    </div>
+<!-- Navigation -->
+<div class="nav-container">
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{{ route('popular') }}" class="nav-link">Pekerjaan Populer</a>
+            </li>
+            <li class="nav-item active">
+                <a href="{{ route('grafis') }}" class="nav-link">Grafis & Desain</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('dokumen') }}" class="nav-link">Dokumen & PPT</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('web') }}" class="nav-link">Web & App</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('video') }}" class="nav-link">Video Editing</a>
+            </li>
+        </ul>
+    </nav>
+</div>
 
 
     <!-- Main Layout -->
     <div class="main-layout">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-title">Web & App</div>
-            <ul class="sidebar-menu">
-                <li class="sidebar-item">
-                    <a href="{{ route('popular.category', ['subcategory' => 'website-development']) }}" class="sidebar-link">Website Development</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('ecommerce-development')">E-commerce Development</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('mobile-app')">Mobile App Development</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('ui-ux-design')">UI/UX Design</a>
-                </li>
-            </ul>
-        </aside>
+<aside class="sidebar">
+    <div class="sidebar-title">Web & App</div>
+    <ul class="sidebar-menu">
+        <li class="sidebar-item">
+            <a href="{{ route('web.category', ['subcategory' => 'website-development']) }}" class="sidebar-link">Website Development</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('web.category', ['subcategory' => 'mobile-app-development']) }}" class="sidebar-link">Mobile App Development</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('web.category', ['subcategory' => 'ecommerce-development']) }}" class="sidebar-link">E-commerce Development</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('web.category', ['subcategory' => 'web-maintenance']) }}" class="sidebar-link">Web Maintenance</a>
+        </li>
+    </ul>
+</aside>
 
         <!-- Main Content Area -->
         <main class="content-area">

@@ -1,8 +1,8 @@
 @extends('freelancer.layout.freelancer-layout')
 @section('title', 'Grafis & Desain - CariFreelance Freelancer')
 @section('content')
-
-
+    @include('freelancer.categories.grafis-desain')
+    
 <!DOCTYPE html>
 <html lang="id">
 <head>

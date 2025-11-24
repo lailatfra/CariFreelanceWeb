@@ -530,33 +530,49 @@
         </div>
     </section>
 
-    <!-- Navigation -->
-    <div class="nav-container">
-        <nav class="nav">
-            <ul class="nav-list">
-                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
-                <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
-                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
-                <li class="nav-item active"><a href="#" class="nav-link">Video Editing</a></li>
-            </ul>
-        </nav>
-    </div>
+<!-- Navigation -->
+<div class="nav-container">
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{{ route('popular') }}" class="nav-link">Pekerjaan Populer</a>
+            </li>
+            <li class="nav-item active">
+                <a href="{{ route('grafis') }}" class="nav-link">Grafis & Desain</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('dokumen') }}" class="nav-link">Dokumen & PPT</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('web') }}" class="nav-link">Web & App</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('video') }}" class="nav-link">Video Editing</a>
+            </li>
+        </ul>
+    </nav>
+</div>
 
     <!-- Main Layout -->
     <div class="main-layout">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-title">Video Editing</div>
-            <ul class="sidebar-menu">
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link active" onclick="filterCategory('video-editing')">Video Editing</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="#" class="sidebar-link" onclick="filterCategory('color-grading')">Color Grading</a>
-                </li>
-            </ul>
-        </aside>
+<aside class="sidebar">
+    <div class="sidebar-title">Video Editing</div>
+    <ul class="sidebar-menu">
+        <li class="sidebar-item">
+            <a href="{{ route('video.category', ['subcategory' => 'video-editing']) }}" class="sidebar-link">Video Editing</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('video.category', ['subcategory' => 'animation']) }}" class="sidebar-link">Animasi</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('video.category', ['subcategory' => 'motion-graphics']) }}" class="sidebar-link">Motion Graphics</a>
+        </li>
+        <li class="sidebar-item">
+            <a href="{{ route('video.category', ['subcategory' => 'video-production']) }}" class="sidebar-link">Video Production</a>
+        </li>
+    </ul>
+</aside>
 
         <!-- Main Content Area -->
         <main class="content-area">

@@ -530,18 +530,28 @@
         </div>
     </section>
 
-    <!-- Navigation -->
-    <div class="nav-container">
-        <nav class="nav">
-            <ul class="nav-list">
-                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
-                <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
-                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
-                <li class="nav-item"><a href="/video" class="nav-link">Video Editing</a></li>
-            </ul>
-        </nav>
-    </div>
+<!-- Navigation -->
+<div class="nav-container">
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{{ route('popular') }}" class="nav-link">Pekerjaan Populer</a>
+            </li>
+            <li class="nav-item active">
+                <a href="{{ route('grafis') }}" class="nav-link">Grafis & Desain</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('dokumen') }}" class="nav-link">Dokumen & PPT</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('web') }}" class="nav-link">Web & App</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('video') }}" class="nav-link">Video Editing</a>
+            </li>
+        </ul>
+    </nav>
+</div>
 
     <!-- Main Layout -->
     <div class="main-layout">
@@ -585,7 +595,7 @@
     
 
     <div class="category-card">
-        <a href="{{ route('popular.category', ['subcategory' => 'mobile-app-development']) }}" class="category-link">
+         <a href="{{ route('popular.category', ['subcategory' => 'mobile-app-development']) }}" class="category-link">
             <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=500&h=300&fit=crop" alt="Mobile App Development" class="category-image">
             <div class="category-overlay">
                 <h3 class="category-title">Mobile App Development</h3>
@@ -595,7 +605,7 @@
     </div>
 
     <div class="category-card">
-        <a href="{{ route('popular.category', ['subcategory' => 'logo-design']) }}" class="category-link">
+        <a href="{{ route('grafis.category', ['subcategory' => 'logo-design']) }}" class="category-link">
             <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Logo Design" class="category-image">
             <div class="category-overlay">
                 <h3 class="category-title">Logo Design</h3>
@@ -605,7 +615,7 @@
     </div>
 
     <div class="category-card">
-        <a href="{{ route('popular.category', ['subcategory' => 'video-editing']) }}" class="category-link">
+        <a href="{{ route('grafis.category', ['subcategory' => 'video-editing']) }}" class="category-link">
             <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=500&h=300&fit=crop" alt="Video Editing" class="category-image">
             <div class="category-overlay">
                 <h3 class="category-title">Video Editing</h3>

@@ -221,13 +221,42 @@ Route::get('/web-app', fn() => view('client.web-app'))->name('app');
 Route::get('/video', fn() => view('client.video-editing'))->name('video');
 
 // Routes untuk kategori utama dengan subcategory
-Route::get('/popular/{subcategory?}', [PostingController::class, 'showPopularCategory'])
-    ->name('popular.category')
-    ->where('subcategory', '[a-z0-9\-]+');
+// Route::get('/popular/{subcategory?}', [PostingController::class, 'showPopularCategory'])
+//     ->name('popular.category')
+//     ->where('subcategory', '[a-z0-9\-]+');
 
-Route::get('/grafis/{subcategory?}', [PostingController::class, 'showGrafisCategory'])
-    ->name('grafis.category')
-    ->where('subcategory', '[a-z0-9\-]+');
+// Route::get('/grafis/{subcategory?}', [PostingController::class, 'showGrafisCategory'])
+//     ->name('grafis.category')
+//     ->where('subcategory', '[a-z0-9\-]+');
+
+
+// Route khusus untuk kategori project
+Route::get('/project/{category}/{subcategory?}', [PostingController::class, 'showProjectsBySubcategory'])
+    ->name('projects.by.category');
+
+
+   // Route untuk halaman utama kategori (TANPA subcategory) - tampilkan view blade biasa
+Route::get('/popular', fn() => view('client.popular'))->name('popular');
+Route::get('/grafis', fn() => view('client.grafis-desain'))->name('grafis');
+Route::get('/dokumen', fn() => view('client.dokumen-ppt'))->name('dokumen');
+Route::get('/web', fn() => view('client.web-app'))->name('web');
+Route::get('/video', fn() => view('client.video-editing'))->name('video');
+
+// Route untuk subcategory (dengan parameter) - tampilkan halaman dengan projects
+Route::get('/popular/{subcategory}', [PostingController::class, 'showPopularCategory'])
+    ->name('popular.category');
+
+Route::get('/grafis/{subcategory}', [PostingController::class, 'showGrafisCategory'])
+    ->name('grafis.category');
+
+Route::get('/dokumen/{subcategory}', [PostingController::class, 'showDokumenCategory'])
+    ->name('dokumen.category');
+
+Route::get('/web/{subcategory}', [PostingController::class, 'showWebCategory'])
+    ->name('web.category');
+
+Route::get('/video/{subcategory}', [PostingController::class, 'showVideoCategory'])
+    ->name('video.category');
 
 // Route lama untuk backward compatibility
 Route::get('/web', [PostingController::class, 'showWebCategory'])->name('web');
@@ -399,8 +428,8 @@ Route::get('/freelancer/profile/job', [ProposalController::class, 'index'])->nam
 Route::post('/proposals/{proposal}/accept', [App\Http\Controllers\ProposalController::class, 'accept'])
     ->name('proposals.accept');
 
-Route::get('/freelancer/popular', fn() => view('freelancer.popular'))->name('popular');
-Route::get('/freelancer/grafis', fn() => view('freelancer.grafis-desain'))->name('grafis');
+Route::get('/freelancer/popular', fn() => view('freelancer.popular'))->name('popularf');
+Route::get('/freelancer/grafis', fn() => view('freelancer.grafis-desain'))->name('grafisf');
 Route::get('/freelancer/web', fn() => view('freelancer.popular.web-development'))->name('web');
 Route::get('/freelancer/web/job', fn() => view('freelancer.popular.job.job1'))->name('job');
 Route::get('/freelancer/proposal', fn() => view('freelancer.proposall'))->name('proposal');
@@ -447,6 +476,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my-projects', [PostingController::class, 'myProjects'])->name('projects.my');
     Route::delete('/projects/{project}', [PostingController::class, 'destroy'])->name('projects.destroy');
 });
+
+
+// Routes untuk freelancer home dan kategori
+Route::get('/freelancer/home', fn() => view('freelancer.home'))->name('freelancer.home');
+
+// Route untuk halaman utama kategori freelancer (TANPA subcategory)
+Route::get('/freelancer/popular', fn() => view('freelancer.popular'))->name('freelancer.popular');
+Route::get('/freelancer/grafis', fn() => view('freelancer.grafis-desain'))->name('freelancer.grafis');
+Route::get('/freelancer/dokumen', fn() => view('freelancer.dokumen-ppt'))->name('freelancer.dokumen');
+Route::get('/freelancer/web', fn() => view('freelancer.web-app'))->name('freelancer.web');
+Route::get('/freelancer/video', fn() => view('freelancer.video-editing'))->name('freelancer.video');
+
 
 //jobboard
 Route::middleware(['auth'])->group(function () {

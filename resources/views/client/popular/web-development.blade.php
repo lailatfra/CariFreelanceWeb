@@ -812,80 +812,85 @@
                                     </div>
                                 </div>
                             </div>
-
+<div style="display: none;">
+    <pre>@json($project->attachments, JSON_PRETTY_PRINT)</pre>
+    <p>Main Attachment: @json($project->main_attachment)</p>
+    <p>Has Image: {{ $project->hasImage() ? 'Yes' : 'No' }}</p>
+    <p>Has Video: {{ $project->hasVideo() ? 'Yes' : 'No' }}</p>
+    <p>Has Document: {{ $project->hasDocument() ? 'Yes' : 'No' }}</p>
+</div>
                             <!-- Enhanced media display with video support -->
-                            @if(!empty($project->attachments))
-                                @php
-                                    $mainAttachment = $project->main_attachment;
-                                @endphp
-                                
-                                @if($mainAttachment)
-                                    @if($mainAttachment['file_type'] === 'image')
-                                        <img src="{{ $mainAttachment['url'] }}" 
-                                             alt="{{ $project->title }}" 
-                                             class="job-image"
-                                             onerror="this.style.display='none'">
-                                    @elseif($mainAttachment['file_type'] === 'video')
-                                        <div style="position: relative; width: 100%; height: 140px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; background: #f8f9fa;">
-                                            <video class="job-image" style="width: 100%; height: 100%; object-fit: cover;" muted>
-                                                <source src="{{ $mainAttachment['url'] }}" type="{{ $mainAttachment['mime_type'] ?? 'video/mp4' }}">
-                                                Your browser does not support the video tag.
-                                            </video>
-                                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white;">
-                                                <i class="fas fa-play" style="font-size: 14px; margin-left: 2px;"></i>
-                                            </div>
-                                            <div style="position: absolute; top: 8px; left: 8px; background: rgba(239, 68, 68, 0.9); color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 600;">
-                                                VIDEO
-                                            </div>
-                                        </div>
-                                    @elseif($mainAttachment['file_type'] === 'document')
-                                        <div style="position: relative; width: 100%; height: 140px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #e1e8ed;">
-                                            @if(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'pdf'))
-                                                <i class="fas fa-file-pdf" style="font-size: 32px; color: #dc3545; margin-bottom: 8px;"></i>
-                                            @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'doc'))
-                                                <i class="fas fa-file-word" style="font-size: 32px; color: #0066cc; margin-bottom: 8px;"></i>
-                                            @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'xls'))
-                                                <i class="fas fa-file-excel" style="font-size: 32px; color: #107c41; margin-bottom: 8px;"></i>
-                                            @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'ppt'))
-                                                <i class="fas fa-file-powerpoint" style="font-size: 32px; color: #d24726; margin-bottom: 8px;"></i>
-                                            @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'txt'))
-                                                <i class="fas fa-file-alt" style="font-size: 32px; color: #6c757d; margin-bottom: 8px;"></i>
-                                            @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'zip') || str_contains(strtolower($mainAttachment['extension'] ?? ''), 'rar'))
-                                                <i class="fas fa-file-archive" style="font-size: 32px; color: #fd7e14; margin-bottom: 8px;"></i>
-                                            @else
-                                                <i class="fas fa-file" style="font-size: 32px; color: #6c757d; margin-bottom: 8px;"></i>
-                                            @endif
-                                            
-                                            <div style="font-size: 11px; color: #6c757d; text-align: center; font-weight: 600; max-width: 90%; word-break: break-word;">
-                                                {{ strtoupper($mainAttachment['extension'] ?? 'FILE') }} DOCUMENT
-                                            </div>
-                                            
-                                            @if(isset($mainAttachment['size']))
-                                                <div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">
-                                                    {{ number_format($mainAttachment['size'] / 1024, 0) }} KB
-                                                </div>
-                                            @endif
-                                            
-                                            <!-- Document type badge -->
-                                            <div style="position: absolute; top: 8px; left: 8px; background: rgba(59, 130, 246, 0.9); color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 600;">
-                                                DOC
-                                            </div>
-                                            
-                                            <!-- Download hint overlay -->
-                                            <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; border-radius: 4px; padding: 4px 6px; font-size: 10px; display: flex; align-items: center; gap: 3px;">
-                                                <i class="fas fa-download" style="font-size: 8px;"></i>
-                                                <span>Klik untuk unduh</span>
-                                            </div>
-                                        </div>
-                                    @endif
-                                @endif
-                            @elseif($project->hasImage())
-                                <!-- Fallback for old image system -->
-                                <img src="{{ $project->image_url }}" 
-                                     alt="{{ $project->title }}" 
-                                     class="job-image"
-                                     onerror="this.style.display='none'">
-                            @endif
+@if(!empty($project->attachments))
+    @php
+        $mainAttachment = $project->main_attachment;
+    @endphp
+    
+    @if($mainAttachment)
+        @if($mainAttachment['file_type'] === 'image')
+            <img src="{{ $mainAttachment['url'] }}" 
+                 alt="{{ $project->title }}" 
+                 class="job-image"
+                 onerror="this.style.display='none'">
+        @elseif($mainAttachment['file_type'] === 'video')
+            <div style="position: relative; width: 100%; height: 140px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; background: #f8f9fa;">
+                <video class="job-image" style="width: 100%; height: 100%; object-fit: cover;" muted>
+                    <source src="{{ $mainAttachment['url'] }}" type="{{ $mainAttachment['mime_type'] ?? 'video/mp4' }}">
+                    Your browser does not support the video tag.
+                </video>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white;">
+                    <i class="fas fa-play" style="font-size: 14px; margin-left: 2px;"></i>
+                </div>
+                <div style="position: absolute; top: 8px; left: 8px; background: rgba(239, 68, 68, 0.9); color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 600;">
+                    VIDEO
+                </div>
+            </div>
+        @elseif($mainAttachment['file_type'] === 'document')
+            <div style="position: relative; width: 100%; height: 140px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #e1e8ed;">
+                @if(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'pdf'))
+                    <i class="fas fa-file-pdf" style="font-size: 32px; color: #dc3545; margin-bottom: 8px;"></i>
+                @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'doc'))
+                    <i class="fas fa-file-word" style="font-size: 32px; color: #0066cc; margin-bottom: 8px;"></i>
+                @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'xls'))
+                    <i class="fas fa-file-excel" style="font-size: 32px; color: #107c41; margin-bottom: 8px;"></i>
+                @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'ppt'))
+                    <i class="fas fa-file-powerpoint" style="font-size: 32px; color: #d24726; margin-bottom: 8px;"></i>
+                @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'txt'))
+                    <i class="fas fa-file-alt" style="font-size: 32px; color: #6c757d; margin-bottom: 8px;"></i>
+                @elseif(str_contains(strtolower($mainAttachment['extension'] ?? ''), 'zip') || str_contains(strtolower($mainAttachment['extension'] ?? ''), 'rar'))
+                    <i class="fas fa-file-archive" style="font-size: 32px; color: #fd7e14; margin-bottom: 8px;"></i>
+                @else
+                    <i class="fas fa-file" style="font-size: 32px; color: #6c757d; margin-bottom: 8px;"></i>
+                @endif
+                
+                <div style="font-size: 11px; color: #6c757d; text-align: center; font-weight: 600; max-width: 90%; word-break: break-word;">
+                    {{ strtoupper($mainAttachment['extension'] ?? 'FILE') }} DOCUMENT
+                </div>
+                
+                @if(isset($mainAttachment['size']))
+                    <div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">
+                        {{ number_format($mainAttachment['size'] / 1024, 0) }} KB
+                    </div>
+                @endif
+                
+                <!-- Document type badge -->
+                <div style="position: absolute; top: 8px; left: 8px; background: rgba(59, 130, 246, 0.9); color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 600;">
+                    DOC
+                </div>
+                
+                <!-- Download hint overlay -->
+                <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; border-radius: 4px; padding: 4px 6px; font-size: 10px; display: flex; align-items: center; gap: 3px;">
+                    <i class="fas fa-download" style="font-size: 8px;"></i>
+                    <span>Klik untuk unduh</span>
+                </div>
+            </div>
+        @endif
+    @endif
+@else
+    <!-- Fallback jika tidak ada attachments -->
+    <div style="width: 100%; height: 140px; background: #f8f9fa; border-radius: 6px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+        <i class="fas fa-image" style="font-size: 32px; opacity: 0.5;"></i>
+    </div>
+@endif
 
                             <h3 class="job-title">{{ Str::limit($project->title, 60) }}</h3>
                             
@@ -996,67 +1001,131 @@
     </div>
 
     <script>
-        // Navigation functionality
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
 
-        // Filter button functionality
+        // Navigation functionality
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Filter button functionality - AUTO FILTER by subcategory
+    function filterProjects(filter) {
+        // Get current URL and subcategory
+        const currentUrl = window.location.href;
+        const url = new URL(currentUrl);
+        
+        // Update filter parameter
+        if (filter === 'semua') {
+            url.searchParams.delete('filter');
+        } else {
+            url.searchParams.set('filter', filter);
+        }
+        
+        // Reload page with new filter
+        window.location.href = url.toString();
+    }
+
+    // Initialize filter buttons on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up filter button event listeners
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Here you can add filtering logic based on data-filter attribute
                 const filter = this.getAttribute('data-filter');
-                console.log('Filtering by:', filter);
+                filterProjects(filter);
             });
         });
-
-        // Control buttons
-        document.querySelectorAll('.control-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                console.log('Control button clicked:', this.textContent.trim());
-            });
-        });
-
-        // Popup functionality
-        function showPopup() {
-            const popup = document.getElementById('helpPopup');
-            popup.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closePopup() {
-            const popup = document.getElementById('helpPopup');
-            popup.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        // Show popup when help button is clicked
-        if (document.querySelector('.help-btn')) {
-            document.querySelector('.help-btn').addEventListener('click', function (e) {
-                e.preventDefault();
-                showPopup();
-            });
-        }
-
-        // Close popup when clicking outside content
-        document.getElementById('helpPopup').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closePopup();
+        
+        // Initialize active filter state from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeFilter = urlParams.get('filter') || 'semua';
+        
+        // Set active filter button
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.getAttribute('data-filter') === activeFilter) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
             }
         });
+        
+        // Update stats based on filter
+        updateStats(activeFilter);
+    });
 
-        // Close popup with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closePopup();
+    function updateStats(filter) {
+        const totalProjects = {{ $totalProjects ?? 0 }};
+        const statsBar = document.querySelector('.stats-bar');
+        
+        if (statsBar) {
+            let filterText = '';
+            if (filter !== 'semua') {
+                filterText = ` - Filter: ${filter.charAt(0).toUpperCase() + filter.slice(1)}`;
             }
+            
+            statsBar.innerHTML = `
+                <div>Pekerjaan yang ditemukan ${totalProjects} Item${filterText}</div>
+                <div>Halaman 1 Dari {{ ceil(($totalProjects ?? 0) / 40) }}</div>
+            `;
+        }
+    }
+
+    // Control buttons
+    document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            console.log('Control button clicked:', this.textContent.trim());
         });
+    });
+
+    // Popup functionality
+    function showPopup() {
+        const popup = document.getElementById('helpPopup');
+        popup.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePopup() {
+        const popup = document.getElementById('helpPopup');
+        popup.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // Show popup when help button is clicked
+    if (document.querySelector('.help-btn')) {
+        document.querySelector('.help-btn').addEventListener('click', function (e) {
+            e.preventDefault();
+            showPopup();
+        });
+    }
+
+    // Close popup when clicking outside content
+    document.getElementById('helpPopup').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePopup();
+        }
+    });
+
+    // Close popup with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePopup();
+        }
+    });
+
+    // Auto-display subcategory info
+    document.addEventListener('DOMContentLoaded', function() {
+        const subcategory = '{{ $subcategory }}';
+        const categoryConfig = @json($categoryConfig ?? []);
+        
+        if (subcategory && categoryConfig.title) {
+            console.log(`Menampilkan project untuk: ${categoryConfig.title}`);
+            console.log(`Subcategory: ${subcategory}`);
+        }
+    });
     </script>
 </body>
 </html>

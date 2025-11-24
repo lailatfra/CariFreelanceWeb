@@ -271,7 +271,7 @@
 let searchTimer = null;
 let currentCategory = '{{ $category }}';
 
-// Data semua kategori
+// Data semua kategori dengan route yang benar
 const allCategoriesData = [
     {
         title: "Pekerjaan Popular",
@@ -361,23 +361,25 @@ const allCategoriesData = [
         subtitle: "Solusi lengkap untuk kebutuhan dokumen bisnis dan presentasi profesional Anda",
         sidebarTitle: "Dokumen & PPT",
         sidebarItems: [
-            { name: "Desain Presentasi", route: "dokumen.category", params: { subcategory: "desain-presentasi" } },
-            { name: "Format Dokumen", route: "dokumen.category", params: { subcategory: "format-dokumen" } }
+            { name: "Document Creation", route: "dokumen.category", params: { subcategory: "document-creation" } },
+            { name: "Presentation Design", route: "dokumen.category", params: { subcategory: "presentation-design" } },
+            { name: "Data Entry", route: "dokumen.category", params: { subcategory: "data-entry" } },
+            { name: "Transcription", route: "dokumen.category", params: { subcategory: "transcription" } }
         ],
         categories: [
             {
-                title: "Desain Presentasi",
-                description: "Slide presentasi yang menarik dan profesional",
-                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=300&fit=crop",
-                route: "dokumen.category",
-                params: { subcategory: "desain-presentasi" }
-            },
-            {
-                title: "Format Dokumen",
-                description: "Dokumen rapi, konsisten, dan siap digunakan secara profesional",
+                title: "Document Creation",
+                description: "Pembuatan dokumen profesional",
                 image: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=500&h=300&fit=crop",
                 route: "dokumen.category",
-                params: { subcategory: "format-dokumen" }
+                params: { subcategory: "document-creation" }
+            },
+            {
+                title: "Presentation Design",
+                description: "Desain presentasi menarik",
+                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=300&fit=crop",
+                route: "dokumen.category",
+                params: { subcategory: "presentation-design" }
             }
         ]
     },
@@ -387,7 +389,9 @@ const allCategoriesData = [
         sidebarTitle: "Video Editing",
         sidebarItems: [
             { name: "Video Editing", route: "video.category", params: { subcategory: "video-editing" } },
-            { name: "Color Grading", route: "video.category", params: { subcategory: "color-grading" } }
+            { name: "Animation", route: "video.category", params: { subcategory: "animation" } },
+            { name: "Motion Graphics", route: "video.category", params: { subcategory: "motion-graphics" } },
+            { name: "Video Production", route: "video.category", params: { subcategory: "video-production" } }
         ],
         categories: [
             {
@@ -398,11 +402,11 @@ const allCategoriesData = [
                 params: { subcategory: "video-editing" }
             },
             {
-                title: "Color Grading",
-                description: "Koreksi warna dan grading untuk tampilan sinematik",
-                image: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=500&h=300&fit=crop",
+                title: "Animation",
+                description: "Kreasi animasi 2D dan 3D berkualitas",
+                image: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=500&h=300&fit=crop",
                 route: "video.category",
-                params: { subcategory: "color-grading" }
+                params: { subcategory: "animation" }
             }
         ]
     },
@@ -411,39 +415,25 @@ const allCategoriesData = [
         subtitle: "Layanan pengembangan website dan aplikasi yang profesional untuk berbagai kebutuhan bisnis Anda",
         sidebarTitle: "Web & App Services",
         sidebarItems: [
-            { name: "Website Development", route: "web-app.category", params: { subcategory: "website-development" } },
-            { name: "E-commerce Development", route: "web-app.category", params: { subcategory: "ecommerce-development" } },
-            { name: "Mobile App Development", route: "web-app.category", params: { subcategory: "mobile-app-development" } },
-            { name: "UI/UX Design", route: "web-app.category", params: { subcategory: "ui-ux-design" } }
+            { name: "Website Development", route: "web.category", params: { subcategory: "website-development" } },
+            { name: "Mobile App Development", route: "web.category", params: { subcategory: "mobile-app-development" } },
+            { name: "E-commerce Development", route: "web.category", params: { subcategory: "ecommerce-development" } },
+            { name: "Web Maintenance", route: "web.category", params: { subcategory: "web-maintenance" } }
         ],
         categories: [
             {
                 title: "Website Development",
                 description: "Pembuatan website profesional dan modern",
                 image: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=500&h=300&fit=crop",
-                route: "web-app.category",
+                route: "web.category",
                 params: { subcategory: "website-development" }
-            },
-            {
-                title: "E-commerce Development",
-                description: "Toko online dan marketplace",
-                image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500&h=300&fit=crop",
-                route: "web-app.category",
-                params: { subcategory: "ecommerce-development" }
             },
             {
                 title: "Mobile App Development",
                 description: "Aplikasi Android dan iOS",
                 image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=500&h=300&fit=crop",
-                route: "web-app.category",
+                route: "web.category",
                 params: { subcategory: "mobile-app-development" }
-            },
-            {
-                title: "UI/UX Design",
-                description: "Desain antarmuka pengguna yang menarik",
-                image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=500&h=300&fit=crop",
-                route: "web-app.category",
-                params: { subcategory: "ui-ux-design" }
             }
         ]
     }
@@ -456,7 +446,7 @@ function generateRouteUrl(routeName, params = {}) {
         'grafis.category': '/grafis/{subcategory}',
         'dokumen.category': '/dokumen/{subcategory}',
         'video.category': '/video/{subcategory}',
-        'web-app.category': '/web-app/{subcategory}'
+        'web.category': '/web/{subcategory}'
     };
     
     let url = routeTemplates[routeName] || '#';

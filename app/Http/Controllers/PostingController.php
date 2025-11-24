@@ -48,14 +48,12 @@ class PostingController extends Controller
      */
     public function store(Request $request)
     {
-        
         // Validation rules
         $rules = [
             'title' => 'required|string|max:100',
             'category' => 'required|string',
             'subcategory' => 'nullable|string',
             'experience_level' => 'nullable|in:entry,intermediate,expert',
-            // 'project_type' => 'required|in:one-time,ongoing,contract',
             'skills_required' => 'nullable|string',
             'description' => 'required|string',
             'requirements' => 'nullable|string',
@@ -163,7 +161,6 @@ class PostingController extends Controller
                 'category' => $request->category,
                 'subcategory' => $request->subcategory,
                 'experience_level' => $request->experience_level,
-                // 'project_type' => $request->project_type,
                 'skills_required' => $skills,
                 'description' => $request->description,
                 'requirements' => $request->requirements,
@@ -225,7 +222,6 @@ class PostingController extends Controller
             'category' => 'required|string',
             'subcategory' => 'nullable|string',
             'experience_level' => 'nullable|in:entry,intermediate,expert',
-            // 'project_type' => 'required|in:one-time,ongoing,contract',
             'skills_required' => 'nullable|string',
             'description' => 'required|string',
             'requirements' => 'nullable|string',
@@ -346,7 +342,6 @@ class PostingController extends Controller
                 'category' => $request->category,
                 'subcategory' => $request->subcategory,
                 'experience_level' => $request->experience_level,
-                // 'project_type' => $request->project_type,
                 'skills_required' => $skills,
                 'description' => $request->description,
                 'requirements' => $request->requirements,
@@ -520,199 +515,354 @@ class PostingController extends Controller
     }
 
     /**
- * Show popular category projects - MODIFIED VERSION
- */
-public function showPopularCategory($subcategory = 'website-development')
-{
-    $popularSubcategories = [
-        'website-development' => [
-            'main_category' => 'pekerjaan-popular',
-            'main_subcategory' => 'website-development',
-            'display_name' => 'Website Development',
-            'title' => 'Jasa Pembuatan Website Terbaik dan Profesional',
-            'description' => 'Temukan freelancer terbaik untuk membuat website impian Anda',
-            'filters' => ['semua', 'Company Profile', 'E-Commerce', 'Landing Page', 'Blog'],
-            'breadcrumb' => 'Website Development',
-            'parent' => 'Pekerjaan Popular'
-        ],
-        'mobile-app-development' => [
-            'main_category' => 'pekerjaan-popular',
-            'main_subcategory' => 'mobile-app-development',
-            'display_name' => 'Mobile App Development',
-            'title' => 'Jasa Pembuatan Aplikasi Mobile Terbaik',
-            'description' => 'Dapatkan aplikasi mobile Android dan iOS berkualitas tinggi',
-            'filters' => ['semua', 'Android', 'iOS', 'React Native', 'Flutter'],
-            'breadcrumb' => 'Mobile App Development',
-            'parent' => 'Pekerjaan Popular'
-        ],
-        'logo-design' => [
-            'main_category' => 'pekerjaan-popular',
-            'main_subcategory' => 'logo-design',
-            'display_name' => 'Logo Design',
-            'title' => 'Jasa Desain Logo Kreatif dan Profesional',
-            'description' => 'Ciptakan identitas brand yang memorable',
-            'filters' => ['semua', 'Minimalis', 'Corporate', 'Creative', 'Modern'],
-            'breadcrumb' => 'Logo Design',
-            'parent' => 'Pekerjaan Popular'
-        ],
-        'video-editing' => [
-            'main_category' => 'pekerjaan-popular',
-            'main_subcategory' => 'video-editing',
-            'display_name' => 'Video Editing',
-            'title' => 'Jasa Edit Video Berkualitas Tinggi',
-            'description' => 'Edit video profesional untuk berbagai kebutuhan',
-            'filters' => ['semua', 'YouTube', 'Instagram', 'Wedding', 'Corporate'],
-            'breadcrumb' => 'Video Editing',
-            'parent' => 'Pekerjaan Popular'
-        ]
-    ];
+     * Show popular category projects
+     */
+    public function showPopularCategory(Request $request, $subcategory)
+    {
+        $popularSubcategories = [
+            'website-development' => [
+                'main_category' => 'pekerjaan-popular',
+                'main_subcategory' => 'website-development',
+                'display_name' => 'Website Development',
+                'title' => 'Jasa Pembuatan Website Terbaik dan Profesional',
+                'description' => 'Temukan freelancer terbaik untuk membuat website impian Anda',
+                'filters' => ['semua', 'Company Profile', 'E-Commerce', 'Landing Page', 'Blog'],
+                'breadcrumb' => 'Website Development',
+                'parent' => 'Pekerjaan Popular'
+            ],
+            'mobile-app-development' => [
+                'main_category' => 'pekerjaan-popular',
+                'main_subcategory' => 'mobile-app-development',
+                'display_name' => 'Mobile App Development',
+                'title' => 'Jasa Pembuatan Aplikasi Mobile Terbaik',
+                'description' => 'Dapatkan aplikasi mobile Android dan iOS berkualitas tinggi',
+                'filters' => ['semua', 'Android', 'iOS', 'React Native', 'Flutter'],
+                'breadcrumb' => 'Mobile App Development',
+                'parent' => 'Pekerjaan Popular'
+            ],
+            'logo-design' => [
+                'main_category' => 'pekerjaan-popular',
+                'main_subcategory' => 'logo-design',
+                'display_name' => 'Logo Design',
+                'title' => 'Jasa Desain Logo Kreatif dan Profesional',
+                'description' => 'Ciptakan identitas brand yang memorable',
+                'filters' => ['semua', 'Minimalis', 'Corporate', 'Creative', 'Modern'],
+                'breadcrumb' => 'Logo Design',
+                'parent' => 'Pekerjaan Popular'
+            ],
+            'video-editing' => [
+                'main_category' => 'pekerjaan-popular',
+                'main_subcategory' => 'video-editing',
+                'display_name' => 'Video Editing',
+                'title' => 'Jasa Edit Video Berkualitas Tinggi',
+                'description' => 'Edit video profesional untuk berbagai kebutuhan',
+                'filters' => ['semua', 'YouTube', 'Instagram', 'Wedding', 'Corporate'],
+                'breadcrumb' => 'Video Editing',
+                'parent' => 'Pekerjaan Popular'
+            ]
+        ];
 
-    if (!isset($popularSubcategories[$subcategory])) {
-        return redirect()->route('popular.category', ['subcategory' => 'website-development']);
+        if (!isset($popularSubcategories[$subcategory])) {
+            return redirect()->route('popular');
+        }
+
+        $config = $popularSubcategories[$subcategory];
+        $filter = $request->get('filter', 'semua');
+
+        $projects = Project::published()
+            ->where('category', 'pekerjaan-popular')
+            ->where('subcategory', $subcategory)
+            ->whereDoesntHave('proposalls', function ($query) {
+                $query->where('status', 'accepted');
+            })
+            ->latest()
+            ->get();
+
+        return view('client.popular.web-development', [
+            'projects' => $projects,
+            'subcategory' => $subcategory,
+            'categoryConfig' => $config,
+            'totalProjects' => $projects->count(),
+            'activeFilter' => $filter,
+            'isEdit' => false
+        ]);
     }
 
-    $config = $popularSubcategories[$subcategory];
+    /**
+     * Show grafis category projects
+     */
+    public function showGrafisCategory(Request $request, $subcategory)
+    {
+        $grafisSubcategories = [
+            'logo-design' => [
+                'main_category' => 'grafis-desain',
+                'main_subcategory' => 'logo-design',
+                'display_name' => 'Logo Design',
+                'title' => 'Jasa Desain Logo Kreatif dan Profesional - Grafis',
+                'description' => 'Desain logo profesional dari kategori Grafis & Desain',
+                'filters' => ['semua', 'Minimalis', 'Corporate', 'Creative', 'Modern'],
+                'breadcrumb' => 'Logo Design',
+                'parent' => 'Grafis & Desain'
+            ],
+            'brand-identity' => [
+                'main_category' => 'grafis-desain',
+                'main_subcategory' => 'brand-identity',
+                'display_name' => 'Brand Identity',
+                'title' => 'Jasa Desain Brand Identity Lengkap',
+                'description' => 'Paket lengkap identitas brand untuk bisnis Anda',
+                'filters' => ['semua', 'Logo Package', 'Brand Guidelines', 'Complete Branding'],
+                'breadcrumb' => 'Brand Identity',
+                'parent' => 'Grafis & Desain'
+            ],
+            'packaging-design' => [
+                'main_category' => 'grafis-desain',
+                'main_subcategory' => 'packaging-design',
+                'display_name' => 'Packaging Design',
+                'title' => 'Jasa Desain Kemasan Produk',
+                'description' => 'Desain kemasan yang menarik dan fungsional',
+                'filters' => ['semua', 'Box Design', 'Label Design', 'Bottle Design'],
+                'breadcrumb' => 'Packaging Design',
+                'parent' => 'Grafis & Desain'
+            ],
+            'ilustrasi-gambar' => [
+                'main_category' => 'grafis-desain',
+                'main_subcategory' => 'ilustrasi-gambar',
+                'display_name' => 'Ilustrasi Gambar',
+                'title' => 'Jasa Ilustrasi dan Artwork Custom',
+                'description' => 'Ilustrasi custom untuk berbagai kebutuhan',
+                'filters' => ['semua', 'Digital Art', 'Character Design', 'Icon Design'],
+                'breadcrumb' => 'Ilustrasi Gambar',
+                'parent' => 'Grafis & Desain'
+            ],
+            'stiker-design' => [
+                'main_category' => 'grafis-desain',
+                'main_subcategory' => 'stiker-design',
+                'display_name' => 'Stiker Design',
+                'title' => 'Jasa Desain Stiker Kreatif',
+                'description' => 'Desain stiker untuk promosi dan branding',
+                'filters' => ['semua', 'Promotional', 'Decorative', 'Custom Shape'],
+                'breadcrumb' => 'Stiker Design',
+                'parent' => 'Grafis & Desain'
+            ]
+        ];
 
-    // MODIFIED QUERY: Only show projects that don't have accepted proposals
-    $projects = Project::published()
-        ->where(function ($query) use ($subcategory) {
-            // New format
-            $query->where('category', 'pekerjaan-popular')
-                ->where('subcategory', $subcategory);
+        if (!isset($grafisSubcategories[$subcategory])) {
+            return redirect()->route('grafis');
+        }
 
-            // Support legacy data
-            if ($subcategory === 'website-development') {
-                $query->orWhere('category', 'web-development')
-                    ->orWhere(function ($q) {
-                        $q->where('category', 'web-app')
-                            ->whereIn('subcategory', ['web-development', 'website-development']);
-                    });
-            } elseif ($subcategory === 'logo-design') {
-                $query->orWhere(function ($q) {
-                    $q->where('category', 'graphic-design')
-                        ->where('subcategory', 'logo-design');
-                });
-            } elseif ($subcategory === 'mobile-app-development') {
-                $query->orWhere(function ($q) {
-                    $q->where('category', 'web-app')
-                        ->whereIn('subcategory', ['mobile-app-development', 'mobile-app']);
-                });
-            } elseif ($subcategory === 'video-editing') {
-                $query->orWhere('category', 'video-editing');
-            }
-        })
-        ->whereDoesntHave('proposalls', function ($query) {
-            $query->where('status', 'accepted'); // Exclude projects with accepted proposals
-        })
-        ->latest()
-        ->get();
+        $config = $grafisSubcategories[$subcategory];
+        $filter = $request->get('filter', 'semua');
 
-    return view('client.popular.web-development', [
-        'projects' => $projects,
-        'subcategory' => $subcategory,
-        'categoryConfig' => $config,
-        'totalProjects' => $projects->count()
-    ]);
-}
+        $projects = Project::published()
+            ->where('category', 'grafis-desain')
+            ->where('subcategory', $subcategory)
+            ->whereDoesntHave('proposalls', function ($query) {
+                $query->where('status', 'accepted');
+            })
+            ->latest()
+            ->get();
 
-/**
- * Show grafis category projects - MODIFIED VERSION
- */
-public function showGrafisCategory($subcategory = 'logo-design')
-{
-    $grafisSubcategories = [
-        'logo-design' => [
-            'main_category' => 'grafis-desain',
-            'main_subcategory' => 'logo-design',
-            'display_name' => 'Logo Design',
-            'title' => 'Jasa Desain Logo Kreatif dan Profesional - Grafis',
-            'description' => 'Desain logo profesional dari kategori Grafis & Desain',
-            'filters' => ['semua', 'Minimalis', 'Corporate', 'Creative', 'Modern'],
-            'breadcrumb' => 'Logo Design',
-            'parent' => 'Grafis & Desain'
-        ],
-        'brand-identity' => [
-            'main_category' => 'grafis-desain',
-            'main_subcategory' => 'brand-identity',
-            'display_name' => 'Brand Identity',
-            'title' => 'Jasa Desain Brand Identity Lengkap',
-            'description' => 'Paket lengkap identitas brand untuk bisnis Anda',
-            'filters' => ['semua', 'Logo Package', 'Brand Guidelines', 'Complete Branding'],
-            'breadcrumb' => 'Brand Identity',
-            'parent' => 'Grafis & Desain'
-        ],
-        'packaging-design' => [
-            'main_category' => 'grafis-desain',
-            'main_subcategory' => 'packaging-design',
-            'display_name' => 'Packaging Design',
-            'title' => 'Jasa Desain Kemasan Produk',
-            'description' => 'Desain kemasan yang menarik dan fungsional',
-            'filters' => ['semua', 'Box Design', 'Label Design', 'Bottle Design'],
-            'breadcrumb' => 'Packaging Design',
-            'parent' => 'Grafis & Desain'
-        ],
-        'ilustrasi-gambar' => [
-            'main_category' => 'grafis-desain',
-            'main_subcategory' => 'ilustrasi-gambar',
-            'display_name' => 'Ilustrasi Gambar',
-            'title' => 'Jasa Ilustrasi dan Artwork Custom',
-            'description' => 'Ilustrasi custom untuk berbagai kebutuhan',
-            'filters' => ['semua', 'Digital Art', 'Character Design', 'Icon Design'],
-            'breadcrumb' => 'Ilustrasi Gambar',
-            'parent' => 'Grafis & Desain'
-        ],
-        'stiker-design' => [
-            'main_category' => 'grafis-desain',
-            'main_subcategory' => 'stiker-design',
-            'display_name' => 'Stiker Design',
-            'title' => 'Jasa Desain Stiker Kreatif',
-            'description' => 'Desain stiker untuk promosi dan branding',
-            'filters' => ['semua', 'Promotional', 'Decorative', 'Custom Shape'],
-            'breadcrumb' => 'Stiker Design',
-            'parent' => 'Grafis & Desain'
-        ]
-    ];
-
-    if (!isset($grafisSubcategories[$subcategory])) {
-        return redirect()->route('grafis.category', ['subcategory' => 'logo-design']);
+        return view('client.popular.web-development', [
+            'projects' => $projects,
+            'subcategory' => $subcategory,
+            'categoryConfig' => $config,
+            'totalProjects' => $projects->count(),
+            'activeFilter' => $filter,
+            'isEdit' => false
+        ]);
     }
 
-    $config = $grafisSubcategories[$subcategory];
+    /**
+     * Show dokumen category projects
+     */
+    public function showDokumenCategory(Request $request, $subcategory)
+    {
+        $dokumenSubcategories = [
+            'document-creation' => [
+                'title' => 'Jasa Pembuatan Dokumen Profesional',
+                'description' => 'Pembuatan dokumen berkualitas untuk berbagai kebutuhan',
+                'breadcrumb' => 'Pembuatan Dokumen',
+                'parent' => 'Dokumen & PPT',
+                'filters' => ['semua', 'Report', 'Proposal', 'Manual', 'Guide']
+            ],
+            'presentation-design' => [
+                'title' => 'Jasa Desain Presentasi Menarik',
+                'description' => 'Desain presentasi yang profesional dan engaging',
+                'breadcrumb' => 'Desain Presentasi',
+                'parent' => 'Dokumen & PPT',
+                'filters' => ['semua', 'Business', 'Education', 'Marketing', 'Pitch Deck']
+            ],
+            'data-entry' => [
+                'title' => 'Jasa Entri Data Akurat',
+                'description' => 'Layanan entri data dengan ketelitian tinggi',
+                'breadcrumb' => 'Entri Data',
+                'parent' => 'Dokumen & PPT',
+                'filters' => ['semua', 'Excel', 'Database', 'CRM', 'Spreadsheet']
+            ],
+            'transcription' => [
+                'title' => 'Jasa Transkripsi Profesional',
+                'description' => 'Konversi audio/video ke teks dengan akurasi tinggi',
+                'breadcrumb' => 'Transkripsi',
+                'parent' => 'Dokumen & PPT',
+                'filters' => ['semua', 'Audio', 'Video', 'Interview', 'Meeting']
+            ]
+        ];
 
-    // MODIFIED QUERY: Only show projects that don't have accepted proposals
-    $projects = Project::published()
-        ->where(function ($query) use ($subcategory) {
-            // New format
-            $query->where('category', 'grafis-desain')
-                ->where('subcategory', $subcategory);
+        if (!isset($dokumenSubcategories[$subcategory])) {
+            return redirect()->route('dokumen');
+        }
 
-            // Support legacy data
-            if ($subcategory === 'logo-design') {
-                $query->orWhere(function ($q) {
-                    $q->where('category', 'graphic-design')
-                        ->where('subcategory', 'logo-design');
-                });
-            }
-        })
-        ->whereDoesntHave('proposalls', function ($query) {
-            $query->where('status', 'accepted'); // Exclude projects with accepted proposals
-        })
-        ->latest()
-        ->get();
+        $config = $dokumenSubcategories[$subcategory];
+        $filter = $request->get('filter', 'semua');
 
-    return view('client.popular.web-development', [
-        'projects' => $projects,
-        'subcategory' => $subcategory,
-        'categoryConfig' => $config,
-        'totalProjects' => $projects->count()
-    ]);
-}
+        $projects = Project::published()
+            ->where('category', 'dokumen-ppt')
+            ->where('subcategory', $subcategory)
+            ->whereDoesntHave('proposalls', function ($query) {
+                $query->where('status', 'accepted');
+            })
+            ->latest()
+            ->get();
+
+        return view('client.popular.web-development', [
+            'projects' => $projects,
+            'subcategory' => $subcategory,
+            'categoryConfig' => $config,
+            'totalProjects' => $projects->count(),
+            'activeFilter' => $filter,
+            'isEdit' => false
+        ]);
+    }
+
+    /**
+     * Show web category projects
+     */
+    public function showWebCategory(Request $request, $subcategory)
+    {
+        $webSubcategories = [
+            'website-development' => [
+                'title' => 'Jasa Pembuatan Website Profesional',
+                'description' => 'Development website custom sesuai kebutuhan bisnis',
+                'breadcrumb' => 'Website Development',
+                'parent' => 'Web & App',
+                'filters' => ['semua', 'Company Profile', 'E-Commerce', 'Landing Page', 'Blog']
+            ],
+            'mobile-app-development' => [
+                'title' => 'Jasa Development Aplikasi Mobile',
+                'description' => 'Pembuatan aplikasi mobile Android dan iOS',
+                'breadcrumb' => 'Mobile App Development',
+                'parent' => 'Web & App',
+                'filters' => ['semua', 'Android', 'iOS', 'React Native', 'Flutter']
+            ],
+            'ecommerce-development' => [
+                'title' => 'Jasa Development E-Commerce',
+                'description' => 'Pembuatan toko online dan platform e-commerce',
+                'breadcrumb' => 'E-commerce Development',
+                'parent' => 'Web & App',
+                'filters' => ['semua', 'Shopify', 'WooCommerce', 'Magento', 'Custom']
+            ],
+            'web-maintenance' => [
+                'title' => 'Jasa Maintenance Website',
+                'description' => 'Perawatan dan update website berkala',
+                'breadcrumb' => 'Web Maintenance',
+                'parent' => 'Web & App',
+                'filters' => ['semua', 'WordPress', 'Security', 'Performance', 'Updates']
+            ]
+        ];
+
+        if (!isset($webSubcategories[$subcategory])) {
+            return redirect()->route('web');
+        }
+
+        $config = $webSubcategories[$subcategory];
+        $filter = $request->get('filter', 'semua');
+
+        $projects = Project::published()
+            ->where('category', 'web-app')
+            ->where('subcategory', $subcategory)
+            ->whereDoesntHave('proposalls', function ($query) {
+                $query->where('status', 'accepted');
+            })
+            ->latest()
+            ->get();
+
+        return view('client.popular.web-development', [
+            'projects' => $projects,
+            'subcategory' => $subcategory,
+            'categoryConfig' => $config,
+            'totalProjects' => $projects->count(),
+            'activeFilter' => $filter,
+            'isEdit' => false
+        ]);
+    }
+
+    /**
+     * Show video category projects
+     */
+    public function showVideoCategory(Request $request, $subcategory)
+    {
+        $videoSubcategories = [
+            'video-editing' => [
+                'title' => 'Jasa Edit Video Profesional',
+                'description' => 'Editing video dengan kualitas terbaik',
+                'breadcrumb' => 'Video Editing',
+                'parent' => 'Video Editing',
+                'filters' => ['semua', 'YouTube', 'Instagram', 'Wedding', 'Corporate']
+            ],
+            'animation' => [
+                'title' => 'Jasa Pembuatan Animasi',
+                'description' => 'Kreasi animasi 2D dan 3D berkualitas',
+                'breadcrumb' => 'Animasi',
+                'parent' => 'Video Editing',
+                'filters' => ['semua', '2D', '3D', 'Motion Graphics', 'Whiteboard']
+            ],
+            'motion-graphics' => [
+                'title' => 'Jasa Motion Graphics',
+                'description' => 'Desain motion graphics yang dinamis dan menarik',
+                'breadcrumb' => 'Motion Graphics',
+                'parent' => 'Video Editing',
+                'filters' => ['semua', 'Explainer', 'Promo', 'Title Sequence', 'Infographic']
+            ],
+            'video-production' => [
+                'title' => 'Jasa Produksi Video',
+                'description' => 'Produksi video dari konsep hingga final',
+                'breadcrumb' => 'Video Production',
+                'parent' => 'Video Editing',
+                'filters' => ['semua', 'Commercial', 'Documentary', 'Event', 'Training']
+            ]
+        ];
+
+        if (!isset($videoSubcategories[$subcategory])) {
+            return redirect()->route('video');
+        }
+
+        $config = $videoSubcategories[$subcategory];
+        $filter = $request->get('filter', 'semua');
+
+        $projects = Project::published()
+            ->where('category', 'video-editing')
+            ->where('subcategory', $subcategory)
+            ->whereDoesntHave('proposalls', function ($query) {
+                $query->where('status', 'accepted');
+            })
+            ->latest()
+            ->get();
+
+        return view('client.popular.web-development', [
+            'projects' => $projects,
+            'subcategory' => $subcategory,
+            'categoryConfig' => $config,
+            'totalProjects' => $projects->count(),
+            'activeFilter' => $filter,
+            'isEdit' => false
+        ]);
+    }
 
     /**
      * Redirect index to popular category
      */
     public function index()
     {
-        return redirect()->route('popular.category', ['subcategory' => 'website-development']);
+        return redirect()->route('popular');
     }
 }

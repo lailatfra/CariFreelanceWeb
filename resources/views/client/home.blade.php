@@ -666,17 +666,29 @@
     </section>
 
     <!-- Navigation -->
-    <div class="nav-container">
-        <nav class="nav">
-            <ul class="nav-list">
-                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
-                <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
-                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Video Editing</a></li>
-            </ul>
-        </nav>
-    </div>
+<div class="nav-container">
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{{ route('popular') }}" class="nav-link">Pekerjaan Populer</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('grafis') }}" class="nav-link">Grafis & Desain</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('dokumen') }}" class="nav-link">Dokumen & PPT</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('web') }}" class="nav-link">Web & App</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('video') }}" class="nav-link">Video Editing</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+</div>
     <!-- Main Content -->
     <main class="main-content1">
         <h2 class="section-title animate-on-scroll">Kategori Terbaru</h2>
@@ -685,37 +697,40 @@
         <!-- Categories Grid -->
         <div class="categories-grid">
 
-            <!-- Grafis & Desain -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('grafis-desain')">
-                <a href="/grafis" class="category-link">
-                <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Grafis & Desain" class="category-image">
-                <h3 class="category-title">Grafis & Desain</h3>
-                </a>
-            </div>
+            <!-- Categories Grid -->
+<div class="categories-grid">
+    <!-- Grafis & Desain -->
+    <div class="category-card animate-on-scroll">
+        <a href="{{ route('grafis.category', ['subcategory' => 'logo-design']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=300&fit=crop" alt="Grafis & Desain" class="category-image">
+            <h3 class="category-title">Grafis & Desain</h3>
+        </a>
+    </div>
 
-            <!-- Dokumen & PPT -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('dokumen-ppt')">
-                <a href="/dokumen" class="category-link">
-                <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500&h=300&fit=crop" alt="Dokumen & PPT" class="category-image">
-                <h3 class="category-title">Dokumen & PPT</h3>
-                </a>
-            </div>
+    <!-- Dokumen & PPT -->
+    <div class="category-card animate-on-scroll">
+        <a href="{{ route('dokumen.category', ['subcategory' => 'document-creation']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500&h=300&fit=crop" alt="Dokumen & PPT" class="category-image">
+            <h3 class="category-title">Dokumen & PPT</h3>
+        </a>
+    </div>
 
-            <!-- Web & App -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('web-app')">
-                <a href="/web-app" class="category-link">
-                <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&h=300&fit=crop" alt="Web & App" class="category-image">
-                <h3 class="category-title">Web & App</h3>
-                </a>
-            </div>
+    <!-- Web & App -->
+    <div class="category-card animate-on-scroll">
+        <a href="{{ route('web.category', ['subcategory' => 'website-development']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=500&h=300&fit=crop" alt="Web & App" class="category-image">
+            <h3 class="category-title">Web & App</h3>
+        </a>
+    </div>
 
-            <!-- Video Editing -->
-            <div class="category-card animate-on-scroll" onclick="navigateToCategory('video-editing')">
-                <a href="#" class="category-link">
-                <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=500&h=300&fit=crop" alt="Video Editing" class="category-image">
-                <h3 class="category-title">Video Editing</h3>
-                </a>
-            </div>
+    <!-- Video Editing -->
+    <div class="category-card animate-on-scroll">
+        <a href="{{ route('video.category', ['subcategory' => 'video-editing']) }}" class="category-link">
+            <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=500&h=300&fit=crop" alt="Video Editing" class="category-image">
+            <h3 class="category-title">Video Editing</h3>
+        </a>
+    </div>
+</div>
 
         </div>
     </main>

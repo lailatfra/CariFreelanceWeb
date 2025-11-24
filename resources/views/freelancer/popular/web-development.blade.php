@@ -1,7 +1,7 @@
-
 @extends('freelancer.layout.freelancer-layout')
-@section('title', 'web & development - CariFreelance Freelancer')
+@section('title', 'Website Development - CariFreelance Freelancer')
 @section('content')
+    
     <!DOCTYPE html>
     <html lang="id">
     <head>

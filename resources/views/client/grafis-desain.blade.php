@@ -530,19 +530,28 @@
         </div>
     </section>
 
-    <!-- Navigation -->
-  <!-- Navigation -->
-    <div class="nav-container">
-        <nav class="nav">
-            <ul class="nav-list">
-                <li class="nav-item"><a href="/popular" class="nav-link">Pekerjaan Populer</a></li>
-                <li class="nav-item"><a href="/grafis" class="nav-link">Grafis & Desain</a></li>
-                <li class="nav-item"><a href="/dokumen" class="nav-link">Dokumen & PPT</a></li>
-                <li class="nav-item"><a href="/web-app" class="nav-link">Web & App</a></li>
-                <li class="nav-item"><a href="/video" class="nav-link">Video Editing</a></li>
-            </ul>
-        </nav>
-    </div>
+<!-- Navigation -->
+<div class="nav-container">
+    <nav class="nav">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{{ route('popular') }}" class="nav-link">Pekerjaan Populer</a>
+            </li>
+            <li class="nav-item active">
+                <a href="{{ route('grafis') }}" class="nav-link">Grafis & Desain</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('dokumen') }}" class="nav-link">Dokumen & PPT</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('web') }}" class="nav-link">Web & App</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('video') }}" class="nav-link">Video Editing</a>
+            </li>
+        </ul>
+    </nav>
+</div>
 
     <!-- Main Layout -->
     <div class="main-layout">
@@ -617,10 +626,6 @@
     </div>
 </div>
 
-            <!-- Load More Section -->
-            <div class="load-more-section">
-                <button class="load-more-btn" onclick="loadMoreCategories()">Lihat Lebih Banyak</button>
-            </div>
         </main>
     </div>
 

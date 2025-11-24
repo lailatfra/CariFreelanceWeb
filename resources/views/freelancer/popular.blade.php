@@ -1,6 +1,7 @@
 @extends('freelancer.layout.freelancer-layout')
 @section('title', 'Pekerjaan Popular - CariFreelance Freelancer')
 @section('content')
+@include('freelancer.categories.popular') {{-- Anda bisa buat component terpisah atau copy dari client --}}
 
 <!DOCTYPE html>
 <html lang="id">
