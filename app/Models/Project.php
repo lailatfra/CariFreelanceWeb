@@ -303,13 +303,15 @@ class Project extends Model
         return $deadline->format('d M Y');
     }
 
-    // File attachment methods (unchanged from previous version)
-    public function getAttachmentsByType($type = null)
-    {
-        if (empty($this->attachments)) {
-            return [];
-        }
+    // Di Model Project
+public function getAttachmentsByType($type = null)
+{
+    if (empty($this->attachments)) {
+        return [];
+    }
 
+    // Jika attachments adalah array, proses seperti biasa
+    if (is_array($this->attachments)) {
         $result = [];
         foreach ($this->attachments as $attachment) {
             $fileType = $attachment['file_type'] ?? 'other';
@@ -317,6 +319,7 @@ class Project extends Model
             if ($type === null || $fileType === $type) {
                 $url = null;
                 if (isset($attachment['path'])) {
+                    // Pastikan path benar
                     $url = asset('storage/' . $attachment['path']);
                 }
 
@@ -333,44 +336,50 @@ class Project extends Model
                 }
             }
         }
-
         return $result;
     }
 
-    public function getImages()
-    {
-        return $this->getAttachmentsByType('image');
+    return [];
+}
+
+// Method untuk mendapatkan semua gambar
+public function getImages()
+{
+    return $this->getAttachmentsByType('image');
+}
+
+// Method untuk mendapatkan semua video
+public function getVideos()
+{
+    return $this->getAttachmentsByType('video');
+}
+
+// Method untuk mendapatkan semua dokumen
+public function getDocuments()
+{
+    return $this->getAttachmentsByType('document');
+}
+
+// Method untuk mendapatkan attachment utama
+public function getMainAttachmentAttribute()
+{
+    $images = $this->getImages();
+    if (!empty($images)) {
+        return $images[0];
+    }
+    
+    $videos = $this->getVideos();
+    if (!empty($videos)) {
+        return $videos[0];
+    }
+    
+    $documents = $this->getDocuments();
+    if (!empty($documents)) {
+        return $documents[0];
     }
 
-    public function getVideos()
-    {
-        return $this->getAttachmentsByType('video');
-    }
-
-    public function getDocuments()
-    {
-        return $this->getAttachmentsByType('document');
-    }
-
-    public function getMainAttachmentAttribute()
-    {
-        if ($this->hasImage()) {
-            $images = $this->getImages();
-            return $images[0] ?? null;
-        }
-        
-        if ($this->hasVideo()) {
-            $videos = $this->getVideos();
-            return $videos[0] ?? null;
-        }
-        
-        if ($this->hasDocument()) {
-            $documents = $this->getDocuments();
-            return $documents[0] ?? null;
-        }
-
-        return null;
-    }
+    return null;
+}
 
     public function getTotalFileSizeAttribute()
     {
@@ -502,6 +511,7 @@ public function projectCancellation()
 {
     return $this->hasOne(ProjectCancellation::class);
 }
+
 
 
 }

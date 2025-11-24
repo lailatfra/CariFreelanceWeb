@@ -192,11 +192,6 @@
                     </div>
                   </div>
                 </form>
-                <div class="mt-2">
-                  <button class="btn btn-outline-primary btn-sm mr-1" title="Lihat Detail">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </div>
               </td>
             </tr>
             @empty

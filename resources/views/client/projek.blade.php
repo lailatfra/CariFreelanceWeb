@@ -43,6 +43,117 @@
             color: var(--gray-900);
         }
 
+        /* Image Preview Styles */
+.image-previews {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.image-preview {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.image-preview:hover {
+    border-color: #3b82f6;
+    transform: scale(1.05);
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.image-preview-remove:hover {
+    background: #dc2626;
+}
+/* FIX FOR BOOTSTRAP MODAL vs CUSTOM MODAL CONFLICT */
+/* Bootstrap Modal (cancellationDetailModal) */
+#cancellationDetailModal {
+    z-index: 1060 !important;
+}
+
+#cancellationDetailModal .modal-backdrop {
+    z-index: 1055 !important;
+    opacity: 0.5 !important;
+}
+
+#cancellationDetailModal .modal-dialog {
+    z-index: 1061 !important;
+}
+
+#cancellationDetailModal .modal-content {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    z-index: 1062 !important;
+}
+
+#cancellationDetailModal .modal-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 30px;
+}
+
+#cancellationDetailModal .modal-title {
+    color: white;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+#cancellationDetailModal .btn-close {
+    filter: invert(1);
+    opacity: 0.8;
+}
+
+#cancellationDetailModal .btn-close:hover {
+    opacity: 1;
+}
+
+#cancellationDetailModal .modal-body {
+    padding: 30px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Custom Modals (yang pakai class .modal) - z-index lebih rendah */
+.modal:not(#cancellationDetailModal) {
+    z-index: 1000 !important;
+}
+
+.modal:not(#cancellationDetailModal) .modal-content {
+    z-index: 1001 !important;
+}
+
         button {
             cursor: pointer;
             background: none;
@@ -1398,6 +1509,31 @@
             color: #1DA1F2;
             text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
         }
+        
+        /* FIX KHUSUS UNTUK CANCELLATION MODAL */
+#cancellationDetailModal {
+    z-index: 9999 !important; /* Pastikan paling atas */
+}
+
+#cancellationDetailModal .modal-content {
+    z-index: 10000 !important;
+    position: relative;
+}
+
+/* HAPUS SEMUA BACKDROP BOOTSTRAP */
+.modal-backdrop {
+    display: none !important;
+}
+
+.bg-modal {
+    display: none !important;
+}
+
+/* Pastikan modal custom backdrop bekerja */
+.modal {
+    background: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(8px);
+}
     </style>
 </head>
 
@@ -1452,330 +1588,290 @@
 
 
             <!-- Table: Applied (Open Projects) - Latest first -->
-            <div class="table-wrap tab-content" id="applied"> 
-                <table class="applied-table">
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>Judul Pekerjaan</th>
-                            <th>Sub Kategori</th>
-                            <th>Freelancer Terpilih</th>
-                            <th>Budget (Rp)</th>
-                            <th>Tanggal Diposting</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php 
-                            $openProjects = $openProjects->sortBy('created_at');
-                            $no = 1; 
-                        @endphp
-                        @forelse($openProjects as $project)
-                            @php
-                                $acceptedProposal = $project->proposalls()
-                                    ->where('status', 'accepted')
-                                    ->with('user')
-                                    ->first();
-                                $isCompleted = $project->submitProjects()
-                                    ->where('status', 'selesai')
-                                    ->exists();
+<div class="table-wrap tab-content" id="applied"> 
+    <table class="applied-table">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Judul Pekerjaan</th>
+                <th>Sub Kategori</th>
+                <th>Freelancer Terpilih</th>
+                <th>Budget (Rp)</th>
+                <th>Tanggal Diposting</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php 
+                $openProjects = $openProjects->sortBy('created_at');
+                $no = 1; 
+            @endphp
+            @forelse($openProjects as $project)
+                @php
+                    $acceptedProposal = $project->proposalls()
+                        ->where('status', 'accepted')
+                        ->with('user')
+                        ->first();
+                    $isCompleted = $project->submitProjects()
+                        ->where('status', 'selesai')
+                        ->exists();
+                    
+                    $hasFreelancer = $acceptedProposal !== null;
+                    $isPendingCancellation = $project->cancellation_status === 'pending';
+                    $isApprovedCancellation = $project->cancellation_status === 'approved';
+                @endphp
+
+                <tr style="{{ $isPendingCancellation ? 'opacity: 0.6; background: #fef3c7;' : ($isApprovedCancellation ? 'opacity: 0.6; background: #fee2e2;' : '') }}">
+                    <td>{{ $no++ }}</td>
+                    <td>
+                        {{ $project->title }}
+                        @if($isPendingCancellation)
+                            <span class="status-badge" style="background: #fbbf24; color: #78350f; margin-left: 8px;">
+                                <i class="fas fa-clock"></i> Pengajuan Pembatalan
+                            </span>
+                        @elseif($isApprovedCancellation)
+                            <span class="status-badge" style="background: #ef4444; color: white; margin-left: 8px;">
+                                <i class="fas fa-times-circle"></i> Proyek Dibatalkan
+                            </span>
+                        @endif
+                    </td>
+                    <td>{{ $project->subcategory }}</td>
+                    <td>
+                        @if($acceptedProposal)
+                            {{ $acceptedProposal->user->name ?? '-' }}
+                        @else
+                            <a href="{{ route('freelancer.show', $project->id) }}" 
+                            style="color: var(--gray-500); text-decoration: underline; cursor: pointer;">
+                                Pilih freelancer
+                            </a>
+                        @endif
+                    </td>
+                    <td>{{ $project->formatted_budget }}</td>
+                    <td>{{ $project->created_at->format('d/m/Y') }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{{ route('projects.show', $project->id) }}" class="btn btn-detail">
+                                <i class="fas fa-info-circle"></i> Detail
+                            </a>
+                            
+                            @if($isApprovedCancellation)
+                                <!-- Tampilkan informasi proyek dibatalkan -->
+                                <button class="btn btn-cancelled" style="background: #ef4444; color: white;" disabled>
+                                    <i class="fas fa-ban"></i> Proyek Dibatalkan
+                                </button>
+                            @else
+                                @if(!$hasFreelancer)
+                                    <a href="{{ route('projects.edit', $project->id) }}" class="btn btn-edit">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    
+                                @elseif($isCompleted)
+                                    <button class="btn btn-results" onclick="showCompletedTab()">
+                                        <i class="fas fa-check-circle"></i> Lihat Hasil
+                                    </button>
+                                @else
+                                    <button class="btn btn-monitor" onclick="showWorkingTab()">
+                                        <i class="fas fa-eye"></i> Pantau Projek
+                                    </button>
+                                @endif
                                 
-                                $hasFreelancer = $acceptedProposal !== null;
-                                $isPendingCancellation = $project->cancellation_status === 'pending';
-                            @endphp
-
-                            <tr style="{{ $isPendingCancellation ? 'opacity: 0.6; background: #fef3c7;' : '' }}">
-                                <td>{{ $no++ }}</td>
-                                <td>
-                                    {{ $project->title }}
-                                    @if($isPendingCancellation)
-                                        <span class="status-badge" style="background: #fbbf24; color: #78350f; margin-left: 8px;">
-                                            <i class="fas fa-clock"></i> Pengajuan Pembatalan
-                                        </span>
-                                    @endif
-                                </td>
-                                <td>{{ $project->subcategory }}</td>
-                                <td>
-                                    @if($acceptedProposal)
-                                        {{ $acceptedProposal->user->name ?? '-' }}
-                                    @else
-                                        <a href="{{ route('freelancer.show', $project->id) }}" 
-                                        style="color: var(--gray-500); text-decoration: underline; cursor: pointer;">
-                                            Pilih freelancer
-                                        </a>
-                                    @endif
-                                </td>
-                                <td>{{ $project->formatted_budget }}</td>
-                                <td>{{ $project->created_at->format('d/m/Y') }}</td>
-                                <td>
+                                @if(!$isPendingCancellation)
                                     <div class="action-buttons">
-                                        <a href="{{ route('projects.show', $project->id) }}" class="btn btn-detail">
-                                            <i class="fas fa-info-circle"></i> Detail
-                                        </a>
-                                        @if(!$hasFreelancer)
-                                            <a href="{{ route('projects.edit', $project->id) }}" class="btn btn-edit">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            
-                                        @elseif($isCompleted)
-                                            <button class="btn btn-results" onclick="showCompletedTab()">
-                                                <i class="fas fa-check-circle"></i> Lihat Hasil
+                                        {{-- Jika project sudah selesai --}}
+                                        @if($project->status === 'completed')
+                                            <span class="status-badge" style="background:#d1fae5; color:#065f46; padding:6px 12px; border-radius:6px;">
+                                                ✔ Selesai
+                                            </span>
+
+                                        {{-- Jika belum ada freelancer --}}
+                                        @elseif(!$hasFreelancer)
+                                            <button class="btn btn-delete" 
+                                                    onclick="confirmDeleteProject({{ $project->id }}, '{{ addslashes($project->title) }}')">
+                                                <i class="fas fa-trash"></i> Cancel
                                             </button>
+
+                                        {{-- Jika sudah ada freelancer (project sedang berjalan) --}}
                                         @else
-                                            <button class="btn btn-monitor" onclick="showWorkingTab()">
-                                                <i class="fas fa-eye"></i> Pantau Projek
-                                            </button>
-                                        @endif
-                                        @if($isPendingCancellation)
-                                            <div class="action-buttons">
-                                                <!-- Tombol Setujui (Centang Hijau) -->
-                                                <button class="btn btn-success" 
-                                                        onclick="handleApproveCancellation({{ $project->id }}, '{{ addslashes($project->title) }}')"
-                                                        title="Setujui Pembatalan">
-                                                    <i class="fas fa-check"></i> Setujui
-                                                </button>
-                                                
-                                                <!-- Tombol Tolak (Silang Merah) -->
-                                                <button class="btn btn-danger" 
-                                                        onclick="handleRejectCancellation({{ $project->id }}, '{{ addslashes($project->title) }}')"
-                                                        title="Tolak Pembatalan">
-                                                    <i class="fas fa-times"></i> Tolak
-                                                </button>
-                                            </div>
-                                        @else
-                                            <div class="action-buttons">
-
-                                            {{-- Jika project sudah selesai --}}
-                                            @if($project->status === 'completed')
-                                                <span class="status-badge" style="background:#d1fae5; color:#065f46; padding:6px 12px; border-radius:6px;">
-                                                    ✔ Selesai
-                                                </span>
-
-                                            {{-- Jika belum ada freelancer --}}
-                                            @elseif(!$hasFreelancer)
-                                                <button class="btn btn-delete" 
-                                                        onclick="confirmDeleteProject({{ $project->id }}, '{{ addslashes($project->title) }}')">
-                                                    <i class="fas fa-trash"></i> Cancel
-                                                </button>
-
-                                            {{-- Jika sudah ada freelancer (project sedang berjalan) --}}
-                                            @else
-                                                <button class="btn btn-detail" onclick="goToWorkingTab({{ $project->id }})">
-                                                    <i class="fas fa-tasks"></i> Pantau Proyek
-                                                </button>
-                                            @endif
-
-                                        </div>
-
-
+                                            <!-- <button class="btn btn-detail" onclick="goToWorkingTab({{ $project->id }})">
+                                                <i class="fas fa-tasks"></i> Pantau Proyek
+                                            </button> -->
                                         @endif
                                     </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray-500);">
-                                    Belum ada pekerjaan terbuka
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                                @endif
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                        Belum ada pekerjaan terbuka
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
             <!-- Table: Working Projects - Latest first -->
-            <div class="table-wrap tab-content hidden" id="working">
-                <table class="working-table">
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>Judul Pekerjaan</th>
-                            <th>Freelancer</th>
-                            <th>Deadline</th>
-                            <th>Timeline</th>
-                            <th>Status</th>
-                            <th>Progress</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php 
-                            $projects = $projects->sortBy('created_at');
-                            $no = 1; 
-                        @endphp
-                        @foreach($projects as $project)
-                            @php
-                                $cancellation = \DB::table('project_cancellations')
-                                    ->where('project_id', $project->id)
-                                    ->first();
+<div class="table-wrap tab-content hidden" id="working">
+    <table class="working-table">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Judul Pekerjaan</th>
+                <th>Freelancer</th>
+                <th>Deadline</th>
+                <th>Timeline</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+$projects = $projects
+    ->where('user_id', auth()->id())
+    ->filter(function($p) {
+        return $p->cancellation_status === null 
+            || $p->cancellation_status === 'pending'
+            || $p->cancellation_status === 'rejected';
+    })
+    ->sortBy('created_at');
 
-                                $showCancelFailed = false;
+$no = 1;
+@endphp
 
-                                // Jika project dibatalkan:
-                                if ($cancellation) {
 
-                                    // Jika refund_status = completed → tampilkan di tab WORKING sebagai "Cancel Gagal"
-                                    if ($cancellation->refund_status === 'completed') {
-                                        $showCancelFailed = true;
-                                    } 
-                                    // Selain itu → tetap disembunyikan (cancel sukses / pending)
-                                    else {
-                                        continue;
-                                    }
-                                }
+            @foreach($projects as $project)
+                @php
+                    // GUNAKAN: Logika sederhana seperti kode kedua
+                    $acceptedProposal = $project->proposalls->first();
+                    $latestSubmission = $project->submitProjects->first(); // Submission terbaru
+                    
+                    // PERBAIKAN: Tentukan status display berdasarkan submission
+                    if ($latestSubmission) {
+                        $statusDisplay = match($latestSubmission->status) {
+                            'pending' => 'Menunggu Persetujuan',
+                            'revisi' => 'Revisi',
+                            'selesai' => 'Selesai',
+                            default => 'Dalam Proses'
+                        };
+                        $statusClass = match($latestSubmission->status) {
+                            'pending' => 'status-pending',
+                            'revisi' => 'status-revision',
+                            'selesai' => 'status-completed',
+                            default => 'status-working'
+                        };
+                    } else {
+                        $statusDisplay = 'Dalam Proses';
+                        $statusClass = 'status-working';
+                    }
+                    
+                    // Deadline calculation
+                    $deadline = $project->deadline ? \Carbon\Carbon::parse($project->deadline) : null;
+                    if ($deadline) {
+                        if (now()->lessThanOrEqualTo($deadline)) {
+                            $deadlineDays = floor(now()->floatDiffInDays($deadline));
+                            $deadlineText = 'Deadline kurang ' . substr($deadlineDays, 0, 2) . ' hari';
+                        } else {
+                            $deadlineDays = floor($deadline->floatDiffInDays(now()));
+                            $deadlineText = 'Terlambat ' . substr($deadlineDays, 0, 2) . ' hari';
+                        }
+                    } else {
+                        $deadlineText = 'Tidak ada deadline';
+                    }
 
-                                $acceptedProposal = $project->proposalls()
-                                    ->where('status', 'accepted')
-                                    ->first();
-                                $submitProject = $project->submitProjects()
-                                    ->where('user_id', $acceptedProposal->user_id ?? 0)
-                                    ->first();
-                                $statusDisplay = $submitProject ? match($submitProject->status) {
-                                    'pending' => 'Menunggu Persetujuan',
-                                    'revisi' => 'Revisi',
-                                    default => 'Dalam Proses'
-                                } : 'Dalam Proses';
-                                $statusClass = $submitProject ? match($submitProject->status) {
-                                    'pending' => 'status-pending',
-                                    'revisi' => 'status-revision',
-                                    default => 'status-working'
-                                } : 'status-working';
-                                $hasSubmitted = $submitProject && in_array($submitProject->status, ['pending', 'revisi']);
-                                
-                                // Pastikan deadline di-parse ke Carbon (pakai namespace langsung)
-                                $deadline = $project->deadline ? \Carbon\Carbon::parse($project->deadline) : null;
+                    // CEK STATUS CANCELLATION
+                    $cancellationStatus = $project->cancellation_status; // asumsi kolom ada di tabel projects
+                @endphp
 
-                                if ($deadline) {
-                                    if (now()->lessThanOrEqualTo($deadline)) {
-                                        $deadlineDays = floor(now()->floatDiffInDays($deadline));
-                                        $deadlineText = 'Deadline kurang ' . substr($deadlineDays, 0, 2) . ' hari';
-                                    } else {
-                                        $deadlineDays = floor($deadline->floatDiffInDays(now()));
-                                        $deadlineText = 'Terlambat ' . substr($deadlineDays, 0, 2) . ' hari';
-                                    }
-                                } else {
-                                    $deadlineText = 'Tidak ada deadline';
-                                }
-
-                            @endphp
-
-                            @if(!$submitProject || $submitProject->status !== 'selesai')
-                            <tr>
-                                <td>{{ $no++ }}</td>
-                                <td>{{ $project->title }}</td>
-                                <td>{{ optional($acceptedProposal->user)->name ?? '-' }}</td>
-                                <td>
-                                    <span class="deadline-badge {{ $deadlineDays >= 0 ? 'deadline-upcoming' : 'deadline-late' }}">
-                                        {{ $deadlineText }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{{ route('timeline', $project->id) }}">Lihat Timeline</a>
-                                </td>
-                                <td>
-                                    <span class="status-badge {{ $statusClass }}">
-                                        {{ $statusDisplay }}
-                                    </span>
-                                </td>
-                                <td>
-                                    {{ $project->progress ?? 0 }}%
-                                    <div class="progress-container">
-                                        <div class="progress-bar" style="width: {{ $project->progress ?? 0 }}%"></div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <a href="{{ route('chat') }}" class="btn btn-chat">
-                                            <i class="fas fa-comments"></i> Chat
-                                        </a>
-                                        <button class="btn btn-view" onclick="viewProgress({{ $project->id }})">
-                                            <i class="fas fa-eye"></i> Lihat Progress
-                                        </button>
-                                        
-                                        @php
-                                            $submitProject = $project->submitProjects->first();
-                                        @endphp
-
-                                        @if($submitProject && $submitProject->status === 'pending')
-                                            <button class="btn btn-accept"
-                                                onclick="reviewSubmission({{ $submitProject->id }}, {{ $project->id }})">
-                                                Setujui / Revisi
-                                            </button>
-                                        @elseif($hasSubmitted && $submitProject->status === 'revisi')
-                                            <button class="btn btn-edit-notes" onclick="editNotes({{ $submitProject->id }})">
-                                                <i class="fas fa-edit"></i> Edit Notes
-                                            </button>
-                                        @endif
-                                        
-                                        @if($showCancelFailed)
-                                            <button class="btn" style="background:#dc3545; color:white; cursor:default;">
-                                                <i class="fas fa-times-circle"></i> Cancel Gagal
-                                            </button>
-                                        @endif
-
-                                        {{-- PERBAIKAN: Tambahkan parameter true untuk working project --}}
-                                        <button class="btn btn-delete" 
-                                                onclick="openCancelModal({{ $project->id }}, '{{ addslashes($project->title) }}', true)">
-                                            <i class="fas fa-trash"></i> Cancel
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                <tr>
+                    <td>{{ $no++ }}</td>
+                    <td>{{ $project->title }}</td>
+                    <td>{{ optional($acceptedProposal->user)->name ?? '-' }}</td>
+                    <td>
+                        <span class="deadline-badge {{ ($deadlineDays ?? 0) >= 0 ? 'deadline-upcoming' : 'deadline-late' }}">
+                            {{ $deadlineText }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ route('timeline', $project->id) }}">Lihat Timeline</a>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ $statusClass }}">
+                            {{ $statusDisplay }}
+                        </span>
+                    </td>
+                    <td>
+                        {{ $project->progress ?? 0 }}%
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: {{ $project->progress ?? 0 }}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{{ route('chat') }}" class="btn btn-chat">
+                                <i class="fas fa-comments"></i> Chat
+                            </a>
+                            <button class="btn btn-view" onclick="viewProgress({{ $project->id }})">
+                                <i class="fas fa-eye"></i> Lihat Progress
+                            </button>
+                            
+                            {{-- PERBAIKAN: Tampilkan tombol berdasarkan status submission --}}
+                            @if($latestSubmission)
+                                @if($latestSubmission->status === 'pending')
+                                    <button class="btn btn-accept"
+                                        onclick="reviewSubmission({{ $latestSubmission->id }}, {{ $project->id }})">
+                                        Setujui / Revisi
+                                    </button>
+                                @elseif($latestSubmission->status === 'revisi')
+                                    <button class="btn btn-edit-notes" onclick="editNotes({{ $latestSubmission->id }})">
+                                        <i class="fas fa-edit"></i> Edit Notes
+                                    </button>
+                                @endif
                             @endif
+                            
+                            {{-- LOGIKA CANCEL BUTTON BARU --}}
+@if($cancellationStatus === 'pending')
+    {{-- Pending = tidak boleh cancel lagi --}}
+    <button class="btn btn-info" style="background: #17a2b8; color: white; cursor: default;" disabled>
+        <i class="fas fa-clock"></i> Mengajukan Pembatalan
+    </button>
 
-                            <!-- Modal Cancel for Working Projects -->
-                            <div class="modal fade" id="cancelWorkingModal-{{ $project->id }}" tabindex="-1" aria-labelledby="cancelWorkingModalLabel-{{ $project->id }}" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title" id="cancelWorkingModalLabel-{{ $project->id }}">
-                                                <i class="fas fa-exclamation-triangle"></i> Cancel Projek: {{ $project->title }}
-                                            </h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="alert alert-warning" role="alert">
-                                                <i class="fas fa-info-circle"></i>
-                                                <strong>Peringatan:</strong> Membatalkan projek ini akan menghentikan semua progress dan tidak dapat dikembalikan.
-                                            </div>
-                                            <form id="cancelWorkingForm-{{ $project->id }}">
-                                                <div class="mb-3">
-                                                    <label for="workingReason-{{ $project->id }}" class="form-label">
-                                                        <strong>Alasan pembatalan:</strong> <span class="text-danger">*</span>
-                                                    </label>
-                                                    <textarea id="workingReason-{{ $project->id }}" class="form-control" rows="4" 
-                                                            placeholder="Jelaskan alasan pembatalan projek ini..." required></textarea>
-                                                    <div class="form-text">Minimal 10 karakter diperlukan</div>
-                                                    <div class="char-counter-working">
-                                                        Karakter: <span id="workingCharCount-{{ $project->id }}">0</span>/500
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Project Info -->
-                                                <div class="mb-3 p-3 bg-light rounded">
-                                                    <h6><i class="fas fa-info-circle"></i> Informasi Projek:</h6>
-                                                    <p class="mb-1"><strong>Freelancer:</strong> {{ optional($acceptedProposal->user)->name ?? 'Tidak ada' }}</p>
-                                                    <p class="mb-1"><strong>Progress:</strong> {{ $project->progress ?? 0 }}%</p>
-                                                    <p class="mb-1"><strong>Deadline:</strong> {{ $deadlineText }}</p>
-                                                    <p class="mb-0"><strong>Status:</strong> {{ $statusDisplay }}</p>
-                                                </div>
-                                            </form>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                <i class="fas fa-arrow-left"></i> Kembali
-                                            </button>
-                                            <button type="button" class="btn btn-danger" onclick="submitWorkingCancel({{ $project->id }})">
-                                                <i class="fas fa-ban"></i> Ya, Batalkan Projek
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+@elseif($cancellationStatus === 'rejected')
+    {{-- Rejected = tetap boleh cancel + tampilkan info gagal --}}
+<div style="display: flex; align-items: center; gap: 10px;">
+
+    <!-- Tombol Cancel -->
+    <button class="btn btn-delete" 
+            onclick="openCancelModal({{ $project->id }}, '{{ addslashes($project->title) }}', true)">
+        <i class="fas fa-trash"></i> Cancel
+    </button>
+
+    <!-- Info Cancel Gagal -->
+    <span style="color: #dc3545; font-size: 12px; cursor:pointer;"
+        onclick="showRejectionReason('{{ addslashes($project->cancellation->rejection_reason ?? 'Tidak ada alasan') }}')">
+        <i class="fas fa-exclamation-circle"></i> Cancel gagal
+    </span>
+
+</div>
+
+@else
+    {{-- NULL = belum pernah ajukan pembatalan, tombol cancel normal --}}
+    <button class="btn btn-delete" 
+            onclick="openCancelModal({{ $project->id }}, '{{ addslashes($project->title) }}', true)">
+        <i class="fas fa-trash"></i> Cancel
+    </button>
+@endif
+
+                        </div>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
 
             <!-- Table: Completed Projects - Latest first -->
             <div class="table-wrap tab-content hidden" id="completed">
@@ -1796,6 +1892,7 @@
                     <tbody>
                         @php
                             $completed = $completed->sortBy('updated_at');
+                            $no = 1;
                         @endphp
                         @forelse($completed as $index => $submission)
                             @php
@@ -1834,7 +1931,7 @@
                                 $currentRating = $sampleRatings[$index % count($sampleRatings)];
                             @endphp
                             <tr data-project-id="{{ $submission->project->id }}">
-                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $no++ }}</td>
                                 <td>{{ $submission->project->title ?? '-' }}</td>
                                 <td>{{ $submission->user->name ?? '-' }}</td>
                                 <td>
@@ -1898,7 +1995,7 @@
                 </table>
             </div>
 
-            <!-- Table: Cancelled Projects -->
+<!-- Table: Cancelled Projects -->
 <div class="table-wrap tab-content hidden" id="cancelled">
     <table class="completed-table">
         <thead>
@@ -1914,9 +2011,16 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($cancelledProjects as $index => $cancel)
+            
+            @php
+                // Urutkan data dari terlama ke terbaru (ASC)
+                $sortedCancelled = $cancelledProjects->sortBy('cancelled_at');
+                $no = 1
+            @endphp
+
+            @forelse($sortedCancelled as $index => $cancel)
                 <tr>
-                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $no++ }}</td>
                     <td>{{ $cancel->project->title }}</td>
 
                     <td>
@@ -1950,19 +2054,19 @@
                     </td>
 
                     <td>
-                        <a href="{{ route('projects.show', $cancel->project->id) }}" class="btn btn-detail">
-                            <i class="fas fa-info-circle"></i> Detail
-                        </a>
-                    </td>
+    <button type="button" class="btn btn-detail" data-cancellation-id="{{ $cancel->id }}">
+        <i class="fas fa-info-circle"></i> Detail
+    </button>
+</td>
                 </tr>
 
-                @empty
+            @empty
                 <tr>
                     <td colspan="8" style="text-align: center; padding: 2rem; color: var(--gray-500);">
                         Tidak ada project yang dibatalkan
                     </td>
                 </tr>
-                @endforelse
+            @endforelse
 
         </tbody>
     </table>
@@ -2289,22 +2393,28 @@
 </div>
 
                 <!-- Upload Evidence (Optional) -->
-                <div class="form-group">
-                    <label for="cancelOpenEvidence" class="form-label">
-                        <strong>Upload Bukti Pendukung:</strong> <span style="color: #9ca3af;">(Opsional)</span>
-                    </label>
-                    <input
-                        type="file"
-                        id="cancelOpenEvidence"
-                        name="evidence_files[]"
-                        class="form-control"
-                        accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt"
-                        multiple>
-                    <small style="color: #6b7280; font-size: 12px;">
-                        Format: JPG, PNG, PDF, DOC, DOCX, TXT (Max. 5MB per file)
-                    </small>
-                    <div id="cancelOpenFileList" style="margin-top: 10px;"></div>
-                </div>
+<div class="form-group">
+    <label for="cancelOpenEvidence" class="form-label">
+        <strong>Upload Bukti Pendukung:</strong> <span style="color: #9ca3af;">(Opsional)</span>
+    </label>
+    <input
+        type="file"
+        id="cancelOpenEvidence"
+        name="evidence_files[]"
+        class="form-control"
+        accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt"
+        multiple
+        onchange="handleFileUploadWithPreview(this, 'cancelOpenFileList', 'imagePreviewsOpen')">
+    <small style="color: #6b7280; font-size: 12px;">
+        Format: JPG, PNG, PDF, DOC, DOCX, TXT (Max. 5MB per file)
+    </small>
+    
+    <!-- Preview Gambar -->
+    <div id="imagePreviewsOpen" class="image-previews" style="margin-top: 10px;"></div>
+    
+    <!-- List File (untuk non-gambar) -->
+    <div id="cancelOpenFileList" class="files-preview" style="margin-top: 10px;"></div>
+</div>
 
                 <!-- Info Warning -->
                 <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 6px; margin-top: 15px;">
@@ -2384,29 +2494,35 @@
                 </div>
 
                 <!-- ✅ UPLOAD BUKTI - COMPACT -->
-                <div style="margin-bottom: 20px; padding: 0 1.5rem;">
-                    <label for="cancelEvidenceFilesWorking" class="form-label" style="display: block; margin-bottom: 6px;">
-                        <strong style="font-size: 13px;">Upload Bukti (Opsional):</strong>
-                    </label>
-                    <div 
-                        style="border: 2px dashed #d1d5db; border-radius: 6px; padding: 12px; text-align: center; background: #f9fafb; cursor: pointer; transition: all 0.3s;" 
-                        onclick="document.getElementById('cancelEvidenceFilesWorking').click()"
-                        id="cancelDropZoneWorking">
-                        <input 
-                            type="file" 
-                            id="cancelEvidenceFilesWorking" 
-                            name="evidence_files[]" 
-                            multiple 
-                            accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt" 
-                            style="display: none;">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; color: #3b82f6; margin-bottom: 6px;"></i>
-                        <p style="margin: 0; color: #3b82f6; font-weight: 600; font-size: 13px;">Klik untuk upload file bukti</p>
-                        <p style="margin: 4px 0 0 0; font-size: 11px; color: #6b7280;">
-                            Gambar, PDF, DOC - Max 5MB/file
-                        </p>
-                    </div>
-                    <div id="cancelFileListWorking" class="files-preview" style="margin-top: 8px;"></div>
-                </div>
+<div style="margin-bottom: 20px; padding: 0 1.5rem;">
+    <label for="cancelEvidenceFilesWorking" class="form-label" style="display: block; margin-bottom: 6px;">
+        <strong style="font-size: 13px;">Upload Bukti (Opsional):</strong>
+    </label>
+    <div 
+        style="border: 2px dashed #d1d5db; border-radius: 6px; padding: 12px; text-align: center; background: #f9fafb; cursor: pointer; transition: all 0.3s;" 
+        onclick="document.getElementById('cancelEvidenceFilesWorking').click()"
+        id="cancelDropZoneWorking">
+        <input 
+            type="file" 
+            id="cancelEvidenceFilesWorking" 
+            name="evidence_files[]" 
+            multiple 
+            accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt" 
+            style="display: none;"
+            onchange="handleFileUploadWithPreview(this, 'cancelFileListWorking', 'imagePreviewsWorking')">
+        <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; color: #3b82f6; margin-bottom: 6px;"></i>
+        <p style="margin: 0; color: #3b82f6; font-weight: 600; font-size: 13px;">Klik untuk upload file bukti</p>
+        <p style="margin: 4px 0 0 0; font-size: 11px; color: #6b7280;">
+            Gambar, PDF, DOC - Max 5MB/file
+        </p>
+    </div>
+    
+    <!-- Preview Gambar -->
+    <div id="imagePreviewsWorking" class="image-previews" style="margin-top: 10px;"></div>
+    
+    <!-- List File (untuk non-gambar) -->
+    <div id="cancelFileListWorking" class="files-preview" style="margin-top: 8px;"></div>
+</div>
 
                 <!-- ✅ BANK SELECT - COMPACT -->
                 <div style="margin-bottom: 16px; padding: 0 1.5rem;">
@@ -2502,6 +2618,86 @@
     </div>
 </div>
 
+<!-- Modal untuk Detail Pembatalan - CUSTOM VERSION -->
+<div id="cancellationDetailModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+            <div class="modal-title-section">
+                <h2 class="modal-title">
+                    <i class="fas fa-info-circle"></i>
+                    Detail Pembatalan Project
+                </h2>
+                <p class="modal-subtitle">Informasi lengkap pembatalan project</p>
+            </div>
+            <span class="close" onclick="closeCancellationModal()">×</span>
+        </div>
+        <div class="modal-body">
+            <div style="padding: 0 1.5rem;">
+                <!-- Alasan Pembatalan -->
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-comment-dots"></i>
+                        Alasan Pembatalan
+                    </h4>
+                    <div id="cancellationReason" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; min-height: 60px;">
+                        <div style="text-align: center; color: #64748b;">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bukti Foto Pendukung -->
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-camera"></i>
+                        Bukti Foto Pendukung
+                    </h4>
+                    <div id="evidenceFiles" style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; min-height: 100px;">
+                        <div style="text-align: center; color: #64748b; width: 100%;">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat bukti...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bukti Transfer dari Admin -->
+                <div style="margin-bottom: 1rem;">
+                    <h4 style="color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-receipt"></i>
+                        Bukti Transfer dari Admin
+                    </h4>
+                    <div id="transferProof" style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; min-height: 80px;">
+                        <div style="text-align: center; color: #64748b; width: 100%;">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat bukti transfer...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeCancellationModal()">
+                <i class="fas fa-times"></i>
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rejection Reason -->
+<div id="rejectionModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width: 400px; margin: auto; padding: 20px;">
+        <h3>Alasan Penolakan</h3>
+        <p id="rejectionText"></p>
+        <button onclick="closeRejectionModal()" 
+                style="margin-top:10px; background:#007bff; color:white; padding:8px 14px; border:none; border-radius:6px;">
+            Tutup
+        </button>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
 
         console.log('🔍 DEBUG: Project Status Check');
@@ -2515,8 +2711,8 @@ let currentProjectId = null;
 let currentRatingProjectId = null;
 let selectedRating = 0;
 let selectedAssessments = {};
-let currentCancelProject = null;
-let cancelEvidenceFiles = [];
+// let currentCancelProject = null;
+// let cancelEvidenceFiles = [];
 
 // ============================================
 // TAB FUNCTIONALITY
@@ -3444,6 +3640,7 @@ window.submitOpenCancel = function() {
         return false;
     }
     
+
     if (!bankName) {
         showNotification('Bank harus dipilih!', 'error');
         return false;
@@ -3678,11 +3875,6 @@ function updateFileList() {
         `;
     }).join('');
 }
-
-window.removeFile = function(index) {
-    cancelEvidenceFiles.splice(index, 1);
-    updateFileList();
-};
 
 // ============================================
 // CHARACTER COUNTERS
@@ -4123,42 +4315,7 @@ function setupWorkingModalEventListeners() {
     }
 }
 
-function updateFileListWorking() {
-    const fileList = document.getElementById('cancelFileListWorking');
-    if (!fileList) return;
-    
-    fileList.innerHTML = cancelEvidenceFiles.map((file, index) => {
-        const size = (file.size / 1024).toFixed(1) + ' KB';
-        const ext = file.name.split('.').pop().toLowerCase();
-        
-        let icon = 'fas fa-file';
-        let color = '#6b7280';
-        
-        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-            icon = 'fas fa-image';
-            color = '#059669';
-        } else if (ext === 'pdf') {
-            icon = 'fas fa-file-pdf';
-            color = '#dc2626';
-        } else if (['doc', 'docx'].includes(ext)) {
-            icon = 'fas fa-file-word';
-            color = '#1d4ed8';
-        }
-        
-        return `
-            <div class="file-item">
-                <div class="file-info">
-                    <i class="${icon} file-icon" style="color: ${color};"></i>
-                    <span class="file-name" title="${file.name}">${file.name}</span>
-                    <span class="file-size">(${size})</span>
-                </div>
-                <button type="button" class="file-remove" onclick="removeFile(${index})">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-    }).join('');
-}
+
 
 // Function untuk konfirmasi hapus project tanpa freelancer
 function confirmDeleteProject(projectId, projectTitle) {
@@ -4355,6 +4512,340 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ============================================
+// FILE UPLOAD WITH IMAGE PREVIEW
+// ============================================
+function handleFileUploadWithPreview(input, listContainerId, previewContainerId) {
+    const files = Array.from(input.files);
+    const container = document.getElementById(listContainerId);
+    const previewContainer = document.getElementById(previewContainerId);
+    
+    if (!container || !previewContainer) return;
+    
+    // Clear existing previews
+    previewContainer.innerHTML = '';
+    container.innerHTML = '';
+    
+    if (files.length === 0) {
+        return;
+    }
+    
+    const imageFiles = [];
+    const otherFiles = [];
+    
+    // Separate image files from other files
+    files.forEach(file => {
+        if (file.type.startsWith('image/')) {
+            imageFiles.push(file);
+        } else {
+            otherFiles.push(file);
+        }
+    });
+    
+    // Handle image files - show preview
+    imageFiles.forEach((file, index) => {
+        // Validate file size
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification(`${file.name} terlalu besar! Max 5MB`, 'error');
+            return;
+        }
+        
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'image-preview';
+            previewDiv.innerHTML = `
+                <img src="${e.target.result}" alt="${file.name}" title="${file.name}">
+                <button type="button" class="image-preview-remove" onclick="removeImagePreview('${input.id}', ${index}, '${previewContainerId}', '${listContainerId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            previewContainer.appendChild(previewDiv);
+        };
+        
+        reader.readAsDataURL(file);
+    });
+    
+    // Handle other files - show in list
+    otherFiles.forEach((file, index) => {
+        // Validate file size
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification(`${file.name} terlalu besar! Max 5MB`, 'error');
+            return;
+        }
+        
+        // Validate file type
+        const allowedTypes = [
+            'application/pdf', 
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain'
+        ];
+        
+        if (!allowedTypes.includes(file.type)) {
+            showNotification(`Format ${file.name} tidak didukung!`, 'error');
+            return;
+        }
+        
+        // Create file item
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        
+        // Get file icon based on type
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        let fileIcon = 'fas fa-file';
+        let iconColor = '#6b7280';
+        
+        if (fileExtension === 'pdf') {
+            fileIcon = 'fas fa-file-pdf';
+            iconColor = '#dc2626';
+        } else if (['doc', 'docx'].includes(fileExtension)) {
+            fileIcon = 'fas fa-file-word';
+            iconColor = '#1d4ed8';
+        } else if (fileExtension === 'txt') {
+            fileIcon = 'fas fa-file-alt';
+            iconColor = '#6b7280';
+        }
+        
+        // Format file size
+        const fileSize = formatFileSize(file.size);
+        
+        // Truncate long file names
+        let displayName = file.name;
+        if (displayName.length > 25) {
+            const nameWithoutExt = displayName.substring(0, displayName.lastIndexOf('.'));
+            const ext = fileExtension;
+            displayName = nameWithoutExt.substring(0, 20) + '...' + ext;
+        }
+        
+        fileItem.innerHTML = `
+            <div class="file-info">
+                <i class="${fileIcon} file-icon" style="color: ${iconColor};"></i>
+                <span class="file-name" title="${file.name}">${displayName}</span>
+                <span class="file-size">${fileSize}</span>
+            </div>
+            <button type="button" class="file-remove" onclick="removeFileFromInput('${input.id}', ${index + imageFiles.length}, '${listContainerId}', '${previewContainerId}')">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        container.appendChild(fileItem);
+    });
+}
+
+// Function to remove image preview
+function removeImagePreview(inputId, index, previewContainerId, listContainerId) {
+    const input = document.getElementById(inputId);
+    const previewContainer = document.getElementById(previewContainerId);
+    
+    if (!input || !previewContainer) return;
+    
+    // Create new FileList without the removed file
+    const dt = new DataTransfer();
+    const files = input.files;
+    
+    for (let i = 0; i < files.length; i++) {
+        if (i !== index) {
+            dt.items.add(files[i]);
+        }
+    }
+    
+    input.files = dt.files;
+    
+    // Update the preview display
+    handleFileUploadWithPreview(input, listContainerId, previewContainerId);
+}
+
+// Update removeFileFromInput to handle both preview and list
+function removeFileFromInput(inputId, index, listContainerId, previewContainerId) {
+    const input = document.getElementById(inputId);
+    const listContainer = document.getElementById(listContainerId);
+    const previewContainer = document.getElementById(previewContainerId);
+    
+    if (!input || !listContainer || !previewContainer) return;
+    
+    // Create new FileList without the removed file
+    const dt = new DataTransfer();
+    const files = input.files;
+    
+    for (let i = 0; i < files.length; i++) {
+        if (i !== index) {
+            dt.items.add(files[i]);
+        }
+    }
+    
+    input.files = dt.files;
+    
+    // Update the display
+    handleFileUploadWithPreview(input, listContainerId, previewContainerId);
+}
+
+// Function khusus untuk cancellation modal
+function openCancellationModal() {
+    const modal = document.getElementById('cancellationDetailModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+}
+
+function closeCancellationModal() {
+    const modal = document.getElementById('cancellationDetailModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Function utama untuk show detail
+function showCancellationDetailModal(cancellationId) {
+    console.log('🔄 Loading cancellation detail for ID:', cancellationId);
+    
+    // Reset dan buka modal terlebih dahulu
+    const reasonElement = document.getElementById('cancellationReason');
+    const evidenceFilesContainer = document.getElementById('evidenceFiles');
+    const transferProofContainer = document.getElementById('transferProof');
+    
+    // Tampilkan loading state
+    reasonElement.innerHTML = '<div style="text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>';
+    evidenceFilesContainer.innerHTML = '<div style="text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Memuat bukti...</div>';
+    transferProofContainer.innerHTML = '<div style="text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Memuat bukti transfer...</div>';
+    
+    // Buka modal SEKARANG
+    openCancellationModal();
+    
+    // Fetch data
+    fetch(`/client/jobboard/cancellation/${cancellationId}`, {
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Data received:', data);
+        
+        // Update alasan pembatalan
+        reasonElement.innerHTML = `
+            <div style="background: white; padding: 1rem; border-radius: 6px; border-left: 4px solid #dc2626;">
+                <p style="margin: 0; line-height: 1.5; color: #374151;">${data.reason || 'Tidak ada alasan yang diberikan'}</p>
+            </div>
+        `;
+
+        // Update evidence files
+        evidenceFilesContainer.innerHTML = '';
+        if (data.evidence_files && data.evidence_files.length > 0) {
+            data.evidence_files.forEach((file, index) => {
+                if (file) {
+                    const filePath = file.startsWith('http') ? file : `/storage/${file}`;
+                    const fileElement = document.createElement('div');
+                    fileElement.style.textAlign = 'center';
+                    fileElement.innerHTML = `
+                        <div style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 0.5rem; background: white;">
+                            <img src="${filePath}" 
+                                 alt="Bukti Pendukung" 
+                                 style="max-height: 120px; max-width: 180px; border-radius: 4px; cursor: pointer;"
+                                 onclick="window.open('${filePath}', '_blank')">
+                            <div style="margin-top: 0.5rem;">
+                                <button type="button" 
+                                        style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;"
+                                        onclick="window.open('${filePath}', '_blank')">
+                                    <i class="fas fa-expand"></i> Lihat Full
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    evidenceFilesContainer.appendChild(fileElement);
+                }
+            });
+        } else {
+            evidenceFilesContainer.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">Tidak ada bukti foto pendukung</div>';
+        }
+
+        // Update transfer proof
+        transferProofContainer.innerHTML = '';
+        if (data.transfer_proof) {
+            const transferPath = data.transfer_proof.startsWith('http') ? data.transfer_proof : `/storage/${data.transfer_proof}`;
+            transferProofContainer.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 0.5rem; background: white; display: inline-block;">
+                        <img src="${transferPath}" 
+                             alt="Bukti Transfer" 
+                             style="max-height: 120px; max-width: 180px; border-radius: 4px; cursor: pointer;"
+                             onclick="window.open('${transferPath}', '_blank')">
+                        <div style="margin-top: 0.5rem;">
+                            <button type="button" 
+                                    style="background: #10b981; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;"
+                                    onclick="window.open('${transferPath}', '_blank')">
+                                <i class="fas fa-expand"></i> Lihat Bukti Transfer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            transferProofContainer.innerHTML = '<div style="text-align: center; color: #64748b; padding: 1rem;">Belum ada bukti transfer dari admin</div>';
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error fetching cancellation detail:', error);
+        reasonElement.innerHTML = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 1rem;">
+                <div style="color: #dc2626; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Error:</strong> Gagal memuat data pembatalan
+                </div>
+                <p style="margin: 0.5rem 0 0 0; color: #7f1d1d; font-size: 0.875rem;">${error.message}</p>
+            </div>
+        `;
+    });
+}
+
+// Event listener untuk tombol detail
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-detail') && e.target.closest('tr')) {
+            const button = e.target.closest('.btn-detail');
+            const cancellationId = button.getAttribute('data-cancellation-id');
+            
+            if (cancellationId) {
+                console.log('🔍 Opening cancellation detail for ID:', cancellationId);
+                showCancellationDetailModal(cancellationId);
+            }
+        }
+    });
+    
+    // Close modal on outside click
+    const cancellationModal = document.getElementById('cancellationDetailModal');
+    if (cancellationModal) {
+        cancellationModal.addEventListener('click', function(event) {
+            if (event.target === cancellationModal) {
+                closeCancellationModal();
+            }
+        });
+    }
+});
+
+function showRejectionReason(reason) {
+    document.getElementById('rejectionText').innerText = reason;
+    document.getElementById('rejectionModal').style.display = 'block';
+}
+
+function closeRejectionModal() {
+    document.getElementById('rejectionModal').style.display = 'none';
+}
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-@extends('freelancer.layout.freelancer-layout') 
+@extends('freelancer.layout.freelancer-layout')
 @section('title', 'Profile Information - CariFreelance')
 @section('content')
 
@@ -14,6 +14,7 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   
   <style>
+    /* CSS styles tetap sama seperti sebelumnya */
     :root {
       --blue-700: #1d4ed8;
       --blue-800: #1e40af;
@@ -680,11 +681,14 @@
         </li>
         @endif
         
+        {{-- Bagian Saldo yang Diubah --}}
         <li>
           <i class="fas fa-wallet"></i> 
           <div>
             <strong>Saldo Tersedia</strong><br>
-            <span style="color: #2563eb; font-weight: 600; font-size: 16px;">Rp {{ number_format(0, 0, ',', '.') }}</span>
+            <span style="color: #2563eb; font-weight: 600; font-size: 16px;">
+              Rp {{ number_format($wallet->balance ?? 0, 0, ',', '.') }}
+            </span>
           </div>
         </li>
         
@@ -749,16 +753,18 @@
       <div id="checklist" class="checklist">
         <h2>Daftar Periksa Profil Freelancer</h2>
         
-        {{-- Ringkasan Penghasilan --}}
+        {{-- Ringkasan Penghasilan yang Diubah --}}
         <div class="checklist-item" style="background: #eff6ff; border-color: #2563eb;">
           <div class="left">
             <div class="icon" style="background: #2563eb; color: white; border-color: #2563eb;"><i class="fas fa-chart-line"></i></div>
             <div>
               <h3 style="color: #2563eb;">Ringkasan Penghasilan</h3>
-              <p style="color: #1d4ed8;">Total penghasilan bulan ini: <strong>Rp {{ number_format(4200000, 0, ',', '.') }}</strong> | Saldo dapat ditarik: <strong>Rp {{ number_format(2450000, 0, ',', '.') }}</strong></p>
+              <p style="color: #1d4ed8;">
+                Total pending: <strong>Rp {{ number_format($totalPending, 0, ',', '.') }}</strong> | 
+                Saldo dapat ditarik: <strong>Rp {{ number_format($wallet->balance ?? 0, 0, ',', '.') }}</strong>
+              </p>
             </div>
           </div>
-          <span style="color: #2563eb; font-weight: 600;">Aktif</span>
         </div>
         
         {{-- Bio --}}

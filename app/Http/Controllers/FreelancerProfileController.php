@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Withdrawal;
+use App\Models\Wallet;
 use App\Models\FreelancerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -92,14 +94,30 @@ class FreelancerProfileController extends Controller
             ->with('user')
             ->first();
 
+        $user = Auth::user();
+    
+    // Ambil data profil freelancer
+    $freelancerProfile = FreelancerProfile::where('user_id', $user->id)->first();
+    
+    // Ambil data wallet
+    $wallet = Wallet::where('user_id', $user->id)->first();
+    
+    // Hitung total pending dari tabel withdrawals dengan status 'pending'
+    $totalPending = Withdrawal::where('user_id', $user->id)
+        ->where('status', 'pending')
+        ->sum('amount');
+
         // Jika belum ada profile, redirect ke halaman create
         if (!$freelancerProfile) {
             return redirect()->route('freelancer.profile.create')
                 ->with('message', 'Silakan lengkapi profil freelancer Anda terlebih dahulu.');
         }
 
-        return view('freelancer.profile.profil', compact('freelancerProfile'));
+        return view('freelancer.profile.profil', compact('freelancerProfile', 'freelancerProfile', 
+        'wallet', 
+        'totalPending'));
     }
+
 
     public function edit()
     {

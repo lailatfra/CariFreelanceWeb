@@ -55,6 +55,30 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     ->name('wallet.index');
 });
 
+
+Route::get('/debug-attachments/{projectId}', function($projectId) {
+    $project = \App\Models\Project::find($projectId);
+    
+    if (!$project) {
+        return 'Project not found';
+    }
+    
+    echo "<h1>Debug Attachments for Project: {$project->title}</h1>";
+    echo "<pre>";
+    print_r($project->attachments);
+    echo "</pre>";
+    
+    echo "<h2>Processed Attachments:</h2>";
+    echo "<pre>";
+    print_r($project->getAttachmentsByType());
+    echo "</pre>";
+    
+    echo "<h2>Storage Files:</h2>";
+    $files = \Storage::disk('public')->files('projects');
+    print_r($files);
+});
+
+
 Route::middleware(['auth'])->group(function () {
     
     // Halaman notifikasi (untuk client dan freelancer)
@@ -175,7 +199,11 @@ Route::middleware(['auth', 'active'])->group(function () {
 });
 
 
+// // Route untuk admin dashboard (gunakan yang ini)
+// Route::get('/admin/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
 
+// // Route biasa untuk user dashboard (biarkan seperti semula)
+// Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
 
 
@@ -484,8 +512,7 @@ Route::post('/admin/login', function (Request $request) {
 // Admin Routes (dengan custom middleware 'admin')
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
     
-    // Dashboard
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
     
     // Users Management
     Route::resource('users', UserController::class);
@@ -511,6 +538,8 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::post('/cancels/{id}/reject', [ProjectCancellationController::class, 'rejectCancellation'])->name('cancels.reject');
 
 });
+
+Route::get('/client/jobboard/cancellation/{id}', [JobboardController::class, 'getCancellationDetail'])->name('client.cancellation.detail');
 
 // Halaman Kelola Freelancer (untuk admin)
 Route::get('/admin/freelancers', [FreelancerController::class, 'index'])
@@ -575,6 +604,10 @@ Route::get('/check-my-role', function() {
 Route::get('/test-middleware-chain', function() {
     return 'Middleware chain passed! User: ' . Auth::user()->name . ', Role: ' . Auth::user()->role;
 })->middleware(['auth', 'role:freelancer']);
+
+Route::get('/freelancer/jobboard/cancellation/{cancellationId}', [ProposalController::class, 'getCancellationDetail'])
+    ->name('freelancer.cancellation.detail')
+    ->middleware('auth');
 
 // // Search routes
 // Route::get('/client/search', [SearchController::class, 'index'])->name('client-search');

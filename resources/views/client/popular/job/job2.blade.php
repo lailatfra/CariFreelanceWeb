@@ -1004,7 +1004,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="color: #6b7280; font-size: 14px;">Durasi</span>
-                            <span style="color: #1a1a1a; font-weight: 500; font-size: 14px;">{{ $project->timeline_duration }}</span>
+                            <span style="color: #1a1a1a; font-weight: 500; font-size: 14px;">{{ $project->timeline_duration }} Minggu</span>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span style="color: #6b7280; font-size: 14px;">Lokasi</span>

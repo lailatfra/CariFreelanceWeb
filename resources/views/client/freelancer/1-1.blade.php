@@ -696,35 +696,58 @@
                 </div>
 
                 <!-- Project Info -->
-                <div class="card">
-                    <h2><i class="bi bi-file-text"></i> Info Proyek</h2>
-                    <div style="background: #f8fafc; padding: 16px; border-radius: 8px;">
-                        <h4 style="color: #1f2937; margin-bottom: 8px; font-size: 1rem;">{{ $proposal->project->title }}</h4>
-                        <p style="color: #6b7280; font-size: 0.8rem; margin-bottom: 12px;">
-                            {{ \Illuminate\Support\Str::limit($proposal->project->description, 100, '...') }}
-                        </p>
-                        <div class="project-info-grid">
-                            <div class="project-info-item">
-                                <span class="label">
-                                    <i class="bi bi-currency-dollar"></i>
-                                    Budget:
-                                </span>
-                                <div class="value budget-value">
-                                    Rp {{ number_format($proposal->project->fixed_budget, 0, ',', '.') }}
-                                </div>
-                            </div>
-                            <div class="project-info-item">
-                                <span class="label">
-                                    <i class="bi bi-clock"></i>
-                                    Timeline:
-                                </span>
-                                <div class="value timeline-value">
-                                    {{ $proposal->project->timeline_duration }}
-                                </div>
-                            </div>
-                        </div>
+<div class="card">
+    <h2><i class="bi bi-file-text"></i> Info Proyek</h2>
+    <div style="background: #f8fafc; padding: 16px; border-radius: 8px;">
+        <h4 style="color: #1f2937; margin-bottom: 8px; font-size: 1rem;">
+            {{ $proposal->project->title }}
+        </h4>
+
+        <p style="color: #6b7280; font-size: 0.8rem; margin-bottom: 12px;">
+            {{ \Illuminate\Support\Str::limit($proposal->project->description, 100, '...') }}
+        </p>
+
+        <div class="project-info-grid">
+
+            <!-- Budget (tampil sesuai budget_type) + tampilkan juga proposal_price -->
+            <div class="project-info-item">
+                <span class="label">
+                    <i class="bi bi-currency-dollar"></i>
+                    Budget:
+                </span>
+                <div class="value budget-value">
+                    @if(isset($proposal->project->budget_type) && $proposal->project->budget_type === 'fixed')
+                        Rp {{ number_format($proposal->project->fixed_budget ?? 0, 0, ',', '.') }}
+                    @elseif(isset($proposal->project->budget_type) && $proposal->project->budget_type === 'range')
+                        Rp {{ number_format($proposal->project->min_budget ?? 0, 0, ',', '.') }}
+                        -
+                        Rp {{ number_format($proposal->project->max_budget ?? 0, 0, ',', '.') }}
+                    @else
+                        <span class="text-muted">Tidak ada data budget</span>
+                    @endif
+
+                    <!-- Penawaran dari tabel proposals -->
+                    <div style="font-size:0.85rem; color:#6b7280; margin-top:6px;">
+                        Penawaran: Rp {{ number_format($proposal->proposal_price ?? 0, 0, ',', '.') }}
                     </div>
                 </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="project-info-item">
+                <span class="label">
+                    <i class="bi bi-clock"></i>
+                    Timeline:
+                </span>
+                <div class="value timeline-value">
+                    {{ $proposal->project->timeline_duration }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
             </div>
         </div>
     </div>

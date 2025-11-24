@@ -752,6 +752,96 @@
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
+
+        /* Enhanced price input styling */
+.price-input-group {
+    position: relative;
+}
+
+.price-prefix {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.price-input {
+    padding-left: 48px !important;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.price-input:read-only {
+    background-color: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #6b7280 !important;
+}
+
+/* Validation states */
+.price-input.valid {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.price-input.invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* Budget info box */
+.budget-info-box {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.budget-info-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.budget-info-header i {
+    color: #0c4a6e;
+    font-size: 16px;
+}
+
+.budget-info-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0c4a6e;
+    margin: 0;
+}
+
+.budget-range {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+}
+
+.budget-min, .budget-max {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.budget-label {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.budget-value {
+    font-weight: 600;
+    color: #16a34a;
+}
     </style>
 </head>
 
@@ -818,15 +908,22 @@
                 <p class="page-subtitle">Tunjukkan mengapa Anda adalah pilihan terbaik untuk mengerjakan proyek ini</p>
 
                 <div class="job-reference">
-                    <div class="job-reference-icon">
-                        <i class="fas fa-briefcase"></i>
-                    </div>
-                    <div class="job-reference-content">
-                        <h4>{{ $project->title }}</h4>
-                        <p>{{ \Illuminate\Support\Str::limit($project->description, 150, '...') }}</p>
-                    </div>
-
-                </div>
+    <div class="job-reference-icon">
+        <i class="fas fa-briefcase"></i>
+    </div>
+    <div class="job-reference-content">
+        <h4>{{ $project->title }}</h4>
+        <p>
+            @if($project->budget_type === 'fixed')
+                Budget: Rp {{ number_format($project->fixed_budget, 0, ',', '.') }} • 
+            @elseif($project->budget_type === 'range')
+                Budget: Rp {{ number_format($project->min_budget, 0, ',', '.') }} - Rp {{ number_format($project->max_budget, 0, ',', '.') }} • 
+            @endif
+            Timeline: {{ $project->timeline_duration }} minggu • 
+            {{ ucfirst($project->experience_level) }} Level
+        </p>
+    </div>
+</div>
             </div>
 
             {{-- Flash Success Message --}}
@@ -885,49 +982,82 @@
                     </div>
                 </div>
 
-                <!-- Pricing & Timeline -->
-                <div class="form-section">
-                    <div class="section-header">
-                        <i class="fas fa-calculator"></i>
-                        <h3>Penawaran Harga</h3>
-                    </div>
-                    <p class="section-description">
-                        Berikan penawaran harga yang kompetitif dan realistis sesuai scope pekerjaan
-                    </p>
+               <!-- Pricing & Timeline -->
+<div class="form-section">
+    <div class="section-header">
+        <i class="fas fa-calculator"></i>
+        <h3>Penawaran Harga</h3>
+    </div>
+    <p class="section-description">
+        Berikan penawaran harga yang kompetitif dan realistis sesuai scope pekerjaan
+    </p>
 
-                    <div class="form-group">
-                        <label for="proposal_price" class="form-label required">Harga Penawaran</label>
-                        <div class="price-input-group">
-                            <span class="price-prefix">Rp</span>
-                            <input type="number" id="proposal_price" name="proposal_price" class="form-input price-input"
-                                placeholder="5000000" min="100000" step="50000" required>
-                        </div>
-                        <div class="form-help">Budget client: Rp 5.000.000+. Sesuaikan dengan fitur yang Anda tawarkan</div>
-                    </div>
-
-                    <!-- <div class="form-group">
-                        <label class="form-label required">Timeline Pengerjaan</label>
-                        <div class="timeline-grid">
-                            <label class="timeline-option">
-                                <input type="radio" name="timeline" value="2-3 minggu" required>
-                                <span>2-3 minggu</span>
-                            </label>
-                            <label class="timeline-option">
-                                <input type="radio" name="timeline" value="4-5 minggu" required>
-                                <span>4-5 minggu</span>
-                            </label>
-                            <label class="timeline-option">
-                                <input type="radio" name="timeline" value="6-8 minggu" required>
-                                <span>6-8 minggu</span>
-                            </label>
-                            <label class="timeline-option">
-                                <input type="radio" name="timeline" value="Lebih dari 8 minggu" required>
-                                <span>Lebih dari 8 minggu</span>
-                            </label>
-                        </div>
-                        <div class="form-help">Client mengharapkan timeline 4-6 minggu</div>
-                    </div> -->
+    @if($project->budget_type === 'fixed')
+        <!-- Fixed Budget - Hanya tampilkan info, tidak ada form input -->
+        <div class="form-group">
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; border: 2px solid #bae6fd; text-align: center;">
+                <div style="margin-bottom: 12px;">
+                    <i class="fas fa-lock" style="font-size: 32px; color: #1d9bf0; margin-bottom: 8px;"></i>
                 </div>
+                <h4 style="color: #0c4a6e; margin-bottom: 8px; font-weight: 600;">Harga Telah Ditentukan</h4>
+                <div style="font-size: 24px; font-weight: 700; color: #16a34a; margin-bottom: 8px;">
+                    Rp {{ number_format($project->fixed_budget, 0, ',', '.') }}
+                </div>
+                <p style="color: #64748b; font-size: 14px; margin: 0;">
+                    Client telah menetapkan harga tetap untuk proyek ini. Sistem akan otomatis menggunakan harga ini untuk proposal Anda.
+                </p>
+            </div>
+            <!-- Hidden input untuk mengirim nilai fixed budget -->
+            <input type="hidden" name="proposal_price" value="{{ $project->fixed_budget }}">
+        </div>
+    @elseif($project->budget_type === 'range')
+        <!-- Range Budget - Tampilkan range dan form input -->
+        <div class="form-group">
+            <div style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #bae6fd;">
+                <h4 style="font-size: 14px; color: #0c4a6e; margin-bottom: 8px; font-weight: 600;">
+                    <i class="fas fa-info-circle"></i> Range Budget Client
+                </h4>
+                <div style="display: flex; gap: 20px; font-size: 14px;">
+                    <div>
+                        <span style="color: #6b7280;">Minimum:</span>
+                        <span style="font-weight: 600; color: #16a34a;">Rp {{ number_format($project->min_budget, 0, ',', '.') }}</span>
+                    </div>
+                    <div>
+                        <span style="color: #6b7280;">Maksimum:</span>
+                        <span style="font-weight: 600; color: #16a34a;">Rp {{ number_format($project->max_budget, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <label for="proposal_price" class="form-label required">Harga Penawaran Anda</label>
+            <div class="price-input-group">
+                <span class="price-prefix">Rp</span>
+                <input type="number" id="proposal_price" name="proposal_price" class="form-input price-input"
+                    placeholder="Masukkan harga penawaran" 
+                    min="{{ $project->min_budget }}" 
+                    max="{{ $project->max_budget }}" 
+                    required
+                    oninput="validatePriceRange(this)"
+                    onblur="formatPriceInput(this)">
+            </div>
+            <div class="form-help">
+                Masukkan harga antara Rp {{ number_format($project->min_budget, 0, ',', '.') }} - Rp {{ number_format($project->max_budget, 0, ',', '.') }}
+            </div>
+            <div id="priceValidationMessage" style="font-size: 12px; margin-top: 5px;"></div>
+        </div>
+    @else
+        <!-- Fallback untuk budget type lainnya -->
+        <div class="form-group">
+            <label for="proposal_price" class="form-label required">Harga Penawaran</label>
+            <div class="price-input-group">
+                <span class="price-prefix">Rp</span>
+                <input type="number" id="proposal_price" name="proposal_price" class="form-input price-input"
+                    placeholder="5000000" min="100000" step="50000" required>
+            </div>
+            <div class="form-help">Berikan penawaran harga yang kompetitif</div>
+        </div>
+    @endif
+</div>
 
                 <!-- Skills & Experience -->
                 <div class="form-section">
@@ -1031,43 +1161,60 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <!-- Job Summary -->
-            <div class="sidebar-card">
-                <div class="sidebar-card-header">
-                    <h4 class="sidebar-card-title">Ringkasan Pekerjaan</h4>
-                </div>
-                <div class="sidebar-card-content">
-                    <div style="margin-bottom: 16px;">
-                        <h5 style="font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px;">
-                            {{ $project->title }}
-                        </h5>
-                        <p style="font-size: 12px; color: #6b7280; line-height: 1.4;">
-                            {{ \Illuminate\Support\Str::limit($project->description, 80, '...') }}
-                        </p>
-                    </div>
+<div class="sidebar-card">
+    <div class="sidebar-card-header">
+        <h4 class="sidebar-card-title">Ringkasan Pekerjaan</h4>
+    </div>
+    <div class="sidebar-card-content">
+        <div style="margin-bottom: 16px;">
+            <h5 style="font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px;">
+                {{ $project->title }}
+            </h5>
+            <p style="font-size: 12px; color: #6b7280; line-height: 1.4;">
+                {{ \Illuminate\Support\Str::limit($project->description, 80, '...') }}
+            </p>
+        </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
-                        <div>
-                            <span style="color: #6b7280;">Budget:</span>
-                            <div style="font-weight: 600; color: #16a34a;">
-                                Rp {{ number_format($project->fixed_budget, 0, ',', '.') }}+
-                            </div>
-                        </div>
-                        <div>
-                            <span style="color: #6b7280;">Timeline:</span>
-                            <div style="font-weight: 600; color: #1a1a1a;">
-                                {{ $project->timeline_duration }}
-                            </div>
-                        </div>
-                        <div>
-                            <span style="color: #6b7280;">Lokasi:</span>
-                            <div style="font-weight: 600; color: #1a1a1a;">
-                                {{ optional($project->client->clientProfile)->location ?? 'Lokasi tidak tersedia' }}
-                            </div>
-                        </div>
-                    </div>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 12px;">
+            <div>
+                <span style="color: #6b7280;">Budget:</span>
+                <div style="font-weight: 600; color: #16a34a;">
+                    @if($project->budget_type === 'fixed')
+                        Rp {{ number_format($project->fixed_budget, 0, ',', '.') }}
+                    @elseif($project->budget_type === 'range')
+                        Rp {{ number_format($project->min_budget, 0, ',', '.') }} - Rp {{ number_format($project->max_budget, 0, ',', '.') }}
+                    @else
+                        Menunggu penawaran
+                    @endif
                 </div>
-
             </div>
+            <div>
+                <span style="color: #6b7280;">Jenis Budget:</span>
+                <div style="font-weight: 600; color: #1a1a1a;">
+                    @if($project->budget_type === 'fixed')
+                        <i class="fas fa-lock" style="color: #dc2626;"></i> Harga Tetap
+                    @elseif($project->budget_type === 'range')
+                        <i class="fas fa-sliders-h" style="color: #16a34a;"></i> Rentang Harga
+                    @else
+                        {{ $project->budget_type }}
+                    @endif
+                </div>
+            </div>
+            <div>
+                <span style="color: #6b7280;">Timeline:</span>
+                <div style="font-weight: 600; color: #1a1a1a;">
+                    {{ $project->timeline_duration }} minggu
+                </div>
+            </div>
+            <div>
+                <span style="color: #6b7280;">Tenggat Waktu:</span>
+                <div style="font-weight: 600; color: #dc2626;">
+                    {{ \Carbon\Carbon::parse($project->deadline)->format('d M Y') }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- Tips Card -->
             <div class="sidebar-card">
@@ -1340,6 +1487,67 @@
             }
 
 
+
+
+// Format price input on blur
+function formatPriceInput(input) {
+    const minBudget = {{ $project->min_budget }};
+    const maxBudget = {{ $project->max_budget }};
+    let currentValue = parseInt(input.value) || 0;
+    
+    // Auto-adjust jika di luar range
+    if (currentValue < minBudget) {
+        input.value = minBudget;
+        showToast(`Harga telah disesuaikan ke minimum: Rp ${minBudget.toLocaleString('id-ID')}`, 'warning');
+    } else if (currentValue > maxBudget) {
+        input.value = maxBudget;
+        showToast(`Harga telah disesuaikan ke maksimum: Rp ${maxBudget.toLocaleString('id-ID')}`, 'warning');
+    }
+    
+    // Update validation message
+    validatePriceRange(input);
+}
+
+// Form submission validation - HANYA untuk range budget
+document.getElementById('proposalForm').addEventListener('submit', function(e) {
+    @if($project->budget_type === 'range')
+    const priceInput = document.getElementById('proposal_price');
+    if (priceInput && !validatePriceRange(priceInput)) {
+        e.preventDefault();
+        showToast('Harap masukkan harga penawaran dalam range yang ditentukan', 'error');
+        priceInput.focus();
+        return false;
+    }
+    @endif
+    
+    // Untuk fixed budget, tidak perlu validasi tambahan
+    // Sistem otomatis akan menggunakan fixed_budget dari hidden input
+});
+
+// Initialize price validation on page load - HANYA untuk range budget
+document.addEventListener('DOMContentLoaded', function() {
+    @if($project->budget_type === 'range')
+    const proposalPriceInput = document.getElementById('proposal_price');
+    if (proposalPriceInput) {
+        // Set placeholder dengan format yang jelas
+        const suggestedPrice = Math.round(({{ $project->min_budget }} + {{ $project->max_budget }}) / 2);
+        proposalPriceInput.placeholder = `Contoh: ${suggestedPrice.toLocaleString('id-ID')}`;
+        
+        // Validasi real-time
+        proposalPriceInput.addEventListener('input', function() {
+            validatePriceRange(this);
+        });
+        
+        proposalPriceInput.addEventListener('focus', function() {
+            this.style.borderColor = '#1d9bf0';
+        });
+    }
+    @endif
+    
+    @if($project->budget_type === 'fixed')
+    console.log('Fixed budget project - Harga otomatis: Rp {{ number_format($project->fixed_budget, 0, ",", ".") }}');
+    @endif
+});
 
 
 

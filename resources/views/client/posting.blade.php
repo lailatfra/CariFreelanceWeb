@@ -617,7 +617,7 @@
                     </div>
                 </div>
 
-                <div class="form-row">
+                <!-- <div class="form-row">
 
                     <div class="form-group">
                         <label for="project_type" class="form-label required">Jenis Proyek</label>
@@ -626,7 +626,7 @@
                             <option value="one-time" {{ old('project_type', $isEdit ? $project->project_type : '') == 'one-time' ? 'selected' : '' }}>Sekali jalan</option>
                         </select>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="form-group">
                     <label for="skills" class="form-label required">Skills yang Dibutuhkan</label>
@@ -701,131 +701,109 @@
             </div>
 
             <!-- Section 3: Budget & Timeline -->
-            <div class="form-section">
-                <h3 class="section-title">Budget & Timeline</h3>
-                
-                <div class="form-group">
-                    <label class="form-label required">Tipe Budget</label>
-                    <div class="budget-options">
-                        <div class="budget-option" data-budget="fixed" onclick="selectBudgetType('fixed')">
-                            <h4>Budget Tetap</h4>
-                            <p>Bayar sejumlah tetap untuk seluruh proyek</p>
-                        </div>
-                        <div class="budget-option" data-budget="range" onclick="selectBudgetType('range')">
-                            <h4>Rentang Budget</h4>
-                            <p>Tentukan budget minimum dan maksimum</p>
-                        </div>
-                    </div>
-                    <input type="hidden" name="budget_type" id="budgetType" 
-                           value="{{ old('budget_type', $isEdit ? $project->budget_type : '') }}">
-                </div>
-
-                <!-- Fixed Budget Details -->
-                <div class="budget-details" id="fixedBudgetDetails">
-                    <div class="form-group">
-                        <label for="fixed_budget" class="form-label required">Budget Tetap (Rp)</label>
-                        <input type="number" id="fixed_budget" name="fixed_budget" class="form-input" 
-                               value="{{ old('fixed_budget', $isEdit ? $project->fixed_budget : '') }}"
-                               placeholder="5000000" min="0">
-                    </div>
-                </div>
-
-                <!-- Range Budget Details -->
-                <div class="budget-details" id="rangeBudgetDetails">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="min_budget" class="form-label required">Budget Minimum (Rp)</label>
-                            <input type="number" id="min_budget" name="min_budget" class="form-input" 
-                                   value="{{ old('min_budget', $isEdit ? $project->min_budget : '') }}"
-                                   placeholder="2000000" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label for="max_budget" class="form-label required">Budget Maksimum (Rp)</label>
-                            <input type="number" id="max_budget" name="max_budget" class="form-input" 
-                                   value="{{ old('max_budget', $isEdit ? $project->max_budget : '') }}"
-                               placeholder="10000000" min="0">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Payment Method -->
-                <div class="form-group">
-                    <label class="form-label required">Metode Pembayaran</label>
-                    <div class="payment-options">
-                        <div class="payment-option">
-                            <input type="radio" id="payment_full" name="payment_method" value="full" 
-                                   {{ old('payment_method', $isEdit ? $project->payment_method : 'full') == 'full' ? 'checked' : '' }}>
-                            <label for="payment_full">
-                                <h4>Bayar Lunas</h4>
-                                <p>Pembayaran 100% di awal</p>
-                            </label>
-                        </div>
-                        <div class="payment-option">
-                            <input type="radio" id="payment_dp" name="payment_method" value="dp_and_final" 
-                                   {{ old('payment_method', $isEdit ? $project->payment_method : '') == 'dp_and_final' ? 'checked' : '' }}>
-                            <label for="payment_dp">
-                                <h4>DP + Pelunasan</h4>
-                                <p>DP di awal, sisa di akhir</p>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DP Percentage (shown when DP option selected) -->
-                <div class="form-group" id="dpPercentageGroup" style="display: none;">
-                    <label for="dp_percentage" class="form-label required">Persentase DP (%)</label>
-                    <select id="dp_percentage" name="dp_percentage" class="form-select">
-                        <option value="">Pilih Persentase DP</option>
-                        <option value="30" {{ old('dp_percentage', $isEdit ? $project->dp_percentage : '') == '30' ? 'selected' : '' }}>30% - 70%</option>
-                        <option value="40" {{ old('dp_percentage', $isEdit ? $project->dp_percentage : '') == '40' ? 'selected' : '' }}>40% - 60%</option>
-                        <option value="50" {{ old('dp_percentage', $isEdit ? $project->dp_percentage : '') == '50' ? 'selected' : '' }}>50% - 50%</option>
-                        <option value="60" {{ old('dp_percentage', $isEdit ? $project->dp_percentage : '') == '60' ? 'selected' : '' }}>60% - 40%</option>
-                    </select>
-                    <div class="help-text">DP akan dibayar di awal, sisanya setelah proyek selesai</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="timeline_type" class="form-label required">Jenis Timeline</label>
-                    <select id="timeline_type" name="timeline_type" class="form-select" required>
-                        <option value="weekly" {{ old('timeline_type', $isEdit ? $project->timeline_type : '') == 'weekly' ? 'selected' : '' }}>Mingguan</option>
-                        <option value="daily" {{ old('timeline_type', $isEdit ? $project->timeline_type : '') == 'daily' ? 'selected' : '' }}>Harian</option>
-                    </select>
-                </div>
-
-                <!-- Timeline Selection -->
-                <div class="form-group">
-                    <label for="timeline_duration" class="form-label required">Durasi Pengerjaan</label>
-                    <select id="timeline_duration" name="timeline_duration" class="form-select" required>
-                        <option value="">Pilih Durasi</option>
-                        <option value="1" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '1' ? 'selected' : '' }}>1 Minggu</option>
-                        <option value="2" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '2' ? 'selected' : '' }}>2 Minggu</option>
-                        <option value="3" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '3' ? 'selected' : '' }}>3 Minggu</option>
-                        <option value="4" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '4' ? 'selected' : '' }}>4 Minggu (1 Bulan)</option>
-                        <option value="6" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '6' ? 'selected' : '' }}>6 Minggu</option>
-                        <option value="8" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '8' ? 'selected' : '' }}>8 Minggu (2 Bulan)</option>
-                        <option value="12" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '12' ? 'selected' : '' }}>12 Minggu (3 Bulan)</option>
-                        <option value="16" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '16' ? 'selected' : '' }}>16 Minggu (4 Bulan)</option>
-                        <option value="24" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '24' ? 'selected' : '' }}>24 Minggu (6 Bulan)</option>
-                    </select>
-                </div>
-
-                <!-- Auto-calculated Deadline -->
-                <div class="form-group">
-                    <label for="deadline" class="form-label required">Deadline Proyek</label>
-                    <input type="date" id="deadline" name="deadline" class="form-input" 
-                           value="{{ old('deadline', $isEdit && $project->deadline ? $project->deadline->format('Y-m-d') : '') }}"
-                           readonly style="background-color: #f9fafb; cursor: not-allowed;">
-                    <div class="help-text">Deadline otomatis dihitung berdasarkan durasi pengerjaan yang dipilih</div>
-                </div>
-
-
-
-                <div class="form-group">
-                    <label for="additional_info" class="form-label">Informasi Tambahan</label>
-                    <textarea id="additional_info" name="additional_info" class="form-textarea"
-                              placeholder="Informasi tambahan yang perlu diketahui freelancer...">{{ old('additional_info', $isEdit ? $project->additional_info : '') }}</textarea>
-                </div>
+<div class="form-section">
+    <h3 class="section-title">Budget & Timeline</h3>
+    
+    <div class="form-group">
+        <label class="form-label required">Tipe Budget</label>
+        <div class="budget-options">
+            <div class="budget-option" data-budget="fixed" onclick="selectBudgetType('fixed')">
+                <h4>Budget Tetap</h4>
+                <p>Bayar sejumlah tetap untuk seluruh proyek</p>
             </div>
+            <div class="budget-option" data-budget="range" onclick="selectBudgetType('range')">
+                <h4>Rentang Budget</h4>
+                <p>Tentukan budget minimum dan maksimum</p>
+            </div>
+        </div>
+        <input type="hidden" name="budget_type" id="budgetType" 
+               value="{{ old('budget_type', $isEdit ? $project->budget_type : '') }}">
+    </div>
+
+    <!-- Fixed Budget Details -->
+    <div class="budget-details" id="fixedBudgetDetails">
+        <div class="form-group">
+            <label for="fixed_budget" class="form-label required">Budget Tetap (Rp)</label>
+            <input type="number" id="fixed_budget" name="fixed_budget" class="form-input" 
+                   value="{{ old('fixed_budget', $isEdit ? $project->fixed_budget : '') }}"
+                   placeholder="5000000" min="0">
+        </div>
+    </div>
+
+    <!-- Range Budget Details -->
+    <div class="budget-details" id="rangeBudgetDetails">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="min_budget" class="form-label required">Budget Minimum (Rp)</label>
+                <input type="number" id="min_budget" name="min_budget" class="form-input" 
+                       value="{{ old('min_budget', $isEdit ? $project->min_budget : '') }}"
+                       placeholder="2000000" min="0">
+            </div>
+            <div class="form-group">
+                <label for="max_budget" class="form-label required">Budget Maksimum (Rp)</label>
+                <input type="number" id="max_budget" name="max_budget" class="form-input" 
+                       value="{{ old('max_budget', $isEdit ? $project->max_budget : '') }}"
+                       placeholder="10000000" min="0">
+            </div>
+        </div>
+    </div>
+
+    <!-- INFO PEMBAYARAN FULL -->
+    <div class="form-group">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h4 style="margin: 0; color: #1e40af; font-weight: 600;">Pembayaran Full 100%</h4>
+            </div>
+            <p style="margin: 0; color: #374151; font-size: 0.875rem;">
+                <strong>Sistem pembayaran:</strong> Client membayar 100% di awal. Dana akan ditahan sistem dan akan ditransfer ke freelancer setelah proyek selesai dan disetujui.
+            </p>
+        </div>
+    </div>
+    <!-- END INFO PEMBAYARAN FULL -->
+
+    <div class="form-group">
+        <label for="timeline_type" class="form-label required">Jenis Timeline</label>
+        <select id="timeline_type" name="timeline_type" class="form-select" required>
+            <option value="weekly" {{ old('timeline_type', $isEdit ? $project->timeline_type : '') == 'weekly' ? 'selected' : '' }}>Mingguan</option>
+            <option value="daily" {{ old('timeline_type', $isEdit ? $project->timeline_type : '') == 'daily' ? 'selected' : '' }}>Harian</option>
+        </select>
+    </div>
+
+    <!-- Timeline Selection -->
+    <div class="form-group">
+        <label for="timeline_duration" class="form-label required">Durasi Pengerjaan</label>
+        <select id="timeline_duration" name="timeline_duration" class="form-select" required>
+            <option value="">Pilih Durasi</option>
+            <option value="1" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '1' ? 'selected' : '' }}>1 Minggu</option>
+            <option value="2" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '2' ? 'selected' : '' }}>2 Minggu</option>
+            <option value="3" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '3' ? 'selected' : '' }}>3 Minggu</option>
+            <option value="4" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '4' ? 'selected' : '' }}>4 Minggu (1 Bulan)</option>
+            <option value="6" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '6' ? 'selected' : '' }}>6 Minggu</option>
+            <option value="8" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '8' ? 'selected' : '' }}>8 Minggu (2 Bulan)</option>
+            <option value="12" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '12' ? 'selected' : '' }}>12 Minggu (3 Bulan)</option>
+            <option value="16" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '16' ? 'selected' : '' }}>16 Minggu (4 Bulan)</option>
+            <option value="24" {{ old('timeline_duration', $isEdit ? $project->timeline_duration : '') == '24' ? 'selected' : '' }}>24 Minggu (6 Bulan)</option>
+        </select>
+    </div>
+
+    <!-- Auto-calculated Deadline -->
+    <div class="form-group">
+        <label for="deadline" class="form-label required">Deadline Proyek</label>
+        <input type="date" id="deadline" name="deadline" class="form-input" 
+               value="{{ old('deadline', $isEdit && $project->deadline ? $project->deadline->format('Y-m-d') : '') }}"
+               readonly style="background-color: #f9fafb; cursor: not-allowed;">
+        <div class="help-text">Deadline otomatis dihitung berdasarkan durasi pengerjaan yang dipilih</div>
+    </div>
+
+    <div class="form-group">
+        <label for="additional_info" class="form-label">Informasi Tambahan</label>
+        <textarea id="additional_info" name="additional_info" class="form-textarea"
+                  placeholder="Informasi tambahan yang perlu diketahui freelancer...">{{ old('additional_info', $isEdit ? $project->additional_info : '') }}</textarea>
+    </div>
+</div>
 
             <!-- Form Actions -->
             <div class="form-actions">
@@ -850,22 +828,6 @@
             </div>
         </form>
 
-        <!-- Delete Section - Only show in edit mode -->
-        @if($isEdit)
-        <div class="delete-section">
-            <h3 class="section-title" style="color: #dc2626;">Zona Bahaya</h3>
-            <div class="delete-warning">
-                <strong>Peringatan!</strong> Tindakan ini tidak dapat dibatalkan. Menghapus proyek akan menghilangkan semua data termasuk proposal yang masuk.
-            </div>
-            <form method="POST" action="{{ route('projects.destroy', $project) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus proyek ini? Tindakan ini tidak dapat dibatalkan.')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> Hapus Proyek
-                </button>
-            </form>
-        </div>
-        @endif
     </div>
 </div>
 

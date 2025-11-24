@@ -1315,6 +1315,16 @@
             text-shadow: 0 0 10px rgba(29, 161, 242, 0.6);
         }
 
+        /* Tambahkan setelah CSS table yang sudah ada */
+.cancelled-table thead th:nth-child(1) { width: 4%; }
+.cancelled-table thead th:nth-child(2) { width: 18%; }
+.cancelled-table thead th:nth-child(3) { width: 12%; }
+.cancelled-table thead th:nth-child(4) { width: 15%; }
+.cancelled-table thead th:nth-child(5) { width: 10%; }
+.cancelled-table thead th:nth-child(6) { width: 12%; }
+.cancelled-table thead th:nth-child(7) { width: 12%; }
+.cancelled-table thead th:nth-child(8) { width: 17%; }
+
   </style>
 </head>
 
@@ -1367,166 +1377,191 @@
         <button type="button" class="tab" data-tab="cancelled">Dibatalkan</button>
       </div>
 
-      <!-- Table: Job Board (Updated with kategori and aksi) -->
-      <div class="table-wrap tab-content" id="applied">
-        <table class="applied-table">
-          <thead>
+<!-- Table: Job Board (Updated with kategori and aksi) -->
+<div class="table-wrap tab-content" id="applied">
+    <table class="applied-table">
+        <thead>
             <tr>
-              <th>No.</th>
-              <th>Judul Pekerjaan</th>
-              <th>Sub Kategori</th>
-              <th>Client</th>
-              <th>Budget (Rp)</th>
-              <th>Status</th>
-              <th>Tanggal Apply</th>
-              <th>Aksi</th>
+                <th>No.</th>
+                <th>Judul Pekerjaan</th>
+                <th>Sub Kategori</th>
+                <th>Client</th>
+                <th>Budget (Rp)</th>
+                <th>Status</th>
+                <th>Tanggal Apply</th>
+                <th>Aksi</th>
             </tr>
-          </thead>
-          <tbody>
+        </thead>
+        <tbody>
             @forelse ($proposals->sortBy('created_at') as $proposal)
-            <tr>
-              <td>{{ $loop->iteration }}</td>
-              <td>{{ $proposal->proposal_title }}</td>
-              <td>{{ $proposal->project->subcategory ?? '-' }}</td>
-              <td>{{ $proposal->project->client->name ?? '-' }}</td>
-              <td>{{ number_format($proposal->proposal_price, 0, ',', '.') }}</td>
-              <td>
-                  @if($proposal->status == 'accepted')
-                      <span class="status-badge status-accepted">Diterima</span>
-                  @elseif($proposal->status == 'rejected')
-                      <span class="status-badge status-rejected">Ditolak</span>
-                  @else
-                      <span class="status-badge status-pending">Menunggu Persetujuan</span>
-                  @endif
-              </td>
-              <td>{{ $proposal->created_at->format('d/m/Y') }}</td>
-              <td>
-                <div class="action-buttons">
-                  <a href="{{ route('projects.show', $proposal->project->id) }}" class="btn btn-detail">
-                    <i class="fas fa-info-circle"></i> Detail
-                  </a>
-                  @if($proposal->status == 'accepted')
-                    @php
-                      $isCompleted = $proposal->project->submitProjects()
-                          ->where('user_id', auth()->id())
-                          ->where('status', 'selesai')
-                          ->exists();
-                    @endphp
-                    @if($isCompleted)
-                      <button class="btn btn-results" onclick="showCompletedTab()">
-                        <i class="fas fa-check-circle"></i> Lihat Hasil
-                      </button>
-                    @else
-                      <button class="btn btn-monitor" onclick="showWorkingTab()">
-                        <i class="fas fa-eye"></i> Pantau Projek
-                      </button>
-                    @endif
-                  @endif
-                </div>
-              </td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="8">Belum ada lamaran</td>
-            </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Table: Sedang Dikerjakan (Updated CSS and Actions) -->
-      <div class="table-wrap tab-content hidden" id="working">
-        <table class="working-table">
-          <thead>
-            <tr>
-              <th>No.</th>
-              <th>Judul Pekerjaan</th>
-              <th>Client</th>
-              <th>Deadline</th>
-              <th>Timeline</th>
-              <th>Status</th>
-              <th>Progress</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            @php 
-                $projects = $projects->sortBy('created_at');
-                $no = 1; 
-            @endphp
-            @foreach($projects as $project)
-              @php
-                $acceptedProposal = $project->proposalls()
-                  ->where('status', 'accepted')
-                  ->where('user_id', auth()->id())
-                  ->first();
-                
-                  // Tambahkan logic deadline
-                $deadline = $project->deadline ? \Carbon\Carbon::parse($project->deadline) : null;
-                if ($deadline) {
-                    if (now()->lessThanOrEqualTo($deadline)) {
-                        $deadlineDays = floor(now()->floatDiffInDays($deadline));
-                        $deadlineText = 'Sisa ' . substr($deadlineDays, 0, 2) . ' hari';
-                        $deadlineClass = 'deadline-upcoming';
-                    } else {
-                        $deadlineDays = floor($deadline->floatDiffInDays(now()));
-                        $deadlineText = 'Terlambat ' . substr($deadlineDays, 0, 2) . ' hari';
-                        $deadlineClass = 'deadline-late';
-                    }
-                } else {
-                    $deadlineText = 'Tidak ada deadline';
-                    $deadlineClass = 'deadline-upcoming';
-                }
-              @endphp
-
-              @if($acceptedProposal)
                 @php
-                  $submitProject = \App\Models\SubmitProject::where('project_id', $project->id)
-                    ->where('user_id', auth()->id())
-                    ->first();
-                    
-                  $shouldShowInWorking = true;
-                  if ($submitProject && $submitProject->status === 'selesai') {
-                    $shouldShowInWorking = false;
-                  }
+                    $isCompleted = $proposal->project->submitProjects()
+                        ->where('user_id', auth()->id())
+                        ->where('status', 'selesai')
+                        ->exists();
+                    $isApprovedCancellation = $proposal->project->cancellation_status === 'approved';
+                    $isPendingCancellation = $proposal->project->cancellation_status === 'pending';
                 @endphp
 
-                @if($shouldShowInWorking)
-                  @php
+                <tr style="{{ $isPendingCancellation ? 'opacity: 0.6; background: #fef3c7;' : ($isApprovedCancellation ? 'opacity: 0.6; background: #fee2e2;' : '') }}">
+                    <td>{{ $loop->iteration }}</td>
+                    <td>
+                        {{ $proposal->proposal_title }}
+                        @if($isPendingCancellation)
+                            <span class="status-badge" style="background: #fbbf24; color: #78350f; margin-left: 8px;">
+                                <i class="fas fa-clock"></i> Pengajuan Pembatalan
+                            </span>
+                        @elseif($isApprovedCancellation)
+                            <span class="status-badge" style="background: #ef4444; color: white; margin-left: 8px;">
+                                <i class="fas fa-times-circle"></i> Proyek Dibatalkan
+                            </span>
+                        @endif
+                    </td>
+                    <td>{{ $proposal->project->subcategory ?? '-' }}</td>
+                    <td>{{ $proposal->project->client->name ?? '-' }}</td>
+                    <td>{{ number_format($proposal->proposal_price, 0, ',', '.') }}</td>
+                    <td>
+                        @if($proposal->status == 'accepted')
+                            @if($isApprovedCancellation)
+                                <span class="status-badge" style="background: #ef4444; color: white;">Dibatalkan</span>
+                            @elseif($isCompleted)
+                                <span class="status-badge" style="background: #10b981; color: white;">Selesai</span>
+                            @else
+                                <span class="status-badge status-accepted">Diterima</span>
+                            @endif
+                        @elseif($proposal->status == 'rejected')
+                            <span class="status-badge status-rejected">Ditolak</span>
+                        @else
+                            <span class="status-badge status-pending">Menunggu Persetujuan</span>
+                        @endif
+                    </td>
+                    <td>{{ $proposal->created_at->format('d/m/Y') }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{{ route('projects.show', $proposal->project->id) }}" class="btn btn-detail">
+                                <i class="fas fa-info-circle"></i> Detail
+                            </a>
+                            
+                            @if($isApprovedCancellation)
+                                <!-- Tampilkan informasi proyek dibatalkan -->
+                                <button class="btn btn-cancelled" style="background: #ef4444; color: white;" disabled>
+                                    <i class="fas fa-ban"></i> Proyek Dibatalkan
+                                </button>
+                            @elseif($proposal->status == 'accepted')
+                                @if($isCompleted)
+                                    <button class="btn btn-results" onclick="showCompletedTab()">
+                                        <i class="fas fa-check-circle"></i> Lihat Hasil
+                                    </button>
+                                @else
+                                    <button class="btn btn-monitor" onclick="showWorkingTab()">
+                                        <i class="fas fa-eye"></i> Pantau Projek
+                                    </button>
+                                @endif
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8">Belum ada lamaran</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+      <!-- Table: Sedang Dikerjakan (Updated CSS and Actions) -->
+<div class="table-wrap tab-content hidden" id="working">
+    <table class="working-table">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Judul Pekerjaan</th>
+                <th>Client</th>
+                <th>Deadline</th>
+                <th>Timeline</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+              $projects = $projects
+                  ->sortBy('created_at');
+
+              $no = 1;
+            @endphp
+
+            @foreach($projects as $project)
+                @php
+                    $acceptedProposal = $project->proposalls
+                        ->where('status', 'accepted')
+                        ->where('user_id', auth()->id())
+                        ->first();
+                    
+                    // Pastikan ada accepted proposal untuk user ini
+                    if (!$acceptedProposal) {
+                        continue;
+                    }
+
+                    // Tambahkan logic deadline
+                    $deadline = $project->deadline ? \Carbon\Carbon::parse($project->deadline) : null;
+                    if ($deadline) {
+                        if (now()->lessThanOrEqualTo($deadline)) {
+                            $deadlineDays = floor(now()->floatDiffInDays($deadline));
+                            $deadlineText = 'Sisa ' . substr($deadlineDays, 0, 2) . ' hari';
+                            $deadlineClass = 'deadline-upcoming';
+                        } else {
+                            $deadlineDays = floor($deadline->floatDiffInDays(now()));
+                            $deadlineText = 'Terlambat ' . substr($deadlineDays, 0, 2) . ' hari';
+                            $deadlineClass = 'deadline-late';
+                        }
+                    } else {
+                        $deadlineText = 'Tidak ada deadline';
+                        $deadlineClass = 'deadline-upcoming';
+                    }
+
+                    // Cek status submission terbaru
+                    $latestSubmission = $project->submitProjects
+                        ->where('user_id', auth()->id())
+                        ->sortBy('created_at')
+                        ->first();
+                    
+                    // Tentukan status display
+                    if ($latestSubmission) {
+                        $statusDisplay = match($latestSubmission->status) {
+                            'pending' => 'Menunggu Persetujuan',
+                            'revisi' => 'Revisi',
+                            'selesai' => 'Selesai',
+                            default => 'Dalam Proses'
+                        };
+                        $statusClass = match($latestSubmission->status) {
+                            'pending' => 'status-pending',
+                            'revisi' => 'status-revision',
+                            'selesai' => 'status-completed',
+                            default => 'status-working'
+                        };
+                    } else {
+                        $statusDisplay = 'Dalam Proses';
+                        $statusClass = 'status-working';
+                    }
+
+                    // Progress calculation
+                    $projectProgress = $project->progress ?? 0;
+                    
+                    // Timeline completion check
                     $allTimelines = $project->timelines;
                     $completedTimelines = $project->timelines->where('status', 'selesai');
                     $isAllCompleted = $allTimelines->count() > 0 && $allTimelines->count() === $completedTimelines->count();
-                    $projectProgress = $project->progress ?? 0;
-                    $canSubmit = ($projectProgress >= 100) || $isAllCompleted;
                     
-                    if (!$submitProject) {
-                      $statusDisplay = 'Dalam Proses';
-                      $statusClass = 'status-working';
-                      $isPending = false;
-                      $isRevisi = false;
-                    } else {
-                      switch($submitProject->status) {
-                        case 'pending':
-                          $statusDisplay = 'Menunggu Persetujuan';
-                          $statusClass = 'status-pending';
-                          $isPending = true;
-                          $isRevisi = false;
-                          break;
-                        case 'revisi':
-                          $statusDisplay = 'Revisi';
-                          $statusClass = 'status-revision';
-                          $isPending = false;
-                          $isRevisi = true;
-                          break;
-                        default:
-                          $statusDisplay = 'Dalam Proses';
-                          $statusClass = 'status-working';
-                          $isPending = false;
-                          $isRevisi = false;
-                      }
+                    // Skip jika project sudah selesai
+                    if ($latestSubmission && $latestSubmission->status === 'selesai') {
+                        continue;
                     }
-                  @endphp
-                  <tr>
+                @endphp
+
+                <tr>
                     <td>{{ $no++ }}</td>
                     <td>{{ $project->title }}</td>
                     <td>{{ $project->client->name ?? '-' }}</td>
@@ -1536,83 +1571,92 @@
                         </span>
                     </td>
                     <td>
-                      <a href="{{ route('timeline', $project->id) }}">Lihat Timeline</a>
+                        <a href="{{ route('timeline', $project->id) }}">Lihat Timeline</a>
                     </td>
                     <td>
-                      <span class="status-badge {{ $statusClass }}">
-                        {{ $statusDisplay }}
-                      </span>
-                      @if($isAllCompleted && !$isPending && !$isRevisi)
-                        <br><small style="color: var(--green-600); font-weight: 600; font-size: 0.65rem;">
-                          Semua timeline selesai
-                        </small>
-                      @endif
-                    </td>
-                    <td>
-                      {{ $projectProgress }}%
-                      <div class="progress-container">
-                        <div class="progress-bar" style="width: {{ $projectProgress }}%"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="action-buttons">
-                        <!-- Chat button - selalu ada -->
-                        <a href="{{ route('chat') }}" class="btn btn-chat">
-                          <i class="fas fa-comments"></i> Chat
-                        </a>
-                        
-                        <!-- Lihat Progress - selalu ada -->
-                        <button class="btn btn-view" style="background: #5a6986ff;;"onclick="viewProgress({{ $project->id }})">
-                          <i class="fas fa-eye"></i> Lihat Progress
-                        </button>
-                        
-                        @if($isRevisi)
-                          <!-- Status Revisi: Show Revisi and Submit Ulang buttons -->
-                          <button class="btn btn-revisi" onclick="viewRevisionNotes({{ $project->id }}, '{{ addslashes($submitProject->notes ?? '') }}')">
-                            <i class="fas fa-exclamation-triangle"></i> Revisi
-                          </button>
-                          <button class="btn btn-resubmit" onclick="resubmitFinalWork({{ $project->id }})">
-                            <i class="fas fa-redo"></i> Submit Ulang
-                          </button>
-                          
-                        @elseif($isPending)
-                          <!-- Status Pending: Menunggu review client info -->
-                          <span style="font-size: 0.65rem; color: var(--gray-500); font-style: italic; padding: 0.25rem; background: #f9fafb; border-radius: 3px;">
-                            <i class="fas fa-clock"></i> Menunggu Persetujuan client
-                          </span>
-
-                        @else
-                          <!-- Status Dalam Proses: Show Upload and Submit buttons -->
-                          <!-- Ganti bagian select yang ada dengan ini -->
-                          @if($project->timelines->where('status', '!=', 'selesai')->count() > 0)
-                            <select id="timeline-select-{{ $project->id }}" class="timeline-select">
-                              <option value="">Pilih Timeline</option>
-                              @foreach($project->timelines->where('status', '!=', 'selesai') as $timeline)
-                                <option value="{{ $timeline->id }}">
-                                  {{ Str::limit($timeline->description, 15) }}
-                                </option>
-                              @endforeach
-                            </select>
-                            <button class="btn btn-upload" onclick="uploadProgress({{ $project->id }})">
-                              <i class="fas fa-upload"></i> Upload
-                            </button>
-                          @endif
-                          
-                          <button class="btn btn-submit {{ !$canSubmit ? 'btn-submit:disabled' : '' }}" 
-                                  onclick="submitFinalWork({{ $project->id }})"
-                                  {{ !$canSubmit ? 'disabled title="Selesaikan semua timeline atau capai progress 100% untuk submit"' : '' }}>
-                            <i class="fas fa-paper-plane"></i> Submit
-                          </button>
+                        <span class="status-badge {{ $statusClass }}">
+                            {{ $statusDisplay }}
+                        </span>
+                        @if($isAllCompleted && $statusDisplay === 'Dalam Proses')
+                            <br><small style="color: var(--green-600); font-weight: 600; font-size: 0.65rem;">
+                                Semua timeline selesai
+                            </small>
                         @endif
-                      </div>
                     </td>
-                  </tr>
-                @endif
-              @endif
+                    <td>
+                        {{ $projectProgress }}%
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: {{ $projectProgress }}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <!-- Chat button - selalu ada -->
+                            <a href="{{ route('chat') }}" class="btn btn-chat">
+                                <i class="fas fa-comments"></i> Chat
+                            </a>
+                            
+                            <!-- Lihat Progress - selalu ada -->
+                            <button class="btn btn-view" style="background: #5a6986ff;" onclick="viewProgress({{ $project->id }})">
+                                <i class="fas fa-eye"></i> Lihat Progress
+                            </button>
+                            
+                            @if($statusDisplay === 'Revisi')
+                                <!-- Status Revisi: Show Revisi and Submit Ulang buttons -->
+                                <button class="btn btn-revisi" onclick="viewRevisionNotes({{ $project->id }}, '{{ addslashes($latestSubmission->notes ?? '') }}')">
+                                    <i class="fas fa-exclamation-triangle"></i> Revisi
+                                </button>
+                                <button class="btn btn-resubmit" onclick="resubmitFinalWork({{ $project->id }})">
+                                    <i class="fas fa-redo"></i> Submit Ulang
+                                </button>
+                                
+                            @elseif($statusDisplay === 'Menunggu Persetujuan')
+                                <!-- Status Pending: Menunggu review client info -->
+                                <span style="font-size: 0.65rem; color: var(--gray-500); font-style: italic; padding: 0.25rem; background: #f9fafb; border-radius: 3px;">
+                                    <i class="fas fa-clock"></i> Menunggu Persetujuan client
+                                </span>
+
+                            @else
+                                <!-- Status Dalam Proses: Show Upload and Submit buttons -->
+                                @if($project->timelines->where('status', '!=', 'selesai')->count() > 0)
+                                    <select id="timeline-select-{{ $project->id }}" class="timeline-select">
+                                        <option value="">Pilih Timeline</option>
+                                        @foreach($project->timelines->where('status', '!=', 'selesai') as $timeline)
+                                            <option value="{{ $timeline->id }}">
+                                                {{ Str::limit($timeline->description, 15) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <button class="btn btn-upload" onclick="uploadProgress({{ $project->id }})">
+                                        <i class="fas fa-upload"></i> Upload
+                                    </button>
+                                @endif
+                                
+                                @php
+                                    $canSubmit = ($projectProgress >= 100) || $isAllCompleted;
+                                @endphp
+                                
+                                <button class="btn btn-submit {{ !$canSubmit ? 'btn-submit:disabled' : '' }}" 
+                                        onclick="submitFinalWork({{ $project->id }})"
+                                        {{ !$canSubmit ? 'disabled title="Selesaikan semua timeline atau capai progress 100% untuk submit"' : '' }}>
+                                    <i class="fas fa-paper-plane"></i> Submit
+                                </button>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
             @endforeach
-          </tbody>
-        </table>
-      </div>
+
+            @if($no === 1)
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--gray-500);">
+                        Belum ada project yang sedang dikerjakan
+                    </td>
+                </tr>
+            @endif
+        </tbody>
+    </table>
+</div>
 
       <!-- Table: Menunggu Review -->
       <div class="table-wrap tab-content hidden" id="review">
@@ -1678,6 +1722,7 @@
     <tbody>
       @php
           $completed = $completed->sortBy('updated_at');
+          $no = 1;
       @endphp
       @forelse($completed as $index => $submission)
         @php
@@ -1712,7 +1757,7 @@
           }
         @endphp
         <tr>
-          <td>{{ $index + 1 }}</td>
+          <td>{{ $no++ }}</td>
           <td>{{ $submission->project->title ?? '-' }}</td>
           <td>{{ $submission->project->client->name ?? '-' }}</td>
           <td>
@@ -1783,19 +1828,21 @@
             <tr>
                 <th>No.</th>
                 <th>Judul Pekerjaan</th>
-                <th>Freelancer</th>
+                <th>Client</th>
                 <th>Alasan Pembatalan</th>
                 <th>Tanggal Dibatalkan</th>
                 <th>Refund Amount</th>
-                <th>Alasan</th>
+                <th>Status Refund</th>
                 <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
+            @php 
+                $sortedCancelled = $cancelledProjects->sortBy('cancelled_at');
+                $no = 1;
+            @endphp
 
-            @php $no = 1; @endphp
-
-            @foreach($cancelledProjects as $cancel)
+            @foreach($sortedCancelled as $cancel)
                 @if($cancel->refund_status !== 'processed')
                     @continue
                 @endif
@@ -1803,37 +1850,23 @@
                 <tr>
                     <td>{{ $no++ }}</td>
                     <td>{{ $cancel->project->title }}</td>
-
-                    <td>
-                        {{ $cancel->project->proposalls()
-                            ->where('status', 'accepted')
-                            ->first()
-                            ?->user?->name ?? '-' 
-                        }}
-                    </td>
-
-                    <!-- Alasan Pembatalan diambil dari project_cancellations.reason -->
+                    <td>{{ $cancel->project->client->name ?? '-' }}</td>
                     <td>
                         <span style="font-size: 0.75rem;">
                             {{ Str::limit($cancel->reason, 50) }}
                         </span>
                     </td>
-
                     <td>{{ $cancel->cancelled_at?->format('d/m/Y') }}</td>
-
                     <td>Rp {{ number_format($cancel->refund_amount, 0, ',', '.') }}</td>
-
-                    <!-- Kolom Status Refund diganti jadi Alasan -->
                     <td>
-                        <span class="status-badge status-processed">
-                            {{ $cancel->reason }}
+                        <span class="status-badge status-completed">
+                            berhasil dibatalkan
                         </span>
                     </td>
-
                     <td>
-                        <a href="{{ route('projects.show', $cancel->project->id) }}" class="btn btn-detail">
+                        <button type="button" class="btn btn-detail" data-cancellation-id="{{ $cancel->id }}">
                             <i class="fas fa-info-circle"></i> Detail
-                        </a>
+                        </button>
                     </td>
                 </tr>
             @endforeach
@@ -1845,7 +1878,6 @@
                     </td>
                 </tr>
             @endif
-
         </tbody>
     </table>
 </div>
@@ -1982,6 +2014,73 @@
     </div>
 </div>
 
+<!-- Modal untuk Detail Pembatalan - CUSTOM VERSION -->
+<div id="cancellationDetailModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+            <div class="modal-title-section">
+                <h2 class="modal-title">
+                    <i class="fas fa-info-circle"></i>
+                    Detail Pembatalan Project
+                </h2>
+                <p class="modal-subtitle">Informasi lengkap pembatalan project</p>
+            </div>
+            <span class="close" onclick="closeCancellationModal()">×</span>
+        </div>
+        <div class="modal-body">
+            <div style="padding: 0 1.5rem;">
+                <!-- Alasan Pembatalan -->
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-comment-dots"></i>
+                        Alasan Pembatalan
+                    </h4>
+                    <div id="cancellationReason" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; min-height: 60px;">
+                        <div style="text-align: center; color: #64748b;">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat data...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bukti Foto Pendukung -->
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-camera"></i>
+                        Bukti Foto Pendukung
+                    </h4>
+                    <div id="evidenceFiles" style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; min-height: 100px;">
+                        <div style="text-align: center; color: #64748b; width: 100%;">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat bukti...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bukti Transfer dari Admin -->
+                <div style="margin-bottom: 1rem;">
+                    <h4 style="color: #dc2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-receipt"></i>
+                        Bukti Transfer dari Admin
+                    </h4>
+                    <div id="transferProof" style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; min-height: 80px;">
+                        <div style="text-align: center; color: #64748b; width: 100%;">
+                            <i class="fas fa-spinner fa-spin"></i> Memuat bukti transfer...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeCancellationModal()">
+                <i class="fas fa-times"></i>
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Tambahkan sebelum penutup </body> -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // JAVASCRIPT LENGKAP FIXED - Ganti semua JavaScript modal yang ada
 
@@ -2790,6 +2889,174 @@ document.addEventListener('DOMContentLoaded', function() {
         badge.title = badge.textContent;
     });
 });
+
+// Tambahkan fungsi-fungsi ini di bagian JavaScript
+
+// Function khusus untuk cancellation modal
+function openCancellationModal() {
+    const modal = document.getElementById('cancellationDetailModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+}
+
+function closeCancellationModal() {
+    const modal = document.getElementById('cancellationDetailModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Function utama untuk show detail
+function showCancellationDetailModal(cancellationId) {
+    console.log('🔄 Loading cancellation detail for ID:', cancellationId);
+    
+    // Reset dan buka modal terlebih dahulu
+    const reasonElement = document.getElementById('cancellationReason');
+    const evidenceFilesContainer = document.getElementById('evidenceFiles');
+    const transferProofContainer = document.getElementById('transferProof');
+    
+    // Tampilkan loading state
+    reasonElement.innerHTML = '<div style="text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>';
+    evidenceFilesContainer.innerHTML = '<div style="text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Memuat bukti...</div>';
+    transferProofContainer.innerHTML = '<div style="text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Memuat bukti transfer...</div>';
+    
+    // Buka modal SEKARANG
+    openCancellationModal();
+    
+    // Fetch data - GANTI ROUTE INI SESUAI DENGAN ROUTE FREELANCER
+    fetch(`/freelancer/jobboard/cancellation/${cancellationId}`, {
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Data received:', data);
+        
+        // Update alasan pembatalan
+        reasonElement.innerHTML = `
+            <div style="background: white; padding: 1rem; border-radius: 6px; border-left: 4px solid #dc2626;">
+                <p style="margin: 0; line-height: 1.5; color: #374151;">${data.reason || 'Tidak ada alasan yang diberikan'}</p>
+            </div>
+        `;
+
+        // Update evidence files
+        evidenceFilesContainer.innerHTML = '';
+        if (data.evidence_files && data.evidence_files.length > 0) {
+            data.evidence_files.forEach((file, index) => {
+                if (file) {
+                    const filePath = file.startsWith('http') ? file : `/storage/${file}`;
+                    const fileElement = document.createElement('div');
+                    fileElement.style.textAlign = 'center';
+                    fileElement.innerHTML = `
+                        <div style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 0.5rem; background: white;">
+                            <img src="${filePath}" 
+                                 alt="Bukti Pendukung" 
+                                 style="max-height: 120px; max-width: 180px; border-radius: 4px; cursor: pointer;"
+                                 onclick="window.open('${filePath}', '_blank')">
+                            <div style="margin-top: 0.5rem;">
+                                <button type="button" 
+                                        style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;"
+                                        onclick="window.open('${filePath}', '_blank')">
+                                    <i class="fas fa-expand"></i> Lihat Full
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    evidenceFilesContainer.appendChild(fileElement);
+                }
+            });
+        } else {
+            evidenceFilesContainer.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">Tidak ada bukti foto pendukung</div>';
+        }
+
+        // Update transfer proof
+        transferProofContainer.innerHTML = '';
+        if (data.transfer_proof) {
+            const transferPath = data.transfer_proof.startsWith('http') ? data.transfer_proof : `/storage/${data.transfer_proof}`;
+            transferProofContainer.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 0.5rem; background: white; display: inline-block;">
+                        <img src="${transferPath}" 
+                             alt="Bukti Transfer" 
+                             style="max-height: 120px; max-width: 180px; border-radius: 4px; cursor: pointer;"
+                             onclick="window.open('${transferPath}', '_blank')">
+                        <div style="margin-top: 0.5rem;">
+                            <button type="button" 
+                                    style="background: #10b981; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;"
+                                    onclick="window.open('${transferPath}', '_blank')">
+                                <i class="fas fa-expand"></i> Lihat Bukti Transfer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            transferProofContainer.innerHTML = '<div style="text-align: center; color: #64748b; padding: 1rem;">Belum ada bukti transfer dari admin</div>';
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error fetching cancellation detail:', error);
+        reasonElement.innerHTML = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 1rem;">
+                <div style="color: #dc2626; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Error:</strong> Gagal memuat data pembatalan
+                </div>
+                <p style="margin: 0.5rem 0 0 0; color: #7f1d1d; font-size: 0.875rem;">${error.message}</p>
+            </div>
+        `;
+    });
+}
+
+// Event listener untuk tombol detail
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-detail') && e.target.closest('tr')) {
+            const button = e.target.closest('.btn-detail');
+            const cancellationId = button.getAttribute('data-cancellation-id');
+            
+            if (cancellationId) {
+                console.log('🔍 Opening cancellation detail for ID:', cancellationId);
+                showCancellationDetailModal(cancellationId);
+            }
+        }
+    });
+    
+    // Close modal on outside click
+    const cancellationModal = document.getElementById('cancellationDetailModal');
+    if (cancellationModal) {
+        cancellationModal.addEventListener('click', function(event) {
+            if (event.target === cancellationModal) {
+                closeCancellationModal();
+            }
+        });
+    }
+});
+
+// Tambahkan function utility ini di JavaScript
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 </script>
 
 </body>

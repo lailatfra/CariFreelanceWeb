@@ -72,8 +72,10 @@ class ProjectCancellationController extends Controller
             'total_refund_pending' => ProjectCancellation::where('refund_status', 'pending')->sum('refund_amount'),
         ];
 
+        
         return view('admin.cancels.index', compact('cancellations', 'stats'));
     }
+
 
     /**
      * Get cancellation details

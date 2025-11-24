@@ -89,9 +89,6 @@
           @endif
         </h6>
         <div>
-          <button type="button" class="btn btn-sm btn-light mr-2" data-toggle="modal" data-target="#createProjectModal">
-            <i class="fas fa-plus"></i> Create Project
-          </button>
           <a href="{{ route('admin.projects.index') }}" class="btn btn-sm btn-outline-light">
             <i class="fas fa-sync-alt"></i> Refresh
           </a>
