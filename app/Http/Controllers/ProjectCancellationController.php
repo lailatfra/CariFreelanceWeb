@@ -762,4 +762,46 @@ public function cancelWorkingProject(Request $request, $projectId)
             'message' => 'Cancellation rejected'
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
+    
+
+public function getEvidence($id)
+{
+    try {
+        $cancellation = ProjectCancellation::findOrFail($id);
+        
+        $evidenceFiles = $cancellation->evidence_files ?? [];
+        
+        // Format response yang konsisten
+        $formattedFiles = [];
+        foreach ($evidenceFiles as $file) {
+            if (is_array($file)) {
+                $filePath = $file['path'] ?? $file['url'] ?? $file;
+                $formattedFiles[] = [
+                    'original_name' => $file['original_name'] ?? $file['name'] ?? basename($filePath),
+                    'path' => $filePath,
+                    'url' => Storage::url($filePath)
+                ];
+            } else {
+                $formattedFiles[] = [
+                    'original_name' => basename($file),
+                    'path' => $file,
+                    'url' => Storage::url($file)
+                ];
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'evidence_files' => $formattedFiles
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Error getting evidence: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memuat bukti: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }

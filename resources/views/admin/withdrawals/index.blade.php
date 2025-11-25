@@ -186,23 +186,7 @@
   </div>
 </div>
 
-<!-- Status Distribution Chart -->
-<div class="row mb-4">
-  <div class="col-xl-12">
-    <div class="card shadow">
-      <div class="card-header py-3 bg-gradient-primary">
-        <h6 class="m-0 font-weight-bold text-white">
-          <i class="fas fa-chart-pie mr-2"></i>Distribusi Status Penarikan
-        </h6>
-      </div>
-      <div class="card-body">
-        <div class="chart-container" style="position: relative; height: 300px;">
-          <canvas id="statusChart"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!-- Withdrawals Table -->
 <div class="card shadow mb-4">

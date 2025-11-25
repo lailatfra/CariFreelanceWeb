@@ -776,9 +776,6 @@
                             <a href="{{ route('freelancer.withdrawals.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus-circle"></i> Ajukan Penarikan
                             </a>
-                            <button class="btn btn-secondary">
-                                <i class="fas fa-chart-line"></i> Laporan Penghasilan
-                            </button>
                         </div>
                     </div>
                 </div>

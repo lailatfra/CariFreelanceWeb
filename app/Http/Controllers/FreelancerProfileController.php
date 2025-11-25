@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Withdrawal;
 use App\Models\Wallet;
 use App\Models\FreelancerProfile;
+use App\Models\Rating;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -201,9 +202,9 @@ class FreelancerProfileController extends Controller
     /**
      * Method untuk menampilkan profil publik berdasarkan user_id
      */
-    public function showPublic($id)
+     public function showPublic($id)
     {
-        $freelancerProfile = FreelancerProfile::with('user')
+        $freelancerProfile = FreelancerProfile::with(['user', 'ratings.user', 'ratings.project'])
             ->where('user_id', $id)
             ->first();
 
@@ -212,7 +213,23 @@ class FreelancerProfileController extends Controller
                 ->with('error', 'Profil freelancer tidak ditemukan atau belum lengkap.');
         }
 
-        return view('freelancer.profile.profile-publik', compact('freelancerProfile'));
+        // ✅ Hitung data rating
+        $averageRating = $freelancerProfile->average_rating;
+        $totalReviews = $freelancerProfile->total_reviews;
+        $ratingBreakdown = $freelancerProfile->rating_breakdown;
+        $latestReviews = $freelancerProfile->latest_reviews;
+        $ratingDistribution = $freelancerProfile->rating_distribution;
+        $completedProjects = $freelancerProfile->completed_projects_count;
+
+        return view('freelancer.profile.profile-publik', compact(
+            'freelancerProfile',
+            'averageRating',
+            'totalReviews',
+            'ratingBreakdown',
+            'latestReviews',
+            'ratingDistribution',
+            'completedProjects'
+        ));
     }
 
     /**
@@ -220,7 +237,7 @@ class FreelancerProfileController extends Controller
      */
     public function showPublicByUsername($username)
     {
-        $freelancerProfile = FreelancerProfile::with('user')
+        $freelancerProfile = FreelancerProfile::with(['user', 'ratings.user', 'ratings.project'])
             ->where('username', $username)
             ->first();
 
@@ -229,9 +246,24 @@ class FreelancerProfileController extends Controller
                 ->with('error', 'Profil freelancer tidak ditemukan.');
         }
 
-        return view('freelancer.profile.profile-publik', compact('freelancerProfile'));
-    }
+        // ✅ Hitung data rating
+        $averageRating = $freelancerProfile->average_rating;
+        $totalReviews = $freelancerProfile->total_reviews;
+        $ratingBreakdown = $freelancerProfile->rating_breakdown;
+        $latestReviews = $freelancerProfile->latest_reviews;
+        $ratingDistribution = $freelancerProfile->rating_distribution;
+        $completedProjects = $freelancerProfile->completed_projects_count;
 
+        return view('freelancer.profile.profile-publik', compact(
+            'freelancerProfile',
+            'averageRating',
+            'totalReviews',
+            'ratingBreakdown',
+            'latestReviews',
+            'ratingDistribution',
+            'completedProjects'
+        ));
+    }
     /**
      * Method untuk menampilkan halaman account settings
      */

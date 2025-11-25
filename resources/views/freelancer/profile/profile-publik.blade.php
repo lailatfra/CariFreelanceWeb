@@ -346,6 +346,53 @@
                 padding: 10px;
             }
         }
+        /* Rating Card Styling */
+.rating-summary {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.rating-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 8px;
+}
+
+.star-rating {
+    color: #f59e0b;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.rating-bar {
+    background: #e5e7eb;
+    border-radius: 8px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.rating-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.3s ease;
+}
+
+.review-item {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #8b5cf6;
+    transition: transform 0.2s ease;
+}
+
+.review-item:hover {
+    transform: translateX(4px);
+}
     </style>
 </head>
 <body>
@@ -380,32 +427,37 @@
                 </div>
             </div>
             
-            <div class="stats">
-                @if($freelancerProfile->rating && $freelancerProfile->review_count)
-                <div class="stat-item">
-                    <span class="stat-icon"><i class="fas fa-star"></i></span>
-                    <span>{{ number_format($freelancerProfile->rating, 1) }} ({{ $freelancerProfile->review_count }} reviews)</span>
-                </div>
-                @endif
-                
-                @if($freelancerProfile->project_count)
-                <div class="stat-item">
-                    <span class="stat-icon"><i class="fas fa-briefcase"></i></span>
-                    <span>{{ $freelancerProfile->project_count }} proyek selesai</span>
-                </div>
-                @endif
-                
-                <div class="stat-item">
-                    <span class="stat-icon"><i class="fas fa-map-marker-alt"></i></span>
-                    <span>{{ $freelancerProfile->location ?? 'Lokasi tidak diatur' }}</span>
-                </div>
-                
-                <div class="stat-item">
-                    <span class="stat-icon"><i class="fas fa-user-clock"></i></span>
-                    <span>Bergabung {{ $freelancerProfile->user->created_at ? $freelancerProfile->user->created_at->format('F Y') : 'Tidak diketahui' }}</span>
-                </div>
-            </div>
-        </div>
+
+<div class="stats">
+    <!-- ✅ RATING SECTION - UPDATED -->
+    @if($averageRating > 0)
+    <div class="stat-item">
+        <span class="stat-icon"><i class="fas fa-star"></i></span>
+        <span>{{ number_format($averageRating, 1) }} ({{ $totalReviews }} reviews)</span>
+    </div>
+    @else
+    <div class="stat-item">
+        <span class="stat-icon"><i class="far fa-star"></i></span>
+        <span>Belum ada rating</span>
+    </div>
+    @endif
+    
+    <!-- ✅ COMPLETED PROJECTS - UPDATED -->
+    <div class="stat-item">
+        <span class="stat-icon"><i class="fas fa-briefcase"></i></span>
+        <span>{{ $completedProjects }} proyek selesai</span>
+    </div>
+    
+    <div class="stat-item">
+        <span class="stat-icon"><i class="fas fa-map-marker-alt"></i></span>
+        <span>{{ $freelancerProfile->location ?? 'Lokasi tidak diatur' }}</span>
+    </div>
+    
+    <div class="stat-item">
+        <span class="stat-icon"><i class="fas fa-user-clock"></i></span>
+        <span>Bergabung {{ $freelancerProfile->user->created_at ? $freelancerProfile->user->created_at->format('F Y') : 'Tidak diketahui' }}</span>
+    </div>
+</div>
 
         <!-- Main Content -->
         <div class="main-content1">
@@ -525,7 +577,149 @@
 
                 </div>
 
-                <!-- Testimonials -->
+    <!-- ✅ TAMBAHKAN RATING DETAIL SECTION - BARU -->
+    @if($totalReviews > 0)
+    <div class="card">
+        <h2><i class="fas fa-star"></i> Rating & Review</h2>
+        
+        <!-- Rating Summary -->
+        <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; margin-bottom: 20px;">
+            <div style="font-size: 3rem; font-weight: 700; color: #92400e; margin-bottom: 8px;">
+                {{ number_format($averageRating, 1) }}
+                <span style="font-size: 1.2rem; color: #b45309;">/5.0</span>
+            </div>
+            <div style="color: #f59e0b; font-size: 1.5rem; margin-bottom: 8px;">
+                @for($i = 1; $i <= 5; $i++)
+                    @if($i <= floor($averageRating))
+                        <i class="fas fa-star"></i>
+                    @elseif($i == ceil($averageRating) && $averageRating - floor($averageRating) >= 0.5)
+                        <i class="fas fa-star-half-alt"></i>
+                    @else
+                        <i class="far fa-star"></i>
+                    @endif
+                @endfor
+            </div>
+            <div style="color: #78350f; font-size: 0.875rem; font-weight: 500;">
+                Dari {{ $totalReviews }} review{{ $totalReviews > 1 ? 's' : '' }}
+            </div>
+        </div>
+
+        <!-- Rating Breakdown -->
+        <div style="margin-bottom: 20px;">
+            <h3 style="font-size: 1rem; margin-bottom: 12px; color: #374151;">
+                <i class="fas fa-chart-bar" style="color: #3b82f6; margin-right: 6px;"></i>
+                Detail Penilaian
+            </h3>
+            
+            <!-- Ketepatan Waktu -->
+            <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-size: 0.875rem; color: #6b7280;">
+                        <i class="fas fa-clock" style="color: #3b82f6; margin-right: 4px;"></i>
+                        Ketepatan Waktu
+                    </span>
+                    <span style="font-size: 0.875rem; font-weight: 600; color: #374151;">
+                        {{ number_format($ratingBreakdown['ketepatan_waktu'], 1) }}/5.0
+                    </span>
+                </div>
+                <div style="background: #e5e7eb; border-radius: 8px; height: 8px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, #3b82f6, #2563eb); height: 100%; width: {{ ($ratingBreakdown['ketepatan_waktu'] / 5) * 100 }}%; border-radius: 8px;"></div>
+                </div>
+            </div>
+
+            <!-- Kualitas Kerja -->
+            <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-size: 0.875rem; color: #6b7280;">
+                        <i class="fas fa-thumbs-up" style="color: #10b981; margin-right: 4px;"></i>
+                        Kualitas Kerja
+                    </span>
+                    <span style="font-size: 0.875rem; font-weight: 600; color: #374151;">
+                        {{ number_format($ratingBreakdown['kualitas_kerja'], 1) }}/5.0
+                    </span>
+                </div>
+                <div style="background: #e5e7eb; border-radius: 8px; height: 8px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, #10b981, #059669); height: 100%; width: {{ ($ratingBreakdown['kualitas_kerja'] / 5) * 100 }}%; border-radius: 8px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Distribution -->
+        <div style="margin-bottom: 20px;">
+            <h3 style="font-size: 1rem; margin-bottom: 12px; color: #374151;">
+                <i class="fas fa-poll" style="color: #f59e0b; margin-right: 6px;"></i>
+                Distribusi Rating
+            </h3>
+            @foreach($ratingDistribution as $star => $count)
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-size: 0.75rem; color: #6b7280; min-width: 60px;">
+                    {{ $star }} <i class="fas fa-star" style="color: #f59e0b; font-size: 0.7rem;"></i>
+                </span>
+                <div style="flex: 1; background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden;">
+                    <div style="background: #f59e0b; height: 100%; width: {{ $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0 }}%; border-radius: 4px;"></div>
+                </div>
+                <span style="font-size: 0.75rem; color: #6b7280; min-width: 30px; text-align: right;">
+                    {{ $count }}
+                </span>
+            </div>
+            @endforeach
+        </div>
+
+        <!-- Latest Reviews -->
+        @if($latestReviews->count() > 0)
+        <div>
+            <h3 style="font-size: 1rem; margin-bottom: 12px; color: #374151;">
+                <i class="fas fa-comments" style="color: #8b5cf6; margin-right: 6px;"></i>
+                Review Terbaru
+            </h3>
+            @foreach($latestReviews as $review)
+            <div class="testimonial-item" style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                    <div>
+                        <div style="font-weight: 600; color: #374151; font-size: 0.875rem; margin-bottom: 2px;">
+                            {{ $review->user->name ?? 'Anonymous' }}
+                        </div>
+                        <div style="color: #f59e0b; font-size: 0.75rem;">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= $review->rating)
+                                    <i class="fas fa-star"></i>
+                                @else
+                                    <i class="far fa-star"></i>
+                                @endif
+                            @endfor
+                        </div>
+                    </div>
+                    <div style="font-size: 0.7rem; color: #9ca3af;">
+                        {{ $review->created_at->diffForHumans() }}
+                    </div>
+                </div>
+                <p style="font-style: italic; color: #4b5563; margin-bottom: 8px; font-size: 0.8rem; line-height: 1.5;">
+                    "{{ $review->review }}"
+                </p>
+                <div style="font-size: 0.7rem; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 6px; margin-top: 6px;">
+                    <i class="fas fa-briefcase" style="color: #3b82f6; margin-right: 4px;"></i>
+                    Project: {{ Str::limit($review->project->title ?? 'Unknown', 30) }}
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </div>
+    @else
+    <!-- No Reviews Yet -->
+    <div class="card">
+        <h2><i class="fas fa-star"></i> Rating & Review</h2>
+        <div style="text-align: center; padding: 40px 20px;">
+            <i class="far fa-star" style="font-size: 3rem; color: #d1d5db; margin-bottom: 12px;"></i>
+            <h3 style="font-size: 1.1rem; color: #6b7280; margin-bottom: 8px;">Belum Ada Review</h3>
+            <p style="font-size: 0.875rem; color: #9ca3af;">
+                Freelancer ini belum memiliki review dari client.
+            </p>
+        </div>
+    </div>
+    @endif
+
+                <!-- Testimonials
                 @if($freelancerProfile->review_count > 0)
                 <div class="card">
                     <h2><i class="fas fa-comments"></i> Testimonial</h2>
@@ -554,7 +748,7 @@
                         </div>
                     </div>
                 </div>
-                @endif
+                @endif -->
             </div>
         </div>
     </div>

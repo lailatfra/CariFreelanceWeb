@@ -3,6 +3,79 @@
 @section('title', 'Manajemen Pembatalan Proyek')
 
 @section('content')
+
+<style>
+    .hover-row:hover {
+        background-color: #f8f9fc !important;
+        transition: background-color 0.2s ease;
+    }
+
+    .table td {
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+    /* Modal Styling */
+    .modal {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-dialog-centered {
+        display: flex;
+        align-items: center;
+        min-height: calc(100% - 1rem);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Zoom Modal Styles */
+    .zoom-modal .swal2-image {
+        max-width: 90vw;
+        max-height: 80vh;
+        object-fit: contain;
+    }
+
+    .full-zoom-modal {
+        max-width: 95vw !important;
+        max-height: 95vh !important;
+    }
+
+    .full-zoom-modal .swal2-image {
+        width: 100%;
+        height: auto;
+        max-height: 85vh;
+        object-fit: contain;
+    }
+
+    .full-zoom-modal .swal2-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        color: white !important;
+        font-size: 24px;
+    }
+
+    /* Evidence Modal */
+    .evidence-modal .swal2-popup {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .evidence-modal .card {
+        transition: transform 0.2s;
+    }
+
+    .evidence-modal .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+
 <!-- Page Heading -->
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Kelola Pembatalan Proyek</h1>
@@ -582,7 +655,6 @@
         document.getElementById('uploadPlaceholder').style.display = 'block';
         document.getElementById('uploadPreview').style.display = 'none';
         
-        // Show Bootstrap modal - sekarang di tengah layar
         $('#transferProofModal').modal('show');
     }
 
@@ -594,7 +666,6 @@
         document.getElementById('rejectReason').value = '';
         document.getElementById('rejectCharCount').textContent = '0';
         
-        // Show Bootstrap modal - sekarang di tengah layar
         $('#rejectCancellationModal').modal('show');
     }
 
@@ -645,6 +716,9 @@
                 }
             });
         }
+
+        // Bulk actions checkbox
+        initializeBulkActions();
     });
 
     // ✅ PREVIEW FILE
@@ -672,7 +746,7 @@
         document.getElementById('uploadPreview').style.display = 'none';
     }
 
-    // ✅ SUBMIT TRANSFER PROOF - LOGIKA TETAP SAMA
+    // ✅ SUBMIT TRANSFER PROOF
     async function submitTransferProof() {
         const fileInput = document.getElementById('transferProofFile');
         if (!fileInput.files || fileInput.files.length === 0) {
@@ -720,7 +794,7 @@
         }
     }
 
-    // ✅ SUBMIT REJECT - LOGIKA TETAP SAMA
+    // ✅ SUBMIT REJECT
     async function submitRejectCancellation() {
         const reason = document.getElementById('rejectReason').value.trim();
         if (!reason || reason.length < 10) {
@@ -769,6 +843,7 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
+    // ✅ NOTIFICATION FUNCTION
     function showNotification(message, type = 'success') {
         Swal.fire({
             title: type === 'success' ? 'Sukses!' : 'Error!',
@@ -779,7 +854,7 @@
         });
     }
 
-    // FUNGSI LAINNYA TETAP SAMA...
+    // ✅ VIEW FULL REASON
     function viewFullReason(reason) {
         Swal.fire({
             title: 'Alasan Pembatalan Lengkap',
@@ -792,28 +867,441 @@
         });
     }
 
+    // ✅ VIEW ALL EVIDENCE FILES
     function viewAllEvidence(cancellationId) {
-        // ... kode tetap sama
+        // Show loading
+        Swal.fire({
+            title: 'Memuat bukti...',
+            text: 'Sedang mengambil data bukti pembatalan',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Fetch evidence data via AJAX
+        fetch(`/admin/cancels/${cancellationId}/evidence`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.close();
+            
+            if (data.success && data.evidence_files && data.evidence_files.length > 0) {
+                showEvidenceModal(data.evidence_files);
+            } else {
+                showNotification('Tidak ada bukti yang ditemukan', 'info');
+            }
+        })
+        .catch(error => {
+            Swal.close();
+            console.error('Error fetching evidence:', error);
+            showNotification('Gagal memuat bukti: ' + error.message, 'error');
+        });
     }
 
+    // ✅ SHOW EVIDENCE MODAL
     function showEvidenceModal(evidenceFiles) {
-        // ... kode tetap sama
+        let filesHtml = '';
+        
+        if (Array.isArray(evidenceFiles) && evidenceFiles.length > 0) {
+            evidenceFiles.forEach((file, index) => {
+                const fileName = file.original_name || file.name || `File ${index + 1}`;
+                const fileUrl = file.url || (file.path ? `/storage/${file.path}` : '#');
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+                
+                // Determine if it's an image
+                const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension);
+                
+                if (isImage) {
+                    filesHtml += `
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <img src="${fileUrl}" 
+                                     class="card-img-top" 
+                                     style="height: 200px; object-fit: cover; cursor: pointer;"
+                                     onclick="zoomImageFull('${fileUrl}', '${fileName}')"
+                                     alt="${fileName}"
+                                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhZ2FsIG11YXQgZ2FtYmFyPC90ZXh0Pjwvc3ZnPg=='">
+                                <div class="card-body p-2">
+                                    <small class="text-muted text-truncate d-block" title="${fileName}">${fileName}</small>
+                                    <a href="${fileUrl}" 
+                                       target="_blank" 
+                                       class="btn btn-sm btn-outline-primary btn-block mt-2">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    filesHtml += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file fa-3x text-secondary mb-2"></i>
+                                    <h6 class="card-title text-truncate" title="${fileName}">${fileName}</h6>
+                                    <small class="text-muted">${fileExtension.toUpperCase()} File</small>
+                                    <a href="${fileUrl}" 
+                                       target="_blank" 
+                                       class="btn btn-sm btn-outline-primary btn-block mt-3">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        } else {
+            filesHtml = `
+                <div class="col-12 text-center py-4">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Tidak ada bukti yang tersedia</p>
+                </div>
+            `;
+        }
+        
+        Swal.fire({
+            title: '<i class="fas fa-folder-open mr-2"></i>Semua Bukti Pembatalan',
+            html: `
+                <div class="container-fluid">
+                    <div class="row">
+                        ${filesHtml}
+                    </div>
+                </div>
+            `,
+            width: '900px',
+            showCloseButton: true,
+            showConfirmButton: false,
+            customClass: {
+                popup: 'evidence-modal'
+            }
+        });
     }
 
+    // ✅ ZOOM IMAGE (Small Preview)
     function zoomImage(imageUrl) {
-        // ... kode tetap sama
+        if (!imageUrl || imageUrl === '#') {
+            showNotification('URL gambar tidak valid', 'error');
+            return;
+        }
+
+        Swal.fire({
+            imageUrl: imageUrl,
+            imageAlt: 'Bukti Pembatalan',
+            showConfirmButton: false,
+            showCloseButton: true,
+            width: 'auto',
+            padding: '0',
+            background: 'transparent',
+            backdrop: 'rgba(0,0,0,0.8)',
+            customClass: {
+                popup: 'zoom-modal',
+                image: 'zoom-image'
+            },
+            imageWidth: 'auto',
+            imageHeight: '80vh',
+            didOpen: () => {
+                // Add error handling for image
+                const img = Swal.getPopup().querySelector('img');
+                img.onerror = function() {
+                    this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkdhbWJhciB0aWRhayBkYXBhdCBkaXRhbXBpbGthbjwvdGV4dD48L3N2Zz4=';
+                };
+            }
+        });
     }
 
-    function zoomImageFull(imageUrl) {
-        // ... kode tetap sama
+    // ✅ ZOOM IMAGE FULL (Full Screen)
+    function zoomImageFull(imageUrl, imageName = 'Bukti Pembatalan') {
+        if (!imageUrl || imageUrl === '#') {
+            showNotification('URL gambar tidak valid', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: imageName,
+            imageUrl: imageUrl,
+            imageAlt: imageName,
+            showConfirmButton: true,
+            confirmButtonText: '<i class="fas fa-download mr-1"></i> Download',
+            showCloseButton: true,
+            width: '90%',
+            padding: '0',
+            background: '#000',
+            backdrop: 'rgba(0,0,0,0.95)',
+            customClass: {
+                popup: 'full-zoom-modal',
+                image: 'full-zoom-image',
+                closeButton: 'text-white position-absolute',
+                confirmButton: 'btn btn-success'
+            },
+            imageWidth: '100%',
+            imageHeight: 'auto',
+            didOpen: () => {
+                // Make image clickable to close
+                const image = Swal.getPopup().querySelector('img');
+                if (image) {
+                    image.style.cursor = 'zoom-out';
+                    image.onclick = () => Swal.close();
+                }
+
+                // Add error handling
+                image.onerror = function() {
+                    this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5HYW1iYXIgdGlkYWsgZGFwYXQgZGl0YW1waWxrYW48L3RleHQ+PC9zdmc+';
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Download image when confirm button clicked
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.download = imageName;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
     }
 
+    // ✅ VIEW TRANSFER PROOF
     function viewTransferProof(url) {
-        // ... kode tetap sama
+        if (!url) {
+            showNotification('URL bukti transfer tidak valid', 'error');
+            return;
+        }
+
+        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+        const isPdf = /\.pdf$/i.test(url);
+        
+        if (isImage) {
+            Swal.fire({
+                title: '<i class="fas fa-receipt mr-2"></i>Bukti Transfer',
+                imageUrl: url,
+                imageAlt: 'Bukti Transfer',
+                showCloseButton: true,
+                showConfirmButton: true,
+                confirmButtonText: '<i class="fas fa-download mr-1"></i> Download',
+                confirmButtonColor: '#28a745',
+                width: '700px',
+                customClass: {
+                    image: 'img-fluid rounded shadow'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.open(url, '_blank');
+                }
+            });
+        } else if (isPdf) {
+            Swal.fire({
+                title: '<i class="fas fa-file-pdf mr-2"></i>Bukti Transfer (PDF)',
+                html: `
+                    <div class="text-center">
+                        <i class="fas fa-file-pdf fa-5x text-danger mb-3"></i>
+                        <p class="text-muted">File PDF tidak dapat ditampilkan di sini</p>
+                        <a href="${url}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-external-link-alt mr-2"></i>Buka di Tab Baru
+                        </a>
+                        <a href="${url}" download class="btn btn-success ml-2">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </a>
+                    </div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '500px'
+            });
+        } else {
+            window.open(url, '_blank');
+        }
     }
 
+    // ✅ VIEW REJECTION REASON
     function viewRejectionReason(reason) {
-        // ... kode tetap sama
+        Swal.fire({
+            title: '<i class="fas fa-info-circle mr-2 text-warning"></i>Alasan Penolakan',
+            html: `
+                <div class="text-left" style="max-height: 400px; overflow-y: auto;">
+                    <div class="alert alert-warning border-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <strong>Pembatalan Ditolak</strong>
+                    </div>
+                    <div class="bg-light p-3 rounded border">
+                        <p style="white-space: pre-wrap; line-height: 1.8; margin: 0;">
+                            ${reason || 'Tidak ada alasan yang dicantumkan'}
+                        </p>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            confirmButtonText: '<i class="fas fa-check mr-1"></i> Mengerti',
+            confirmButtonColor: '#f6c23e',
+            width: '600px'
+        });
+    }
+
+    // ✅ BULK ACTIONS FUNCTIONS
+    function initializeBulkActions() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.cancellation-checkbox');
+        const bulkApprove = document.getElementById('bulkApprove');
+        const bulkReject = document.getElementById('bulkReject');
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+                toggleBulkActions();
+            });
+        }
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', toggleBulkActions);
+        });
+
+        function toggleBulkActions() {
+            const checkedCount = document.querySelectorAll('.cancellation-checkbox:checked').length;
+            if (checkedCount > 0) {
+                bulkApprove.style.display = 'inline-block';
+                bulkReject.style.display = 'inline-block';
+            } else {
+                bulkApprove.style.display = 'none';
+                bulkReject.style.display = 'none';
+            }
+        }
+
+        // Bulk approve action
+        if (bulkApprove) {
+            bulkApprove.addEventListener('click', function() {
+                const selectedIds = Array.from(document.querySelectorAll('.cancellation-checkbox:checked'))
+                    .map(checkbox => checkbox.value);
+                
+                if (selectedIds.length === 0) {
+                    showNotification('Pilih setidaknya satu pembatalan untuk disetujui!', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Setujui Pembatalan Terpilih?',
+                    html: `Anda akan menyetujui <strong>${selectedIds.length}</strong> pembatalan proyek.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-check"></i> Ya, Setujui!',
+                    cancelButtonText: '<i class="fas fa-times"></i> Batal',
+                    confirmButtonColor: '#28a745'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        bulkApproveAction(selectedIds);
+                    }
+                });
+            });
+        }
+
+        // Bulk reject action
+        if (bulkReject) {
+            bulkReject.addEventListener('click', function() {
+                const selectedIds = Array.from(document.querySelectorAll('.cancellation-checkbox:checked'))
+                    .map(checkbox => checkbox.value);
+                
+                if (selectedIds.length === 0) {
+                    showNotification('Pilih setidaknya satu pembatalan untuk ditolak!', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Tolak Pembatalan Terpilih?',
+                    html: `Anda akan menolak <strong>${selectedIds.length}</strong> pembatalan proyek.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-times"></i> Ya, Tolak!',
+                    cancelButtonText: '<i class="fas fa-arrow-left"></i> Batal',
+                    confirmButtonColor: '#dc3545'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        bulkRejectAction(selectedIds);
+                    }
+                });
+            });
+        }
+    }
+
+    // ✅ BULK APPROVE ACTION
+    async function bulkApproveAction(selectedIds) {
+        const approveBtn = document.getElementById('bulkApprove');
+        const originalHTML = approveBtn.innerHTML;
+        approveBtn.disabled = true;
+        approveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+        try {
+            const response = await fetch('/admin/cancels/bulk-approve', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification(data.message, 'error');
+            approveBtn.disabled = false;
+                approveBtn.innerHTML = originalHTML;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Terjadi kesalahan: ' + error.message, 'error');
+            approveBtn.disabled = false;
+            approveBtn.innerHTML = originalHTML;
+        }
+    }
+
+    // ✅ BULK REJECT ACTION
+    async function bulkRejectAction(selectedIds) {
+        const rejectBtn = document.getElementById('bulkReject');
+        const originalHTML = rejectBtn.innerHTML;
+        rejectBtn.disabled = true;
+        rejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+        try {
+            const response = await fetch('/admin/cancels/bulk-reject', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showNotification(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification(data.message, 'error');
+                rejectBtn.disabled = false;
+                rejectBtn.innerHTML = originalHTML;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Terjadi kesalahan: ' + error.message, 'error');
+            rejectBtn.disabled = false;
+            rejectBtn.innerHTML = originalHTML;
+        }
     }
 </script>
 @endpush

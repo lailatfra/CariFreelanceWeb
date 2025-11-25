@@ -670,3 +670,7 @@ Route::get('/ratings/{project}', [RatingController::class, 'show'])->name('ratin
 // Untuk freelancer cancellation detail
 Route::get('/freelancer/jobboard/cancellation/{cancellationId}', [ProposalController::class, 'showCancellationDetail'])
     ->name('freelancer.cancellation.detail');
+    // Route untuk mengambil evidence files
+// Route untuk mengambil evidence files
+Route::get('/admin/cancels/{id}/evidence', [ProjectCancellationController::class, 'getEvidence'])
+    ->name('admin.cancels.evidence');

@@ -530,11 +530,18 @@
                     <div class="desktop-actions d-none d-md-flex align-items-center" style="gap: 1rem;">
                         {{-- Notifications --}}
                         <a href="/notification">
-                            <button class="action-btn position-relative" title="Notifikasi">
-                                <i class="fas fa-bell"></i>
-                                <span class="notification-badge">3</span>
-                            </button>
-                        </a>
+    <button class="action-btn position-relative" title="Notifikasi">
+        <i class="fas fa-bell"></i>
+        @php
+            $unreadCount = \App\Models\Notification::where('user_id', auth()->id())
+                ->where('is_read', 0)
+                ->count();
+        @endphp
+        @if($unreadCount > 0)
+            <span class="notification-badge">{{ $unreadCount }}</span>
+        @endif
+    </button>
+</a>
 
                         {{-- Messages --}}
                         <a href="{{ route('chat') }}">
