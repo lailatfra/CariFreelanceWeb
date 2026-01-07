@@ -1,61 +1,144 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Website CariFreelance
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Website **CariFreelance** adalah platform berbasis web yang mempertemukan **Client** dan **Freelancer**. Aplikasi ini dibuat menggunakan **Laravel** dengan sistem **multi-role** dan alur registrasi bertahap.
 
-## About Laravel
+## Tujuan Aplikasi
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+* Menyediakan platform pencarian freelancer seperti Fiverr
+* Menerapkan konsep **multi-role user** (Client & Freelancer)
+* Mengimplementasikan alur **registrasi modern berbasis Google**
+* Melatih penggunaan Laravel MVC, autentikasi, dan relasi database
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Teknologi yang Digunakan
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Laravel
+* Blade Template
+* MySQL
+* Laravel Authentication
+* MVC Architecture
 
-## Learning Laravel
+## Role Pengguna
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Aplikasi memiliki tiga peran utama:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+1. **Client**
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+   * Memposting proyek
+   * Memilih freelancer berdasarkan proposal
+   * Memantau progress pengerjaan
+   * Berkomunikasi dengan freelancer melalui fitur chat
+   * Mengajukan pembatalan jika terjadi masalah
 
-## Laravel Sponsors
+2. **Freelancer**
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+   * Melihat daftar proyek yang tersedia
+   * Mengajukan proposal pada proyek client
+   * Mengerjakan proyek dan mengupdate progress
+   * Berkomunikasi langsung dengan client melalui chat
 
-### Premium Partners
+3. **Admin**
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+   * Mengontrol seluruh data aplikasi
+   * Mengelola user, proyek, dan transaksi
+   * Menangani laporan dan pembatalan proyek
+   * Menjaga sistem agar tetap aman dan terpercaya
 
-## Contributing
+Role disimpan di tabel `users` dan digunakan untuk menentukan hak akses dashboard.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Alur Kerja Aplikasi
 
-## Code of Conduct
+### Registrasi Akun
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+* User melakukan pendaftaran menggunakan akun Google
+* Sistem menyimpan data dasar user ke tabel `users`
+* User diwajibkan memilih role sebelum dapat melanjutkan
 
-## Security Vulnerabilities
+### Pengisian Profil
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+* Setelah memilih role, user mengisi profil sesuai perannya
+* Data profil disimpan di tabel terpisah:
 
-## License
+  * `client_profiles`
+  * `freelancer_profiles`
+* Kedua tabel memiliki foreign key ke tabel `users`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Proyek dan Proposal
+
+* Client membuat proyek dan menyimpannya ke tabel `projects`
+* Freelancer melihat proyek yang tersedia
+* Freelancer mengajukan proposal yang disimpan di tabel `proposals`
+* Client memilih proposal yang sesuai untuk memulai proyek
+
+### Progress dan Pemantauan
+
+* Freelancer mengirim update progress pengerjaan
+* Data progress disimpan di tabel `project_progress`
+* Client dapat memantau progress secara real-time
+* Client dapat mengajukan pembatalan jika proyek bermasalah
+
+### Chat Client & Freelancer
+
+* Client dan freelancer dapat berkomunikasi melalui fitur chat
+* Pesan disimpan di tabel `messages`
+* Chat hanya dapat diakses oleh pihak yang terlibat dalam proyek
+
+### Fitur Tambahan
+
+* **Pencarian (Search)**
+
+  * User dapat mencari proyek atau freelancer berdasarkan kata kunci
+  * Pencarian dilakukan melalui query ke database menggunakan Eloquent
+  * Fitur ini memanfaatkan parameter request dan query builder Laravel agar hasil lebih relevan
+
+* **Saldo & Transaksi Internal**
+
+  * Sistem memiliki saldo internal yang tersimpan di database aplikasi
+  * Client melakukan pembayaran ke sistem, lalu saldo ditahan oleh platform
+  * Saldo akan diteruskan ke freelancer setelah proyek selesai
+  * Semua transaksi tercatat untuk keamanan dan transparansi
+
+* **Notifikasi yang jelas**
+
+  * Sistem mengirim notifikasi apabila terdapat interaksi antara client dan freelancer, misalnya ketika menerima pesan atau terdapat freelancer yang mengajukan prfoposal, dan sebagainya.
+
+## Penjelasan Cara Kerja Kode
+
+### Struktur MVC
+
+* **Model**
+
+  * `User` mengelola data user dan role
+  * `ClientProfile` dan `FreelancerProfile` mengelola data profil
+  * `Project`, `Proposal`, `ProjectProgress`, dan `Message` mengelola data utama aplikasi
+
+* **Controller**
+
+  * `AuthController` menangani proses registrasi dan login
+  * `Client` controller mengelola proyek dan pemantauan
+  * `Freelancer` controller mengelola proposal dan progress
+  * `Admin` controller mengelola seluruh data sistem
+
+* **View**
+
+  * Menggunakan Blade Template
+  * Tampilan dashboard dibedakan berdasarkan role
+
+### Routing
+
+* Route dipisahkan berdasarkan role menggunakan group route
+* Middleware digunakan untuk membatasi akses
+
+### Middleware & Keamanan
+
+* `auth` memastikan user sudah login
+* `role` middleware membatasi akses berdasarkan role
+* Validasi request digunakan pada setiap form input
+
+## Kelebihan Sistem
+
+* Sistem multi-role yang jelas
+* Alur kerja proyek mendekati aplikasi freelance nyata
+* Pemantauan progress proyek
+* Fitur chat internal
+* Sistem dikontrol oleh admin untuk menjaga kepercayaan
+
