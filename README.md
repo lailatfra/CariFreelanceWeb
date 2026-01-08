@@ -1,12 +1,12 @@
 # Website CariFreelance
 
-Website **CariFreelance** adalah platform berbasis web yang mempertemukan **Client** dan **Freelancer**. Aplikasi ini dibuat menggunakan **Laravel** dengan sistem **multi-role** dan alur registrasi bertahap.
+Website CariFreelance adalah platform berbasis web yang mempertemukan Client dan Freelancer. Aplikasi ini dibuat menggunakan Laravel dengan sistem multi-role dan alur registrasi bertahap.
 
 ## Tujuan Aplikasi
 
 * Menyediakan platform pencarian freelancer seperti Fiverr
-* Menerapkan konsep **multi-role user** (Client & Freelancer)
-* Mengimplementasikan alur **registrasi modern berbasis Google**
+* Menerapkan konsep multi-role user (Client & Freelancer)
+* Mengimplementasikan alur registrasi modern berbasis Google
 * Melatih penggunaan Laravel MVC, autentikasi, dan relasi database
 
 ## Teknologi yang Digunakan
@@ -127,18 +127,4 @@ Role disimpan di tabel `users` dan digunakan untuk menentukan hak akses dashboar
 
 * Route dipisahkan berdasarkan role menggunakan group route
 * Middleware digunakan untuk membatasi akses
-
-### Middleware & Keamanan
-
-* `auth` memastikan user sudah login
-* `role` middleware membatasi akses berdasarkan role
-* Validasi request digunakan pada setiap form input
-
-## Kelebihan Sistem
-
-* Sistem multi-role yang jelas
-* Alur kerja proyek mendekati aplikasi freelance nyata
-* Pemantauan progress proyek
-* Fitur chat internal
-* Sistem dikontrol oleh admin untuk menjaga kepercayaan
 
